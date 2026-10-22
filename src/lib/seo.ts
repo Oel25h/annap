@@ -73,6 +73,8 @@ export function pageHead(page: {
     image: { src: string; width: number | null; height: number | null; alt: string } | null;
   };
   type?: "website" | "article" | "book";
+  /** schema.org graph as JSON text, from the server. */
+  jsonLd?: string;
 }) {
   const { seo, locale } = page;
   const image = seo.image ? absoluteUrl(seo.image.src) : absoluteUrl("/og.jpg");
@@ -106,7 +108,7 @@ export function pageHead(page: {
         ]
       : []),
   ];
-  return { meta, links };
+  return { meta, links, scripts: jsonLdScript(page.jsonLd) };
 }
 
 /**

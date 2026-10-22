@@ -23,6 +23,7 @@ import {
 import { resolveMedia } from "./media.server";
 import { parseSections, prepareSections } from "./pages.server";
 import { sanitizeRichText } from "./rich-text.server";
+import { itemJsonLd, personId } from "./structured-data.server";
 import { getSiteSettings } from "./site.server";
 import { publicDb } from "./supabase-public.server";
 
@@ -39,7 +40,6 @@ export const ITEM_BASE: Record<ItemKind, string> = {
 };
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const AUTHOR = { "@type": "Person", name: "Anastasia Patience" };
 
 /** Plain text from the studio's lists: one item per line. */
 function lines(text: string | null | undefined): string[] {
@@ -155,7 +155,12 @@ async function finish(ctx: LoaderContext, shell: Shell): Promise<PageData> {
     },
     intro: shell.intro,
     jsonLd: shell.jsonLd
-      ? JSON.stringify(shell.jsonLd(canonical, image ? image.src : null))
+      ? await itemJsonLd(ctx.db, shell.jsonLd(canonical, image ? image.src : null), {
+          locale: ctx.locale,
+          parent: shell.kind === "story" ? "/foundation" : ITEM_BASE[shell.kind],
+          path,
+          name: shell.title,
+        })
       : undefined,
   };
 }
@@ -240,7 +245,7 @@ async function bookPage(ctx: LoaderContext, slug: string): Promise<PageData | nu
       "@type": "Book",
       name: book.title,
       ...(book.subtitle ? { alternativeHeadline: book.subtitle } : {}),
-      author: AUTHOR,
+      author: { "@type": "Person", "@id": personId(), name: "Anastasia Patience" },
       description: summary(book.description, 500),
       url,
       ...(image ? { image } : {}),
@@ -322,7 +327,7 @@ async function postPage(ctx: LoaderContext, slug: string): Promise<PageData | nu
       "@type": "BlogPosting",
       headline: post.title,
       ...(post.excerpt ? { description: post.excerpt } : {}),
-      author: AUTHOR,
+      author: { "@type": "Person", "@id": personId(), name: "Anastasia Patience" },
       ...(post.publishedAt ? { datePublished: post.publishedAt } : {}),
       ...(row.updated_at ? { dateModified: row.updated_at } : {}),
       mainEntityOfPage: url,
@@ -572,7 +577,7 @@ async function eventPage(ctx: LoaderContext, slug: string): Promise<PageData | n
             name: event.venue || event.city,
             address: { "@type": "PostalAddress", addressLocality: event.city },
           },
-      organizer: AUTHOR,
+      organizer: { "@type": "Person", "@id": personId(), name: "Anastasia Patience" },
       ...(image ? { image } : {}),
       ...(event.ticketUrl ? { offers: { "@type": "Offer", url: event.ticketUrl } } : {}),
       url,

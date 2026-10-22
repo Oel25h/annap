@@ -19,6 +19,7 @@ import { fetchOverlays, overlayKey, type OverlayMap, type OverlayRequest } from 
 import { sanitizeRichText } from "./rich-text.server";
 import { loadSectionData } from "./section-data.server";
 import { getSiteSettings } from "./site.server";
+import { pageJsonLd } from "./structured-data.server";
 import { publicDb, type PublicDb } from "./supabase-public.server";
 
 const PAGE_PATH = /^\/([a-z0-9-]+(\/[a-z0-9-]+)*)?$/;
@@ -202,6 +203,11 @@ export async function loadPage(
       .map((text) => text?.trim() ?? "")
       .find(Boolean) ?? "";
 
+  const image = ogImageId ? (media[ogImageId] ?? null) : null;
+  const jsonLd = row.noindex
+    ? undefined
+    : await pageJsonLd(db, { path, title, locale, canonical, image: image?.src ?? null });
+
   return {
     id: row.id,
     path,
@@ -220,7 +226,8 @@ export async function loadPage(
       noindex: row.noindex,
       canonical,
       alternates: greekReady ? { en: englishUrl, el: greekUrl } : null,
-      image: ogImageId ? (media[ogImageId] ?? null) : null,
+      image,
     },
+    jsonLd,
   };
 }

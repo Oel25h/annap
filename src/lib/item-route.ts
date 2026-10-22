@@ -7,7 +7,7 @@ import { notFound, redirect } from "@tanstack/react-router";
 import type { PageData } from "@/sections/types";
 import { getItemPage, getRedirect, type ItemKind } from "./content.functions";
 import type { Locale } from "./i18n/locale";
-import { jsonLdScript, pageHead } from "./seo";
+import { pageHead } from "./seo";
 
 export function langDeps({ search }: { search: unknown }): { lang: Locale } {
   return { lang: (search as { lang?: string }).lang === "el" ? "el" : "en" };
@@ -39,8 +39,5 @@ const OG_TYPE: Record<string, "book" | "article" | "website"> = {
 
 export function itemHead(page: PageData | undefined) {
   if (!page) return {};
-  return {
-    ...pageHead({ ...page, type: OG_TYPE[page.kind] ?? "website" }),
-    scripts: jsonLdScript(page.jsonLd),
-  };
+  return pageHead({ ...page, type: OG_TYPE[page.kind] ?? "website" });
 }
