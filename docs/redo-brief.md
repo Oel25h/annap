@@ -260,7 +260,7 @@ Lives at `/admin`, client-rendered, same orange identity in a denser layout, des
 
 ## 9. Design
 
-`DESIGN.md` and `src/styles.css` are the design lock and are updated before any design change. Until `DESIGN.md` is rewritten in Phase 1, this section overrides it.
+`DESIGN.md` (3.0, "The Open Book", rewritten in Phase 1 with its reference mocks in `docs/design/mocks/`) and the tokens in `src/styles/tokens.css` are the design lock, and are updated before any design change. Where this section and `DESIGN.md` differ, `DESIGN.md` wins, except that there are still no scroll-triggered reveals.
 
 - Palette tokens only: Tangerine #F27329, Burnt orange #C2410C, Apricot #FFB27A, Peach cream #FFF1E6, Warm ivory #FFFAF5, Cocoa ink #3B1F14, Berry #7A2E4A, Blush #F7C9C0, plus the warm dark grounds defined in `DESIGN.md`. Token names say what they are; the legacy `--plum` and `--burgundy` names are removed.
 - **Contrast.** Text on Tangerine is always Cocoa ink; Warm ivory or white on Tangerine is never used at any size. Orange text on Warm ivory or Peach cream is Burnt orange. On Blush, text is Cocoa ink only. On dark grounds, orange text and links are Apricot or Tangerine, never Burnt orange. Apricot is decorative only (hairlines, dividers); input borders, focus rings and other meaningful non-text UI use Burnt orange or Cocoa ink (Apricot on dark). The focus ring is 2 px with a 2 px offset. WCAG AA everywhere.
