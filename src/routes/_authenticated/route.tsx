@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAdmin } from "@/hooks/useAdmin";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -8,6 +9,15 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function Gate() {
+  const [queryClient] = useState(() => new QueryClient());
+  return (
+    <QueryClientProvider client={queryClient}>
+      <StudioGate />
+    </QueryClientProvider>
+  );
+}
+
+function StudioGate() {
   const nav = useNavigate();
   const { loading, userId, isAdmin } = useAdmin();
 

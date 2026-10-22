@@ -305,3 +305,49 @@ $$;
 
 revoke all on function public.purge_expired() from public, anon, authenticated;
 grant execute on function public.purge_expired() to service_role;
+
+-- ---------------------------------------------------------------------------
+-- What visitors may know about private tables, and nothing more.
+-- ---------------------------------------------------------------------------
+
+-- Which published books have a free download, and in which languages. The
+-- files themselves stay private until the reader fills in the form.
+create or replace function public.free_download_locales(_book_ids uuid[])
+returns table (book_id uuid, locale text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select distinct f.book_id, f.locale
+  from public.book_files f
+  join public.books b on b.id = f.book_id
+  where f.purpose = 'free_download'
+    and b.status = 'published'
+    and f.book_id = any (_book_ids);
+$$;
+
+-- Whether readers can pay here, and the Turnstile site key (public by design).
+create or replace function public.public_integrations()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'payments', coalesce(
+      (select status = 'connected' from public.integration_secrets where provider = 'stripe'),
+      false
+    ),
+    'turnstileSiteKey', (
+      select config ->> 'site_key' from public.integration_secrets
+      where provider = 'turnstile' and status = 'connected'
+    )
+  );
+$$;
+
+revoke all on function public.free_download_locales(uuid[]) from public;
+revoke all on function public.public_integrations() from public;
+grant execute on function public.free_download_locales(uuid[]) to anon, authenticated, service_role;
+grant execute on function public.public_integrations() to anon, authenticated, service_role;

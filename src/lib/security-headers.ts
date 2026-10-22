@@ -52,7 +52,7 @@ export function contentSecurityPolicy(opts: {
   studio: boolean;
 }): string {
   const supabase = supabaseOrigins(opts.supabaseUrl);
-  const scriptSrc = ["'self'", `'nonce-${opts.nonce}'`];
+  const scriptSrc = ["'self'", `'nonce-${opts.nonce}'`, TURNSTILE];
   if (opts.studio) scriptSrc.push("'wasm-unsafe-eval'");
 
   const directives: Record<string, string[]> = {

@@ -1,89 +1,44 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { caps } from "@/lib/i18n/caps";
 import {
+  HeadContent,
   Outlet,
-  createRootRouteWithContext,
+  Scripts,
+  createRootRoute,
   retainSearchParams,
   useRouter,
   useRouterState,
-  HeadContent,
-  Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportClientError } from "../lib/error-reporting";
+import { getSiteShell } from "../lib/content.functions";
 import { getPublicConfig, publicConfigScript } from "../lib/public-config";
-import { SiteHeader } from "../components/SiteHeader";
-import { SiteFooter } from "../components/SiteFooter";
 import { LocaleProvider, localeFromSearch, useT } from "../lib/i18n/context";
-import { LocaleLink } from "../components/LocaleLink";
+import { SiteHeader } from "../components/site/SiteHeader";
+import { SiteFooter } from "../components/site/SiteFooter";
+import { SiteLink } from "../components/site/SiteLink";
+import { LanguageSuggestion } from "../components/site/LanguageSuggestion";
+import { AudioProvider } from "../components/audio/AudioProvider";
+import { MiniPlayer } from "../components/audio/MiniPlayer";
 
-function NotFoundComponent() {
-  const t = useT();
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-ivory px-4">
-      <div className="max-w-lg text-center">
-        <div className="mb-6 text-[11px] uppercase tracking-[0.3em] text-gold">404</div>
-        <h1 className="font-display text-6xl leading-none text-plum md:text-7xl">
-          {t.common.notFoundTitle}
-        </h1>
-        <p className="mt-6 text-ink">{t.common.notFoundBody}</p>
-        <div className="mt-8">
-          <LocaleLink
-            to="/"
-            className="inline-flex items-center gap-2 rounded-sm bg-burgundy px-6 py-3 text-xs uppercase tracking-[0.28em] text-ivory hover:bg-plum"
-          >
-            {t.common.returnHome}
-          </LocaleLink>
-        </div>
-      </div>
-    </div>
-  );
-}
+/** Routes with their own chrome: the studio, sign-in and the link-in-bio page. */
+const BARE = /^\/(admin|auth|start)(\/|$)/;
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
-  const router = useRouter();
-  const t = useT();
-  useEffect(() => {
-    reportClientError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-ivory px-4">
-      <div className="max-w-md text-center">
-        <h1 className="font-display text-3xl text-plum">{t.common.errorTitle}</h1>
-        <p className="mt-3 text-sm text-ink">{t.common.errorBody}</p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="rounded-sm bg-burgundy px-5 py-3 text-xs uppercase tracking-[0.24em] text-ivory hover:bg-plum"
-          >
-            {t.common.tryAgain}
-          </button>
-          <LocaleLink
-            to="/"
-            className="rounded-sm border border-plum/20 px-5 py-3 text-xs uppercase tracking-[0.24em] text-plum hover:border-gold"
-          >
-            {t.common.goHome}
-          </LocaleLink>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRoute({
   // `lang` is set by the locale rewrite (src/lib/i18n/rewrite.ts) and retained on every link.
   validateSearch: (search: Record<string, unknown>): { lang?: "el" } =>
     search.lang === "el" ? { lang: "el" } : {},
   search: { middlewares: [retainSearchParams(["lang"])] },
+  loaderDeps: ({ search }) => ({ lang: search.lang === "el" ? ("el" as const) : ("en" as const) }),
+  loader: ({ deps }) => getSiteShell({ data: deps.lang }),
+  staleTime: 5 * 60_000,
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#fffaf5", media: "(prefers-color-scheme: light)" },
+      { name: "theme-color", content: "#1f120c", media: "(prefers-color-scheme: dark)" },
       { name: "author", content: "Anastasia Patience" },
       { property: "og:site_name", content: "Anastasia Patience" },
     ],
@@ -98,8 +53,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   }),
   shellComponent: RootShell,
   component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
+  notFoundComponent: NotFound,
+  errorComponent: ErrorPage,
 });
 
 function RootShell({ children }: { children: ReactNode }) {
@@ -124,17 +79,108 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-  // Hide public site chrome on /start (link-in-bio), /admin (dashboard), and /auth.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const bare = pathname === "/start" || pathname === "/auth" || pathname.startsWith("/admin");
   return (
-    <QueryClientProvider client={queryClient}>
-      <LocaleProvider>
-        {!bare && <SiteHeader />}
+    <LocaleProvider>
+      {BARE.test(pathname) ? (
         <Outlet />
-        {!bare && <SiteFooter />}
-      </LocaleProvider>
-    </QueryClientProvider>
+      ) : (
+        <SiteChrome>
+          <Outlet />
+        </SiteChrome>
+      )}
+    </LocaleProvider>
+  );
+}
+
+/** Header, main landmark and footer around every public page. */
+function SiteChrome({ children }: { children: ReactNode }) {
+  const t = useT();
+  const shell = Route.useLoaderData();
+  return (
+    <AudioProvider>
+      <a className="skip" href="#main">
+        {t.site.skipToContent}
+      </a>
+      <SiteHeader
+        siteName={shell.settings.siteName}
+        items={shell.menus.header}
+        action={shell.menus.headerAction}
+      />
+      <main id="main" tabIndex={-1}>
+        {children}
+      </main>
+      <SiteFooter shell={shell} />
+      <MiniPlayer />
+      <LanguageSuggestion />
+    </AudioProvider>
+  );
+}
+
+function NotFound() {
+  const t = useT();
+  return (
+    <section className="chapter status-page" aria-labelledby="status-title">
+      <div className="wrap">
+        <p className="label label--accent">{caps(t.site.notFound.label)}</p>
+        <h1 id="status-title" className="display-l">
+          {t.site.notFound.title}
+        </h1>
+        <p className="lead">{t.site.notFound.body}</p>
+        <ul className="status-links">
+          <li>
+            <SiteLink className="link" href="/books">
+              {t.site.notFound.books}
+            </SiteLink>
+          </li>
+          <li>
+            <SiteLink className="link" href="/blog">
+              {t.site.notFound.journal}
+            </SiteLink>
+          </li>
+          <li>
+            <SiteLink className="link" href="/contact">
+              {t.site.notFound.contact}
+            </SiteLink>
+          </li>
+          <li>
+            <SiteLink className="link" href="/">
+              {t.site.notFound.home}
+            </SiteLink>
+          </li>
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function ErrorPage({ error, reset }: { error: Error; reset: () => void }) {
+  const router = useRouter();
+  const t = useT();
+  useEffect(() => {
+    reportClientError(error, { boundary: "root" });
+  }, [error]);
+  const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+  return (
+    <section className="chapter status-page" aria-labelledby="status-title" role="alert">
+      <div className="wrap">
+        <h1 id="status-title" className="display-l">
+          {t.site.error.title}
+        </h1>
+        <p className="lead">{offline ? t.site.error.offline : t.site.error.body}</p>
+        <p className="status-links">
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={() => {
+              reset();
+              void router.invalidate();
+            }}
+          >
+            {t.site.error.tryAgain}
+          </button>
+        </p>
+      </div>
+    </section>
   );
 }

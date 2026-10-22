@@ -56,3 +56,55 @@ export function seoHead({
       ];
   return { meta, links };
 }
+
+/**
+ * Head tags for a CMS page from the SEO the server worked out: canonical
+ * (English when the Greek is not approved yet), hreflang pairs only when both
+ * languages are real, Open Graph and Twitter in the page's language.
+ */
+export function pageHead(page: {
+  locale: Locale;
+  seo: {
+    title: string;
+    description: string;
+    noindex: boolean;
+    canonical: string;
+    alternates: { en: string; el: string } | null;
+    image: { src: string; width: number | null; height: number | null; alt: string } | null;
+  };
+  type?: "website" | "article" | "book";
+}) {
+  const { seo, locale } = page;
+  const image = seo.image ? absoluteUrl(seo.image.src) : absoluteUrl("/og.jpg");
+  const meta = [
+    { title: seo.title },
+    ...(seo.description ? [{ name: "description", content: seo.description }] : []),
+    { property: "og:type", content: page.type ?? "website" },
+    { property: "og:title", content: seo.title },
+    ...(seo.description ? [{ property: "og:description", content: seo.description }] : []),
+    { property: "og:url", content: seo.canonical },
+    { property: "og:image", content: image },
+    ...(seo.image?.width ? [{ property: "og:image:width", content: String(seo.image.width) }] : []),
+    ...(seo.image?.height
+      ? [{ property: "og:image:height", content: String(seo.image.height) }]
+      : []),
+    ...(seo.image?.alt ? [{ property: "og:image:alt", content: seo.image.alt }] : []),
+    { property: "og:locale", content: OG_LOCALE[locale] },
+    ...(seo.alternates
+      ? [{ property: "og:locale:alternate", content: OG_LOCALE[locale === "en" ? "el" : "en"] }]
+      : []),
+    { name: "twitter:card", content: "summary_large_image" },
+    ...(seo.noindex ? [{ name: "robots", content: "noindex" }] : []),
+  ];
+  const links = [
+    ...(seo.noindex ? [] : [{ rel: "canonical", href: seo.canonical }]),
+    ...(seo.alternates && !seo.noindex
+      ? [
+          { rel: "alternate", hrefLang: "en", href: seo.alternates.en },
+          { rel: "alternate", hrefLang: "el", href: seo.alternates.el },
+          { rel: "alternate", hrefLang: "x-default", href: seo.alternates.en },
+        ]
+      : []),
+  ];
+  return { meta, links };
+}

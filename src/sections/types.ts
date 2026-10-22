@@ -31,8 +31,171 @@ export type ResolvedMedia = {
 
 export type MediaMap = Record<string, ResolvedMedia>;
 
+export type BookFormat = "paperback" | "hardcover" | "ebook" | "audiobook";
+
+export type BookOffer = {
+  id: string;
+  format: BookFormat;
+  retailer: string;
+  externalUrl: string | null;
+  priceCents: number | null;
+  currency: string;
+  /** Sold here through Stripe Checkout (Stripe connected and a price set). */
+  buyHere: boolean;
+};
+
+export type BookSummary = {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  tagline: string;
+  description: string;
+  coverMediaId: string | null;
+  textLang: Locale;
+  offers: BookOffer[];
+  /** A free download exists in the page's language (or in English). */
+  freeDownload: Locale | null;
+};
+
+export type AudiobookTrack = {
+  id: string;
+  title: string;
+  /** Null for chapters that are not free to stream: they show a lock and the buy link. */
+  audioMediaId: string | null;
+  durationSeconds: number | null;
+};
+
+export type AudiobookItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  narrator: string;
+  coverMediaId: string | null;
+  /** The language of the recording. */
+  locale: Locale;
+  bookSlug: string | null;
+  tracks: AudiobookTrack[];
+};
+
+export type PostCard = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: { slug: string; name: string } | null;
+  publishedAt: string | null;
+  readingMinutes: number | null;
+  coverMediaId: string | null;
+  textLang: Locale;
+};
+
+export type VideoCard = {
+  id: string;
+  youtubeId: string;
+  title: string;
+  description: string;
+  durationSeconds: number | null;
+  publishedAt: string | null;
+  thumbnailMediaId: string | null;
+  textLang: Locale;
+};
+
+export type TestimonialItem = {
+  id: string;
+  quote: string;
+  name: string;
+  role: string;
+  photoMediaId: string | null;
+  textLang: Locale;
+};
+
+export type ProductCard = {
+  id: string;
+  slug: string;
+  name: string;
+  summary: string;
+  productType: string;
+  /** Formatted on the server from price_cents, or the free-text label. */
+  priceCents: number | null;
+  currency: string;
+  priceLabel: string;
+  coverMediaId: string | null;
+  textLang: Locale;
+};
+
+export type MasterclassCard = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  startsAt: string | null;
+  scheduleNote: string;
+  format: "online" | "in_person" | "hybrid";
+  location: string;
+  priceLabel: string;
+  availability: "open" | "waitlist" | "closed";
+  coverMediaId: string | null;
+  textLang: Locale;
+};
+
+export type EventCard = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  startsAt: string;
+  endsAt: string | null;
+  timeZone: string;
+  online: boolean;
+  venue: string;
+  city: string;
+  ticketUrl: string | null;
+  coverMediaId: string | null;
+  textLang: Locale;
+};
+
+export type PressItem = {
+  id: string;
+  outlet: string;
+  headline: string;
+  publishedOn: string | null;
+  url: string | null;
+  logoMediaId: string | null;
+};
+
+export type StoryCard = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  /** First name only when the story is anonymised. */
+  personName: string;
+  location: string;
+  category: string;
+  /** Null when the story is anonymised (no face photos). */
+  coverMediaId: string | null;
+  textLang: Locale;
+};
+
 /** Data a section needs beyond its own props, for the section types that have a loader. */
-type SectionDataByType = Record<never, never>;
+type SectionDataByType = {
+  featured_book: { book: BookSummary };
+  ebook_gate: { book: BookSummary };
+  book_list: { books: BookSummary[] };
+  book_excerpts: { book: { slug: string; title: string } | null };
+  audiobook_player: { audiobooks: AudiobookItem[]; fallbackToEnglish: boolean };
+  latest_posts: { posts: PostCard[]; categories: { slug: string; name: string }[] };
+  video: { videos: VideoCard[] };
+  testimonials: { items: TestimonialItem[] };
+  gallery: { imageMediaIds: string[] };
+  donation: { payments: boolean };
+  products: { products: ProductCard[] };
+  masterclasses: { items: MasterclassCard[] };
+  events: { upcoming: EventCard[]; past: EventCard[] };
+  press: { items: PressItem[] };
+  foundation_stories: { stories: StoryCard[] };
+};
 
 export type SectionDataMap = {
   [T in SectionType]: T extends keyof SectionDataByType ? SectionDataByType[T] : null;

@@ -10,24 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SplatRouteImport } from './routes/$'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as BlogRouteImport } from './routes/blog'
-import { Route as BooksRouteImport } from './routes/books'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as FoundationRouteImport } from './routes/foundation'
-import { Route as GalleryRouteImport } from './routes/gallery'
-import { Route as MasterclassesRouteImport } from './routes/masterclasses'
-import { Route as ShopRouteImport } from './routes/shop'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as StartRouteImport } from './routes/start'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as BlogIndexRouteImport } from './routes/blog.index'
-import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
-import { Route as BooksIndexRouteImport } from './routes/books.index'
-import { Route as BooksFindYourReasonToSmileRouteImport } from './routes/books.find-your-reason-to-smile'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminBlogRouteImport } from './routes/_authenticated/admin.blog'
 import { Route as AuthenticatedAdminBooksRouteImport } from './routes/_authenticated/admin.books'
@@ -48,13 +36,13 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const SplatRoute = SplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -62,49 +50,9 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogRoute = BlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BooksRoute = BooksRouteImport.update({
-  id: '/books',
-  path: '/books',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FoundationRoute = FoundationRouteImport.update({
-  id: '/foundation',
-  path: '/foundation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GalleryRoute = GalleryRouteImport.update({
-  id: '/gallery',
-  path: '/gallery',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MasterclassesRoute = MasterclassesRouteImport.update({
-  id: '/masterclasses',
-  path: '/masterclasses',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShopRoute = ShopRouteImport.update({
-  id: '/shop',
-  path: '/shop',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StartRoute = StartRouteImport.update({
-  id: '/start',
-  path: '/start',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -117,27 +65,6 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const BlogIndexRoute = BlogIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => BlogRoute,
-} as any)
-const BlogSlugRoute = BlogSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => BlogRoute,
-} as any)
-const BooksIndexRoute = BooksIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => BooksRoute,
-} as any)
-const BooksFindYourReasonToSmileRoute =
-  BooksFindYourReasonToSmileRouteImport.update({
-    id: '/find-your-reason-to-smile',
-    path: '/find-your-reason-to-smile',
-    getParentRoute: () => BooksRoute,
-  } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -219,23 +146,11 @@ const ApiPublicUnsubscribeRoute = ApiPublicUnsubscribeRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/$': typeof SplatRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRouteWithChildren
-  '/books': typeof BooksRouteWithChildren
-  '/contact': typeof ContactRoute
-  '/foundation': typeof FoundationRoute
-  '/gallery': typeof GalleryRoute
-  '/masterclasses': typeof MasterclassesRoute
-  '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/start': typeof StartRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/blog/$slug': typeof BlogSlugRoute
-  '/books/find-your-reason-to-smile': typeof BooksFindYourReasonToSmileRoute
-  '/blog/': typeof BlogIndexRoute
-  '/books/': typeof BooksIndexRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -253,20 +168,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/$': typeof SplatRoute
   '/auth': typeof AuthRoute
-  '/contact': typeof ContactRoute
-  '/foundation': typeof FoundationRoute
-  '/gallery': typeof GalleryRoute
-  '/masterclasses': typeof MasterclassesRoute
-  '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/start': typeof StartRoute
   '/unsubscribe': typeof UnsubscribeRoute
-  '/blog/$slug': typeof BlogSlugRoute
-  '/books/find-your-reason-to-smile': typeof BooksFindYourReasonToSmileRoute
-  '/blog': typeof BlogIndexRoute
-  '/books': typeof BooksIndexRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -286,23 +191,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/about': typeof AboutRoute
+  '/$': typeof SplatRoute
   '/auth': typeof AuthRoute
-  '/blog': typeof BlogRouteWithChildren
-  '/books': typeof BooksRouteWithChildren
-  '/contact': typeof ContactRoute
-  '/foundation': typeof FoundationRoute
-  '/gallery': typeof GalleryRoute
-  '/masterclasses': typeof MasterclassesRoute
-  '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/start': typeof StartRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/blog/$slug': typeof BlogSlugRoute
-  '/books/find-your-reason-to-smile': typeof BooksFindYourReasonToSmileRoute
-  '/blog/': typeof BlogIndexRoute
-  '/books/': typeof BooksIndexRoute
   '/_authenticated/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/_authenticated/admin/books': typeof AuthenticatedAdminBooksRoute
   '/_authenticated/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -322,23 +215,11 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
+    | '/$'
     | '/auth'
-    | '/blog'
-    | '/books'
-    | '/contact'
-    | '/foundation'
-    | '/gallery'
-    | '/masterclasses'
-    | '/shop'
     | '/sitemap.xml'
-    | '/start'
     | '/unsubscribe'
     | '/admin'
-    | '/blog/$slug'
-    | '/books/find-your-reason-to-smile'
-    | '/blog/'
-    | '/books/'
     | '/admin/blog'
     | '/admin/books'
     | '/admin/foundation'
@@ -356,20 +237,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
+    | '/$'
     | '/auth'
-    | '/contact'
-    | '/foundation'
-    | '/gallery'
-    | '/masterclasses'
-    | '/shop'
     | '/sitemap.xml'
-    | '/start'
     | '/unsubscribe'
-    | '/blog/$slug'
-    | '/books/find-your-reason-to-smile'
-    | '/blog'
-    | '/books'
     | '/admin/blog'
     | '/admin/books'
     | '/admin/foundation'
@@ -388,23 +259,11 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/about'
+    | '/$'
     | '/auth'
-    | '/blog'
-    | '/books'
-    | '/contact'
-    | '/foundation'
-    | '/gallery'
-    | '/masterclasses'
-    | '/shop'
     | '/sitemap.xml'
-    | '/start'
     | '/unsubscribe'
     | '/_authenticated/admin'
-    | '/blog/$slug'
-    | '/books/find-your-reason-to-smile'
-    | '/blog/'
-    | '/books/'
     | '/_authenticated/admin/blog'
     | '/_authenticated/admin/books'
     | '/_authenticated/admin/foundation'
@@ -424,17 +283,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AboutRoute: typeof AboutRoute
+  SplatRoute: typeof SplatRoute
   AuthRoute: typeof AuthRoute
-  BlogRoute: typeof BlogRouteWithChildren
-  BooksRoute: typeof BooksRouteWithChildren
-  ContactRoute: typeof ContactRoute
-  FoundationRoute: typeof FoundationRoute
-  GalleryRoute: typeof GalleryRoute
-  MasterclassesRoute: typeof MasterclassesRoute
-  ShopRoute: typeof ShopRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  StartRoute: typeof StartRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
 }
@@ -448,18 +299,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$': {
+      id: '/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -469,67 +320,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog': {
-      id: '/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof BlogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/books': {
-      id: '/books'
-      path: '/books'
-      fullPath: '/books'
-      preLoaderRoute: typeof BooksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/foundation': {
-      id: '/foundation'
-      path: '/foundation'
-      fullPath: '/foundation'
-      preLoaderRoute: typeof FoundationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/gallery': {
-      id: '/gallery'
-      path: '/gallery'
-      fullPath: '/gallery'
-      preLoaderRoute: typeof GalleryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/masterclasses': {
-      id: '/masterclasses'
-      path: '/masterclasses'
-      fullPath: '/masterclasses'
-      preLoaderRoute: typeof MasterclassesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/shop': {
-      id: '/shop'
-      path: '/shop'
-      fullPath: '/shop'
-      preLoaderRoute: typeof ShopRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/start': {
-      id: '/start'
-      path: '/start'
-      fullPath: '/start'
-      preLoaderRoute: typeof StartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/unsubscribe': {
@@ -545,34 +340,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/blog/': {
-      id: '/blog/'
-      path: '/'
-      fullPath: '/blog/'
-      preLoaderRoute: typeof BlogIndexRouteImport
-      parentRoute: typeof BlogRoute
-    }
-    '/blog/$slug': {
-      id: '/blog/$slug'
-      path: '/$slug'
-      fullPath: '/blog/$slug'
-      preLoaderRoute: typeof BlogSlugRouteImport
-      parentRoute: typeof BlogRoute
-    }
-    '/books/': {
-      id: '/books/'
-      path: '/'
-      fullPath: '/books/'
-      preLoaderRoute: typeof BooksIndexRouteImport
-      parentRoute: typeof BooksRoute
-    }
-    '/books/find-your-reason-to-smile': {
-      id: '/books/find-your-reason-to-smile'
-      path: '/find-your-reason-to-smile'
-      fullPath: '/books/find-your-reason-to-smile'
-      preLoaderRoute: typeof BooksFindYourReasonToSmileRouteImport
-      parentRoute: typeof BooksRoute
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -721,44 +488,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface BlogRouteChildren {
-  BlogSlugRoute: typeof BlogSlugRoute
-  BlogIndexRoute: typeof BlogIndexRoute
-}
-
-const BlogRouteChildren: BlogRouteChildren = {
-  BlogSlugRoute: BlogSlugRoute,
-  BlogIndexRoute: BlogIndexRoute,
-}
-
-const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
-
-interface BooksRouteChildren {
-  BooksFindYourReasonToSmileRoute: typeof BooksFindYourReasonToSmileRoute
-  BooksIndexRoute: typeof BooksIndexRoute
-}
-
-const BooksRouteChildren: BooksRouteChildren = {
-  BooksFindYourReasonToSmileRoute: BooksFindYourReasonToSmileRoute,
-  BooksIndexRoute: BooksIndexRoute,
-}
-
-const BooksRouteWithChildren = BooksRoute._addFileChildren(BooksRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AboutRoute: AboutRoute,
+  SplatRoute: SplatRoute,
   AuthRoute: AuthRoute,
-  BlogRoute: BlogRouteWithChildren,
-  BooksRoute: BooksRouteWithChildren,
-  ContactRoute: ContactRoute,
-  FoundationRoute: FoundationRoute,
-  GalleryRoute: GalleryRoute,
-  MasterclassesRoute: MasterclassesRoute,
-  ShopRoute: ShopRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  StartRoute: StartRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
 }

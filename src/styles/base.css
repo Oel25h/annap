@@ -1,0 +1,352 @@
+/*
+ * Base styles, type roles, buttons and links. Ported from the final design
+ * mocks; see DESIGN.md for the rules behind each value.
+ */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: var(--size-header);
+  }
+  /* Smooth only for in-page jumps the reader starts (not on load, not for find-in-page) */
+  @media (prefers-reduced-motion: no-preference) {
+    html:focus-within {
+      scroll-behavior: smooth;
+    }
+  }
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-serif);
+    font-size: var(--text-body);
+    line-height: 1.65;
+    font-kerning: normal;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: oldstyle-nums proportional-nums;
+    overflow-x: clip;
+  }
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+  a {
+    color: inherit;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  figure,
+  blockquote,
+  ol,
+  ul,
+  dl,
+  dd {
+    margin: 0;
+  }
+  ol,
+  ul {
+    padding: 0;
+    list-style: none;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+  ::selection {
+    background: var(--color-selection);
+    color: var(--color-cocoa-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .skip {
+    position: absolute;
+    left: var(--space-4);
+    top: -96px;
+    z-index: 60;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-control-sm);
+    padding: 0 var(--space-4);
+    border-radius: var(--radius);
+    background: var(--color-action);
+    color: var(--color-on-action);
+    font: 600 var(--text-ui)/1 var(--font-sans);
+    text-decoration: none;
+  }
+  .skip:focus {
+    top: var(--space-3);
+  }
+  .wrap {
+    width: 100%;
+    max-width: calc(var(--content-max) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+  svg.i {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  svg.i-24 {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@layer components {
+  /* Section backgrounds: ivory, peach and the cocoa room */
+  .band-ivory {
+    background: var(--color-bg);
+  }
+  .band-peach {
+    background: var(--color-bg-alt);
+  }
+  .band-cocoa {
+    --color-bg: var(--color-cocoa-ink);
+    --color-surface: var(--color-cocoa-ink);
+    --color-surface-alt: var(--color-cocoa-ink);
+    --color-text: var(--color-peach-cream);
+    --color-text-secondary: var(--color-peach-cream-76);
+    --color-text-tertiary: var(--color-peach-cream-68);
+    --color-accent-text: var(--color-apricot);
+    --color-hairline: var(--color-apricot-32);
+    --color-leader: var(--color-apricot-48);
+    --color-field-border: var(--color-peach-cream-52);
+    --color-focus: var(--color-apricot);
+    --color-action-hover: var(--color-apricot);
+    --color-on-action-hover: var(--color-cocoa-ink);
+    --color-error: var(--color-blush);
+    --color-on-error: var(--color-cocoa-ink);
+    background: var(--color-bg);
+    color: var(--color-text);
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) .band-peach {
+      border-block: 1px solid var(--color-hairline);
+    }
+  }
+  :root.dark .band-peach {
+    border-block: 1px solid var(--color-hairline);
+  }
+
+  /* Type roles */
+  .display-xl,
+  .display-l,
+  .display-m {
+    font-family: var(--font-display);
+    font-variant-numeric: lining-nums;
+    color: var(--color-text);
+    font-optical-sizing: auto;
+  }
+  .display-xl {
+    font-size: var(--text-display-xl);
+    font-weight: 400;
+    line-height: 1.02;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+  @media (min-width: 1024px) {
+    .display-xl {
+      font-weight: 360;
+    }
+  }
+  :lang(el) .display-xl {
+    font-size: var(--text-display-xl-el);
+    line-height: 1.04;
+    letter-spacing: -0.016em;
+  }
+  .display-l {
+    font-size: var(--text-display-l);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.016em;
+    text-wrap: balance;
+  }
+  .display-m {
+    font-size: var(--text-display-m);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .display-xl em,
+  .display-l em,
+  .display-m em {
+    font-style: italic;
+    color: var(--color-accent-text);
+  }
+  .title {
+    font-family: var(--font-serif);
+    font-size: var(--text-title);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  .lead {
+    font-size: var(--text-lead);
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+    text-wrap: pretty;
+  }
+  .body {
+    font-size: var(--text-body);
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+  .small {
+    font-size: var(--text-small);
+    line-height: 1.5;
+  }
+  .caption {
+    font: italic 400 var(--text-small)/1.5 var(--font-serif);
+    color: var(--color-text-secondary);
+    text-wrap: balance;
+  }
+  .label {
+    font-family: var(--font-sans);
+    font-size: var(--text-label);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-tertiary);
+    font-variant-numeric: lining-nums;
+  }
+  .label--accent {
+    color: var(--color-accent-text);
+  }
+  .meta {
+    font-family: var(--font-sans);
+    font-size: var(--text-meta);
+    line-height: 1.4;
+    color: var(--color-text-tertiary);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .ui {
+    font-family: var(--font-sans);
+    font-size: var(--text-ui);
+    line-height: 1.25;
+  }
+  .title a,
+  .display-m a,
+  .display-l a {
+    text-decoration: none;
+  }
+  .title a:hover,
+  .display-m a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-text);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.24em;
+  }
+
+  /* Buttons and links */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--size-control);
+    padding: 0 var(--space-5);
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    font: 600 var(--text-ui)/1.25 var(--font-sans);
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background-color var(--duration-hover),
+      color var(--duration-hover),
+      border-color var(--duration-hover);
+  }
+  .btn-primary {
+    background: var(--color-action);
+    color: var(--color-on-action);
+  }
+  .btn-primary:hover {
+    background: var(--color-action-hover);
+    color: var(--color-on-action-hover);
+  }
+  .btn-quiet {
+    background: transparent;
+    color: var(--color-text);
+    border-color: var(--color-field-border);
+  }
+  .btn-quiet:hover {
+    border-color: var(--color-text);
+    background: var(--color-bg-alt);
+  }
+  .band-cocoa .btn-quiet:hover {
+    background: transparent;
+    border-color: var(--color-accent-text);
+    color: var(--color-accent-text);
+  }
+  .btn-sm {
+    min-height: var(--size-control-sm);
+    padding: 0 var(--space-4);
+  }
+  .btn-block {
+    width: 100%;
+  }
+  .btn svg.i {
+    width: 20px;
+    height: 20px;
+  }
+  .link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--size-control-sm);
+    font: 600 var(--text-ui)/1.3 var(--font-sans);
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-text);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.45em;
+    transition:
+      color var(--duration-hover),
+      text-decoration-thickness var(--duration-hover);
+    white-space: nowrap;
+  }
+  .link:hover {
+    color: var(--color-accent-text);
+    text-decoration-thickness: 2px;
+  }
+  .link svg.i {
+    width: 18px;
+    height: 18px;
+  }
+}

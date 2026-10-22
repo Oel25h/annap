@@ -236,7 +236,8 @@ create table if not exists public.redirects (
 -- ---------------------------------------------------------------------------
 create table if not exists public.navigation_items (
   id uuid primary key default gen_random_uuid(),
-  menu text not null check (menu in ('header', 'footer', 'legal')),
+  -- header_action is the one button beside the language switch ("Free eBook").
+  menu text not null check (menu in ('header', 'header_action', 'footer', 'legal')),
   label text not null,
   page_id uuid references public.pages (id) on delete cascade,
   url text check (url is null or url ~ '^(/|https://|mailto:)'),

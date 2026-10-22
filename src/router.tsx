@@ -1,4 +1,3 @@
-import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { getGlobalStartContext } from "@tanstack/react-start";
 import { routeTree } from "./routeTree.gen";
@@ -15,18 +14,12 @@ function requestNonce(): string | undefined {
   }
 }
 
-export const getRouter = () => {
-  const queryClient = new QueryClient();
-
-  const router = createRouter({
+export const getRouter = () =>
+  createRouter({
     routeTree,
-    context: { queryClient },
     rewrite: localeRewrite,
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 30_000,
     ssr: { nonce: requestNonce() },
   });
-
-  return router;
-};

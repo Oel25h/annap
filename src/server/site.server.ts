@@ -43,8 +43,10 @@ export type SocialLink = { id: string; platform: string; url: string; label: str
 
 export type SiteShell = {
   settings: SiteSettings;
-  menus: { header: NavItem[]; footer: NavItem[]; legal: NavItem[] };
+  menus: { header: NavItem[]; headerAction: NavItem | null; footer: NavItem[]; legal: NavItem[] };
   socials: SocialLink[];
+  /** Set when Turnstile is configured in the studio; forms then require it. */
+  turnstileSiteKey: string | null;
 };
 
 type Memo<T> = { value: T; expires: number };
@@ -146,13 +148,14 @@ export async function getSiteShell(db: PublicDb, locale: Locale): Promise<SiteSh
   const memo = shellMemo.get(locale);
   if (memo && memo.expires > Date.now()) return memo.value;
 
-  const [settings, nav, socials] = await Promise.all([
+  const [settings, nav, socials, integrations] = await Promise.all([
     getSiteSettings(db),
     db
       .from("navigation_items")
       .select("id, menu, label, url, parent_id, position, page:pages(path)")
       .order("position"),
     db.from("social_links").select("id, platform, url, label").order("position"),
+    db.rpc("public_integrations"),
   ]);
   if (nav.error) throw new Error(`Navigation: ${nav.error.message}`);
   if (socials.error) throw new Error(`Social links: ${socials.error.message}`);
@@ -171,10 +174,13 @@ export async function getSiteShell(db: PublicDb, locale: Locale): Promise<SiteSh
     settings,
     menus: {
       header: buildMenu(rows, "header", greek),
+      headerAction: buildMenu(rows, "header_action", greek)[0] ?? null,
       footer: buildMenu(rows, "footer", greek),
       legal: buildMenu(rows, "legal", greek),
     },
     socials: socials.data ?? [],
+    turnstileSiteKey:
+      (integrations.data as { turnstileSiteKey?: string | null } | null)?.turnstileSiteKey ?? null,
   };
   shellMemo.set(locale, { value, expires: Date.now() + TTL_MS });
   return value;

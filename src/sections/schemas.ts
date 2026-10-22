@@ -9,7 +9,7 @@
  * - Images, audio and files are referenced by media library id (`…MediaId`).
  * - Repeated items carry a stable `id`, so a Greek overlay follows an item
  *   when it is reordered.
- * - URL fields accept only https:, mailto:, tel: or a site path.
+ * - URL fields accept only https:, mailto:, tel:, a site path or a #anchor on the page.
  * - Translatable text is declared in TRANSLATABLE below; nothing else is ever
  *   taken from a translation.
  */
@@ -35,8 +35,11 @@ export const safeUrl = z
   .trim()
   .max(2000)
   .refine(
-    (value) => /^(https:\/\/|mailto:|tel:)/i.test(value) || /^\/(?!\/)/.test(value),
-    "Use a link that starts with https://, mailto:, tel: or /",
+    (value) =>
+      /^(https:\/\/|mailto:|tel:)/i.test(value) ||
+      /^\/(?!\/)/.test(value) ||
+      /^#[a-z0-9]+(-[a-z0-9]+)*$/.test(value),
+    "Use a link that starts with https://, mailto:, tel:, / or # (a place on this page)",
   );
 
 const link = z.object({

@@ -2663,6 +2663,13 @@ export type Database = {
     Functions: {
       draft_protected_columns: { Args: Record<PropertyKey, never>; Returns: string[] };
       entity_table: { Args: { _entity_type: string }; Returns: string };
+      free_download_locales: {
+        Args: { _book_ids: string[] };
+        Returns: {
+          book_id: string;
+          locale: string;
+        }[];
+      };
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"]; _user_id: string };
         Returns: boolean;
@@ -2673,6 +2680,7 @@ export type Database = {
       };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_translator: { Args: Record<PropertyKey, never>; Returns: boolean };
+      public_integrations: { Args: Record<PropertyKey, never>; Returns: Json };
       publish_draft: {
         Args: {
           _english_hashes?: Json;
