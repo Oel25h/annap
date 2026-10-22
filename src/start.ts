@@ -8,7 +8,6 @@ import {
   createNonce,
   withHeaders,
 } from "./lib/security-headers";
-import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 // Server functions are same-origin RPC endpoints; refuse cross-site calls.
 const csrfMiddleware = createCsrfMiddleware({
@@ -61,6 +60,5 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
 });
 
 export const startInstance = createStart(() => ({
-  functionMiddleware: [attachSupabaseAuth],
   requestMiddleware: [csrfMiddleware, securityMiddleware, errorMiddleware],
 }));

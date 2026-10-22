@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireAdmin } from "@/lib/studio-auth";
 import type { EntityType } from "@/lib/i18n/translations";
 import { hashSource } from "@/lib/i18n/translations";
 
@@ -255,7 +255,7 @@ async function localizeWithGemini(fields: Record<string, string>): Promise<Recor
 }
 
 export const generateGreekDraft = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAdmin])
   .inputValidator((d: unknown) => EntityInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -286,7 +286,7 @@ export const generateGreekDraft = createServerFn({ method: "POST" })
   });
 
 export const saveGreekTranslation = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAdmin])
   .inputValidator((d: unknown) => SaveInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -313,7 +313,7 @@ export const saveGreekTranslation = createServerFn({ method: "POST" })
   });
 
 export const setGreekApproval = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAdmin])
   .inputValidator((d: unknown) => EntityInput.extend({ approve: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireAdmin } from "@/lib/studio-auth";
 import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 
@@ -34,7 +34,7 @@ async function assertAdmin(context: { supabase: SupabaseClient<Database>; userId
 }
 
 export const updateBook = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAdmin])
   .inputValidator((d: unknown) => BookPatch.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -48,7 +48,7 @@ export const BOOK_STATUSES = ["published", "hidden"] as const;
 export type BookStatus = (typeof BOOK_STATUSES)[number];
 
 export const createBook = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAdmin])
   .handler(async ({ context }) => {
     await assertAdmin(context);
     // unique slug based on timestamp so admin can rename without conflicts
@@ -82,7 +82,7 @@ export const createBook = createServerFn({ method: "POST" })
   });
 
 export const deleteBook = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireAdmin])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
