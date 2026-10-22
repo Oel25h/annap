@@ -14,6 +14,9 @@ insert into auth.users (id, email, aud, role)
 values
   ('00000000-0000-0000-0000-00000000a001', 'admin@example.test', 'authenticated', 'authenticated'),
   ('00000000-0000-0000-0000-00000000a002', 'translator@example.test', 'authenticated', 'authenticated');
+insert into auth.sessions (id, user_id, aal) values
+  ('00000000-0000-0000-0000-00000000c001', '00000000-0000-0000-0000-00000000a001', 'aal2'),
+  ('00000000-0000-0000-0000-00000000c002', '00000000-0000-0000-0000-00000000a002', 'aal2');
 insert into public.user_roles (user_id, role) values
   ('00000000-0000-0000-0000-00000000a001', 'admin'),
   ('00000000-0000-0000-0000-00000000a002', 'translator');
@@ -21,7 +24,7 @@ insert into public.user_roles (user_id, role) values
 -- An admin with two-factor creates a page, drafts it and publishes it. -------
 set local role authenticated;
 select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-0000-0000-00000000a001","role":"authenticated","aal":"aal2"}', true);
+  '{"sub":"00000000-0000-0000-0000-00000000a001","session_id":"00000000-0000-0000-0000-00000000c001","role":"authenticated","aal":"aal2"}', true);
 
 insert into public.pages (id, path, title)
 values ('00000000-0000-0000-0000-0000000000b1', '/test-page', 'Draft title');
@@ -84,7 +87,7 @@ select pg_temp.expect('publishing new English marks approved Greek stale',
 
 -- An admin without two-factor gets nothing. --------------------------------------
 select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-0000-0000-00000000a001","role":"authenticated","aal":"aal1"}', true);
+  '{"sub":"00000000-0000-0000-0000-00000000a001","session_id":"00000000-0000-0000-0000-00000000c001","role":"authenticated","aal":"aal1"}', true);
 select pg_temp.expect('aal1 admin cannot read pages', not exists (select 1 from public.pages));
 select pg_temp.expect('aal1 admin still sees their own role',
   exists (select 1 from public.user_roles where user_id = '00000000-0000-0000-0000-00000000a001'));
@@ -97,7 +100,7 @@ $$;
 
 -- A translator manages Greek but cannot change content. ----------------------------
 select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-0000-0000-00000000a002","role":"authenticated","aal":"aal2"}', true);
+  '{"sub":"00000000-0000-0000-0000-00000000a002","session_id":"00000000-0000-0000-0000-00000000c002","role":"authenticated","aal":"aal2"}', true);
 select pg_temp.expect('translator reads pages', exists (select 1 from public.pages));
 select pg_temp.expect('translator cannot read subscribers or orders',
   not exists (select 1 from public.subscribers) and not exists (select 1 from public.orders));
@@ -112,6 +115,14 @@ where entity_id = '5ec71011-0000-4000-8000-000000000001';
 select pg_temp.expect('translator edits Greek drafts',
   (select draft_fields ->> 'body' = 'Γεια σου' from public.content_translations
    where entity_id = '5ec71011-0000-4000-8000-000000000001'));
+
+-- A signed-out session stops working at once. -------------------------------------
+reset role;
+delete from auth.sessions where id = '00000000-0000-0000-0000-00000000c001';
+set local role authenticated;
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-00000000a001","session_id":"00000000-0000-0000-0000-00000000c001","role":"authenticated","aal":"aal2"}', true);
+select pg_temp.expect('a revoked session cannot read drafts', not exists (select 1 from public.content_drafts));
 
 -- Visitors ----------------------------------------------------------------------------
 reset role;

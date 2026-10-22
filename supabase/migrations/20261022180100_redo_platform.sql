@@ -8,6 +8,22 @@
 -- ---------------------------------------------------------------------------
 -- Who may do what. Both checks require a two-factor (aal2) session.
 -- ---------------------------------------------------------------------------
+-- A signed-out or revoked session stops working at once, not when its access
+-- token expires.
+create or replace function public.session_is_active()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from auth.sessions
+    where id = nullif(auth.jwt() ->> 'session_id', '')::uuid
+      and (not_after is null or not_after > now())
+  )
+$$;
+
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -17,6 +33,7 @@ set search_path = public
 as $$
   select coalesce(auth.jwt() ->> 'aal', '') = 'aal2'
      and public.has_role(auth.uid(), 'admin')
+     and public.session_is_active()
 $$;
 
 -- Translators review Greek. Admins can do everything a translator can.
@@ -29,10 +46,13 @@ set search_path = public
 as $$
   select coalesce(auth.jwt() ->> 'aal', '') = 'aal2'
      and (public.has_role(auth.uid(), 'translator') or public.has_role(auth.uid(), 'admin'))
+     and public.session_is_active()
 $$;
 
+revoke all on function public.session_is_active() from public;
 revoke all on function public.is_admin() from public;
 revoke all on function public.is_translator() from public;
+grant execute on function public.session_is_active() to anon, authenticated, service_role;
 grant execute on function public.is_admin() to anon, authenticated, service_role;
 grant execute on function public.is_translator() to anon, authenticated, service_role;
 
@@ -80,6 +100,8 @@ create table if not exists public.site_settings (
   default_seo_title text not null default '',
   default_seo_description text not null default '',
   social_image_id uuid references public.media_assets (id) on delete set null,
+  logo_media_id uuid references public.media_assets (id) on delete set null,
+  favicon_media_id uuid references public.media_assets (id) on delete set null,
   footer_text text not null default '',
   legal_name text not null default '',
   legal_address text not null default '',

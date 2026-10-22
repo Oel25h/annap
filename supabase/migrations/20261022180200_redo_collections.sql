@@ -166,6 +166,10 @@ alter table public.foundation_stories add column if not exists cover_media_id uu
 alter table public.foundation_stories add column if not exists sections jsonb not null default '[]'::jsonb;
 alter table public.foundation_stories add column if not exists seo_title text not null default '';
 alter table public.foundation_stories add column if not exists seo_description text not null default '';
+-- A story about a real person needs their consent on record before it is
+-- published; anonymise shows first name only and hides face photos.
+alter table public.foundation_stories add column if not exists consent_recorded boolean not null default false;
+alter table public.foundation_stories add column if not exists anonymise boolean not null default false;
 
 -- ---------------------------------------------------------------------------
 -- Masterclasses (many). Enrolment is an external link or a shop product; a
