@@ -98,8 +98,7 @@ export function Master() {
             </h1>
 
             <p className="mt-8 max-w-lg whitespace-pre-line text-lg leading-relaxed text-ink">
-              {m?.description ||
-                "{t.masterclasses.sub}"}
+              {m?.description || "{t.masterclasses.sub}"}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">

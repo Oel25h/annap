@@ -44,7 +44,11 @@ type Cat = { id: string; name: string; slug: string; sort_order: number };
 
 async function loadFoundation() {
   const [{ data: settings }, { data: stories }, { data: cats }] = await Promise.all([
-    supabase.from("foundation_settings" as never).select("*").limit(1).maybeSingle(),
+    supabase
+      .from("foundation_settings" as never)
+      .select("*")
+      .limit(1)
+      .maybeSingle(),
     supabase
       .from("foundation_stories" as never)
       .select(
@@ -190,8 +194,7 @@ export function FoundationPage() {
     return ordered;
   }, [cats, stories]);
 
-  const filtered =
-    filter === "__all__" ? stories : stories.filter((s) => s.category === filter);
+  const filtered = filter === "__all__" ? stories : stories.filter((s) => s.category === filter);
 
   const topStories = filtered.filter((s) => s.featured);
   const moreStories =
@@ -429,7 +432,9 @@ export function FoundationPage() {
                   <p className="font-display text-2xl leading-snug text-plum sm:text-3xl md:text-4xl md:leading-[1.1]">
                     {t.foundation.closeHeadline}
                   </p>
-                  <p className="mt-3 text-sm text-plum/60 sm:text-base">{t.foundation.heroCaption}</p>
+                  <p className="mt-3 text-sm text-plum/60 sm:text-base">
+                    {t.foundation.heroCaption}
+                  </p>
                 </div>
                 <div className="w-full md:w-auto md:justify-self-end">
                   <Cta />

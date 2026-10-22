@@ -77,7 +77,8 @@ export function Shop() {
     [items],
   );
   const allLabel = t.shop.all;
-  const filtered = type === allLabel || type === "All" ? items : items.filter((p) => p.product_type === type);
+  const filtered =
+    type === allLabel || type === "All" ? items : items.filter((p) => p.product_type === type);
 
   return (
     <main className="bg-ivory">

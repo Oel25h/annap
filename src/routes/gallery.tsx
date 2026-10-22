@@ -70,7 +70,8 @@ export function Gallery() {
     [images],
   );
   const allLabel = t.gallery.all;
-  const filtered = filter === allLabel || filter === "All" ? images : images.filter((i) => i.chapter === filter);
+  const filtered =
+    filter === allLabel || filter === "All" ? images : images.filter((i) => i.chapter === filter);
 
   useEffect(() => {
     if (boxIndex === null) return;

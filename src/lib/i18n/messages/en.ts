@@ -372,7 +372,8 @@ export const en = {
     visionLabel: "Our vision",
     valuesLabel: "Our values",
     valuesHeadline: "What guides every act of care.",
-    valuesSub: "Compassion, dignity, service, hope, and community — the values behind every meal, every visit, and every rescue.",
+    valuesSub:
+      "Compassion, dignity, service, hope, and community — the values behind every meal, every visit, and every rescue.",
     values: ["Compassion", "Dignity", "Service", "Hope", "Community"],
     pillars: {
       food: "Food assistance",

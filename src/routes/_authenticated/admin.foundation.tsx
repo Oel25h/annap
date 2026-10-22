@@ -95,7 +95,11 @@ function FoundationAdmin() {
     setErr(null);
     const [{ data: s, error: se }, { data: st, error: ste }, { data: c, error: ce }] =
       await Promise.all([
-        supabase.from("foundation_settings" as never).select("*").limit(1).maybeSingle(),
+        supabase
+          .from("foundation_settings" as never)
+          .select("*")
+          .limit(1)
+          .maybeSingle(),
         supabase
           .from("foundation_stories" as never)
           .select("*")
@@ -143,8 +147,7 @@ function FoundationAdmin() {
     setBusy(true);
     setErr(null);
     try {
-      const slug =
-        slugify(editing.slug || editing.title) || `story-${Date.now().toString(36)}`;
+      const slug = slugify(editing.slug || editing.title) || `story-${Date.now().toString(36)}`;
       const payload = {
         slug,
         person_name: editing.person_name?.trim() || "—",
@@ -157,8 +160,7 @@ function FoundationAdmin() {
         status: editing.status || "draft",
         featured: !!editing.featured,
         sort_order: editing.sort_order ?? 0,
-        published_at:
-          (editing.status || "draft") === "published" ? new Date().toISOString() : null,
+        published_at: (editing.status || "draft") === "published" ? new Date().toISOString() : null,
       };
       if (editing.id) {
         const { error } = await supabase
@@ -184,7 +186,10 @@ function FoundationAdmin() {
 
   async function delStory(id: string) {
     setErr(null);
-    const { error } = await supabase.from("foundation_stories" as never).delete().eq("id", id);
+    const { error } = await supabase
+      .from("foundation_stories" as never)
+      .delete()
+      .eq("id", id);
     if (error) setErr(error.message);
     else {
       flash("Story deleted");
@@ -284,7 +289,10 @@ function FoundationAdmin() {
   }
 
   async function delCat(id: string) {
-    const { error } = await supabase.from("foundation_categories" as never).delete().eq("id", id);
+    const { error } = await supabase
+      .from("foundation_categories" as never)
+      .delete()
+      .eq("id", id);
     if (error) setErr(error.message);
     else {
       flash("Category deleted");
@@ -589,7 +597,10 @@ function FoundationAdmin() {
                       )}
                       {s.status === "published" ? "Unpublish" : "Publish"}
                     </PillButton>
-                    <ConfirmButton onConfirm={() => void delStory(s.id)} message="Delete this story?">
+                    <ConfirmButton
+                      onConfirm={() => void delStory(s.id)}
+                      message="Delete this story?"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </ConfirmButton>
                   </div>
@@ -616,7 +627,9 @@ function FoundationAdmin() {
             </span>
             <div>
               <h2 className="font-display text-2xl text-plum">Page settings</h2>
-              <p className="text-xs text-plum/55">Hero, mission, vision, CTAs — not everyday stories</p>
+              <p className="text-xs text-plum/55">
+                Hero, mission, vision, CTAs — not everyday stories
+              </p>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -801,7 +814,10 @@ function FoundationAdmin() {
                   >
                     <ChevronDown className="h-4 w-4" />
                   </button>
-                  <ConfirmButton onConfirm={() => void delCat(c.id)} message="Delete this category?">
+                  <ConfirmButton
+                    onConfirm={() => void delCat(c.id)}
+                    message="Delete this category?"
+                  >
                     Delete
                   </ConfirmButton>
                 </div>

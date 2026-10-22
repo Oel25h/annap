@@ -32,7 +32,8 @@ export const Route = createFileRoute("/books/find-your-reason-to-smile")({
       { property: "og:title", content: "Find Your Reason to Smile — Anastasia Patience" },
       {
         property: "og:description",
-        content: "A Journey of Faith, Loss, Resilience, and Hope. A memoir about faith, loss, and hope.",
+        content:
+          "A Journey of Faith, Loss, Resilience, and Hope. A memoir about faith, loss, and hope.",
       },
       { property: "og:type", content: "book" },
       { property: "og:url", content: absoluteUrl("/books/find-your-reason-to-smile") },
@@ -354,7 +355,9 @@ export function BookDetail() {
         >
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-10">
             <div className="min-w-0">
-              <div className="truncate font-display text-base text-plum md:text-lg">{fullTitle}</div>
+              <div className="truncate font-display text-base text-plum md:text-lg">
+                {fullTitle}
+              </div>
               <div className="hidden text-[10px] uppercase tracking-[0.22em] text-plum/50 sm:block">
                 {t.books.stickyLine}
               </div>

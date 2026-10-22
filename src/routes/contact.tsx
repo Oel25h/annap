@@ -76,9 +76,7 @@ export function Contact() {
               {t.contact.headlineBefore}{" "}
               <em className="font-italic-display text-burgundy">{t.contact.headlineEm}</em>.
             </h1>
-            <p className="mt-8 max-w-md text-lg text-ink">
-              {t.contact.sub}
-            </p>
+            <p className="mt-8 max-w-md text-lg text-ink">{t.contact.sub}</p>
 
             <div className="mt-10 space-y-3">
               <a

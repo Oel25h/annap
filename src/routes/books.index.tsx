@@ -142,7 +142,8 @@ export function BooksPage() {
 
                 <Reveal delay={0.1}>
                   <div className="inline-flex items-center gap-2 rounded-full bg-burgundy/10 px-3 py-1 text-[10px] uppercase tracking-[0.28em] text-burgundy">
-                    <span className="h-1.5 w-1.5 rounded-full bg-burgundy" /> {t.books.bookN} 0{i + 1}
+                    <span className="h-1.5 w-1.5 rounded-full bg-burgundy" /> {t.books.bookN} 0
+                    {i + 1}
                   </div>
                   <h2 className="mt-4 font-display text-4xl leading-[1.05] text-plum md:text-6xl">
                     {b.title}

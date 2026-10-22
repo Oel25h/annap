@@ -162,7 +162,10 @@ function GalleryManager() {
           {images.length === 1 ? "" : "s"}
         </p>
         {err && (
-          <p className="mt-3 rounded-2xl border border-terracotta/30 bg-terracotta/10 px-4 py-3 text-sm text-terracotta" role="alert">
+          <p
+            className="mt-3 rounded-2xl border border-terracotta/30 bg-terracotta/10 px-4 py-3 text-sm text-terracotta"
+            role="alert"
+          >
             {err}
           </p>
         )}

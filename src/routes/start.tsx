@@ -164,9 +164,7 @@ export function Start() {
 
           <div className="mt-7 inline-flex items-center gap-2 rounded-full border border-burgundy/25 bg-ivory/70 px-4 py-1.5 text-[10px] uppercase tracking-[0.28em] text-burgundy backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-burgundy" />{" "}
-            {s?.hero_eyebrow?.trim()
-              ? localizeStartText(locale, s.hero_eyebrow)
-              : t.start.eyebrow}
+            {s?.hero_eyebrow?.trim() ? localizeStartText(locale, s.hero_eyebrow) : t.start.eyebrow}
           </div>
 
           <h1 className="mt-4 font-display text-3xl leading-tight text-plum md:text-4xl">
