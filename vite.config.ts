@@ -4,6 +4,7 @@ import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { nitro } from "nitro/vite";
+import { clientChunkGraph } from "./scripts/vite/client-chunk-graph";
 
 /**
  * TanStack Start + Nitro + Tailwind.
@@ -35,6 +36,7 @@ export default defineConfig(({ mode }) => {
         preset: nitroPreset,
       }),
       viteReact(),
+      clientChunkGraph(),
     ],
   };
 });

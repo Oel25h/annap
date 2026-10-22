@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "secrets:check": "bun run scripts/check-secrets-not-in-client.mjs",
+    "bundle:check": "node scripts/check-public-bundle.mjs",
     "build:cf": "NITRO_PRESET=cloudflare-module vite build",
     "preview:cf": "wrangler dev -c .output/server/wrangler.json --env-file ../../.env",
     "test:unit": "bun test src",
