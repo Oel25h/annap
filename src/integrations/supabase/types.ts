@@ -2664,6 +2664,11 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      claim_outbox: {
+        Args: { p_limit?: number };
+        Returns: Database["public"]["Tables"]["email_outbox"]["Row"][];
+        SetofOptions: { from: "*"; to: "email_outbox"; isOneToOne: false; isSetofReturn: true };
+      };
       draft_protected_columns: { Args: Record<PropertyKey, never>; Returns: string[] };
       entity_table: { Args: { _entity_type: string }; Returns: string };
       free_download_locales: {

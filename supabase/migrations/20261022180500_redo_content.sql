@@ -193,9 +193,9 @@ Thank you for writing. I read every message myself and will reply within a few d
 
 With warmth,
 Anastasia'),
-  ('contact_notification', 'New message from {name}', '{name} ({email}) wrote about: {topic}
+  ('contact_notification', 'New message from {name}', '{name} ({email}) wrote about: {topic}'),
+  ('waitlist_confirm', 'You are on the list', 'Dear {firstName},
 
-{message}'),
-  ('waitlist_confirm', 'You are on the list', 'Thank you. I will write to you as soon as places open.')
+Thank you. I will write to you as soon as places open in {title}.')
 on conflict (key) do nothing;
 

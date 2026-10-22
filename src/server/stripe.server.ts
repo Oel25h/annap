@@ -4,8 +4,8 @@
  * Crypto. No SDK, so nothing Node-specific runs on the worker.
  */
 import { readIntegration } from "./secrets.server";
+import { apiBase } from "./api-base.server";
 
-const API = "https://api.stripe.com/v1";
 const API_VERSION = "2025-09-30.clover";
 
 export class StripeError extends Error {
@@ -57,7 +57,8 @@ export async function stripeRequest<T>(
   const key = options.key ?? (await stripeKey());
   if (!key) throw new StripeError("Stripe is not connected", 503, "not_connected");
   const body = encodeForm(params);
-  const url = method === "GET" && body.size ? `${API}${path}?${body}` : `${API}${path}`;
+  const api = apiBase("STRIPE_API_BASE", "https://api.stripe.com/v1");
+  const url = method === "GET" && body.size ? `${api}${path}?${body}` : `${api}${path}`;
   const headers: Record<string, string> = {
     Authorization: `Bearer ${key}`,
     "Stripe-Version": API_VERSION,

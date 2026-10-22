@@ -842,15 +842,11 @@ const templates: [string, string, string][] = [
     "I have your message",
     "Dear {name},\n\nThank you for writing. I read every message myself and will reply within a few days.\n\nWith warmth,\nAnastasia",
   ],
-  [
-    "contact_notification",
-    "New message from {name}",
-    "{name} ({email}) wrote about: {topic}\n\n{message}",
-  ],
+  ["contact_notification", "New message from {name}", "{name} ({email}) wrote about: {topic}"],
   [
     "waitlist_confirm",
     "You are on the list",
-    "Thank you. I will write to you as soon as places open.",
+    "Dear {firstName},\n\nThank you. I will write to you as soon as places open in {title}.",
   ],
 ];
 out.push(`-- Email templates she can edit in the studio.

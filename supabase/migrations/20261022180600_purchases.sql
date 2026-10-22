@@ -25,3 +25,6 @@ alter table public.email_templates
     'newsletter_confirm', 'ebook_link', 'order_receipt', 'donation_thanks', 'contact_autoreply',
     'contact_notification', 'waitlist_confirm', 'order_notification'
   ));
+insert into public.email_templates (key, subject, body) values
+  ('order_notification', 'New order {orderNumber} to post', '{name} ({email}) placed order {orderNumber}. It includes something to post.')
+on conflict (key) do nothing;

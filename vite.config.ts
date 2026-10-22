@@ -6,6 +6,8 @@ import tsConfigPaths from "vite-tsconfig-paths";
 import { nitro } from "nitro/vite";
 import { clientChunkGraph } from "./scripts/vite/client-chunk-graph";
 
+const fromRoot = (path: string) => new URL(path, import.meta.url).pathname;
+
 /**
  * TanStack Start + Nitro + Tailwind.
  * Ship builds target Cloudflare Workers (NITRO_PRESET=cloudflare-module, see wrangler.jsonc).
@@ -22,7 +24,7 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        "@": new URL("./src", import.meta.url).pathname,
+        "@": fromRoot("./src"),
       },
       dedupe: ["react", "react-dom", "@tanstack/react-query", "@tanstack/react-router"],
     },
@@ -34,6 +36,16 @@ export default defineConfig(({ mode }) => {
       }),
       nitro({
         preset: nitroPreset,
+        // Cron Triggers on Cloudflare: Nitro writes them into the worker config.
+        experimental: { tasks: true },
+        tasks: {
+          "outbox:drain": { handler: fromRoot("./src/server/tasks/outbox-drain.ts") },
+          "purge:expired": { handler: fromRoot("./src/server/tasks/purge-expired.ts") },
+        },
+        scheduledTasks: {
+          "*/5 * * * *": ["outbox:drain"],
+          "17 3 * * *": ["purge:expired"],
+        },
       }),
       viteReact(),
       clientChunkGraph(),
