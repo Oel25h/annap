@@ -7,11 +7,11 @@ import { nitro } from "nitro/vite";
 
 /**
  * TanStack Start + Nitro + Tailwind.
- * Ship builds: NITRO_PRESET=vercel (package.json build:vercel / Vercel).
+ * Ship builds target Cloudflare Workers (NITRO_PRESET=cloudflare-module, see wrangler.jsonc).
  */
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const nitroPreset = process.env.NITRO_PRESET || env.NITRO_PRESET || "vercel";
+  const nitroPreset = process.env.NITRO_PRESET || env.NITRO_PRESET || "cloudflare-module";
 
   return {
     server: {

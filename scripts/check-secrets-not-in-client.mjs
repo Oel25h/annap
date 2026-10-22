@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Fail if client build output (dist/) contains server-only secrets.
- * Run after `bun run build`. Does not print secret values.
+ * Fail if client build output (.output/public/) contains server-only secrets.
+ * Run after `bun run build:cf`. Does not print secret values.
  *
  * Checks:
  *  - Known dangerous substrings in client assets
@@ -11,7 +11,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { join, extname } from "node:path";
 
 const ROOT = process.cwd();
-const DIST = join(ROOT, "dist");
+const DIST = join(ROOT, ".output", "public");
 
 const SCAN_EXTS = new Set([
   ".js",
@@ -35,7 +35,7 @@ const FORBIDDEN_PATTERNS = [
   { id: "service_role_literal", re: /service_role/g },
 ];
 
-/** Env vars that are server-only — their exact values must not appear in dist. */
+/** Env vars that are server-only — their exact values must not appear in client assets. */
 const SERVER_ONLY_ENV = ["SUPABASE_SERVICE_ROLE_KEY", "ADMIN_SETUP_SECRET", "GEMINI_API_KEY"];
 
 async function walk(dir) {
@@ -45,7 +45,7 @@ async function walk(dir) {
     entries = await readdir(dir, { withFileTypes: true });
   } catch (e) {
     if (e && e.code === "ENOENT") {
-      console.error(`[secrets:check] FAIL — missing ${dir}. Run bun run build first.`);
+      console.error(`[secrets:check] FAIL — missing ${dir}. Run bun run build:cf first.`);
       process.exit(2);
     }
     throw e;
@@ -68,7 +68,7 @@ async function main() {
 
   const files = (await walk(DIST)).filter((f) => SCAN_EXTS.has(extname(f).toLowerCase()));
   if (files.length === 0) {
-    console.error("[secrets:check] FAIL — no scannable files under dist/");
+    console.error("[secrets:check] FAIL — no scannable files under .output/public/");
     process.exit(2);
   }
 
@@ -129,7 +129,7 @@ async function main() {
 
   const envChecked = envNeedles.map((e) => e.name).join(", ") || "(none loaded in env)";
   console.log(
-    `[secrets:check] PASS — scanned ${files.length} files under dist/; env value checks: ${envChecked}`,
+    `[secrets:check] PASS — scanned ${files.length} files under .output/public/; env value checks: ${envChecked}`,
   );
 }
 
