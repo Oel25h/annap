@@ -15,9 +15,11 @@
     "build:cf": "NITRO_PRESET=cloudflare-module vite build",
     "preview:cf": "wrangler dev -c .output/server/wrangler.json --env-file ../../.env",
     "test:e2e": "playwright test",
-    "gate": "bun run typecheck && bun run lint && bun run build:cf && bun run secrets:check && bun run test:e2e",
+    "gate": "bun run typecheck && bun run lint && bun run db:check && bun run build:cf && bun run secrets:check && bun run test:e2e",
     "check": "bun run gate",
-    "deploy": "bun run gate && wrangler deploy -c .output/server/wrangler.json"
+    "deploy": "bun run gate && wrangler deploy -c .output/server/wrangler.json",
+    "db:check": "bash scripts/check-db.sh",
+    "db:types": "npx -y supabase@2.121.0 gen types typescript --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres --schema public > src/integrations/supabase/types.ts && prettier --write src/integrations/supabase/types.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

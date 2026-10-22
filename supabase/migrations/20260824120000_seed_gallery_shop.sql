@@ -1,3 +1,4 @@
+-- Edited during the redo: replays never overwrite live rows (was DO UPDATE).
 -- Phase prod-audit: seed gallery sections + images from static brand assets (idempotent).
 -- Images served from /public/gallery/* so URLs work without Storage upload.
 
@@ -7,10 +8,7 @@ INSERT INTO public.gallery_sections (name, slug, sort_order) VALUES
   ('Speaking & Livestreams', 'speaking', 30),
   ('Community & Events', 'community', 40),
   ('Behind the Scenes', 'bts', 50)
-ON CONFLICT (slug) DO UPDATE SET
-  name = EXCLUDED.name,
-  sort_order = EXCLUDED.sort_order,
-  updated_at = now();
+ON CONFLICT (slug) DO NOTHING;
 
 -- Only seed images when table is empty (avoid duplicates on re-run)
 INSERT INTO public.gallery_images (chapter, image_url, caption, sort_order, section_id)
@@ -41,9 +39,4 @@ INSERT INTO public.products (
   'published',
   10
 )
-ON CONFLICT (slug) DO UPDATE SET
-  name = EXCLUDED.name,
-  description = EXCLUDED.description,
-  image_url = COALESCE(public.products.image_url, EXCLUDED.image_url),
-  checkout_url = COALESCE(public.products.checkout_url, EXCLUDED.checkout_url),
-  updated_at = now();
+ON CONFLICT (slug) DO NOTHING;

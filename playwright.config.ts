@@ -1,4 +1,8 @@
+import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+
+// Tests talk to the same local Supabase stack as the server under test.
+if (existsSync(".env")) process.loadEnvFile(".env");
 
 /**
  * End-to-end tests run against the production Cloudflare build served by
@@ -18,9 +22,11 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    { name: "api", testMatch: /\.api\.spec\.ts$/ },
+    { name: "mobile", testIgnore: /\.api\.spec\.ts$/, use: { ...devices["Pixel 7"] } },
     {
       name: "desktop",
+      testIgnore: /\.api\.spec\.ts$/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
   ],

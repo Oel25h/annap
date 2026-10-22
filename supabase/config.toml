@@ -1,1 +1,17 @@
 project_id = "extyqqkasmchctvoltbm"
+[auth]
+site_url = "http://127.0.0.1:8787"
+additional_redirect_urls = ["http://localhost:3000", "http://127.0.0.1:3000"]
+# Signup is closed: the first admin is created with ADMIN_SETUP_SECRET and
+# later admins are invited from the studio.
+enable_signup = false
+
+[auth.email]
+enable_signup = false
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true

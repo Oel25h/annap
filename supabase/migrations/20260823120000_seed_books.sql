@@ -1,3 +1,4 @@
+-- Edited during the redo: replays never overwrite live rows (was DO UPDATE).
 -- Phase 1: seed books from static site.ts shape (idempotent on slug).
 -- Covers live under /public so cover_url works without storage upload.
 -- status CHECK remains published | hidden.
@@ -41,16 +42,7 @@ INSERT INTO public.books (
   'published',
   20
 )
-ON CONFLICT (slug) DO UPDATE SET
-  title = EXCLUDED.title,
-  tagline = EXCLUDED.tagline,
-  who_for = EXCLUDED.who_for,
-  description = EXCLUDED.description,
-  formats = EXCLUDED.formats,
-  cover_url = COALESCE(public.books.cover_url, EXCLUDED.cover_url),
-  status = public.books.status,
-  sort_order = COALESCE(public.books.sort_order, EXCLUDED.sort_order),
-  updated_at = now();
+ON CONFLICT (slug) DO NOTHING;
 
 -- Reviews for FYRTS (only if none yet for that book)
 INSERT INTO public.book_reviews (book_id, by_name, quote, sort_order)
