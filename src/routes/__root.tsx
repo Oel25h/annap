@@ -104,10 +104,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   const lang = useRouterState({ select: (s) => localeFromSearch(s.location.search) });
+  const nonce = useRouter().options.ssr?.nonce;
   return (
     <html lang={lang} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: publicConfigScript(getPublicConfig()) }} />
+        <script
+          nonce={nonce}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: publicConfigScript(getPublicConfig()) }}
+        />
         <HeadContent />
       </head>
       <body>
