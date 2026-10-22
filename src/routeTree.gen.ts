@@ -16,7 +16,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as BooksRouteImport } from './routes/books'
 import { Route as ContactRouteImport } from './routes/contact'
-import { Route as ElRouteImport } from './routes/el'
 import { Route as FoundationRouteImport } from './routes/foundation'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as MasterclassesRouteImport } from './routes/masterclasses'
@@ -29,16 +28,6 @@ import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as BooksIndexRouteImport } from './routes/books.index'
 import { Route as BooksFindYourReasonToSmileRouteImport } from './routes/books.find-your-reason-to-smile'
-import { Route as ElIndexRouteImport } from './routes/el.index'
-import { Route as ElAboutRouteImport } from './routes/el.about'
-import { Route as ElBlogRouteImport } from './routes/el.blog'
-import { Route as ElBooksRouteImport } from './routes/el.books'
-import { Route as ElContactRouteImport } from './routes/el.contact'
-import { Route as ElFoundationRouteImport } from './routes/el.foundation'
-import { Route as ElGalleryRouteImport } from './routes/el.gallery'
-import { Route as ElMasterclassesRouteImport } from './routes/el.masterclasses'
-import { Route as ElShopRouteImport } from './routes/el.shop'
-import { Route as ElStartRouteImport } from './routes/el.start'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminBlogRouteImport } from './routes/_authenticated/admin.blog'
 import { Route as AuthenticatedAdminBooksRouteImport } from './routes/_authenticated/admin.books'
@@ -53,10 +42,6 @@ import { Route as AuthenticatedAdminSocialsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminStartRouteImport } from './routes/_authenticated/admin.start'
 import { Route as AuthenticatedAdminSubscribersRouteImport } from './routes/_authenticated/admin.subscribers'
 import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
-import { Route as ElBlogIndexRouteImport } from './routes/el.blog.index'
-import { Route as ElBlogSlugRouteImport } from './routes/el.blog.$slug'
-import { Route as ElBooksIndexRouteImport } from './routes/el.books.index'
-import { Route as ElBooksFindYourReasonToSmileRouteImport } from './routes/el.books.find-your-reason-to-smile'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -90,11 +75,6 @@ const BooksRoute = BooksRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ElRoute = ElRouteImport.update({
-  id: '/el',
-  path: '/el',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FoundationRoute = FoundationRouteImport.update({
@@ -158,56 +138,6 @@ const BooksFindYourReasonToSmileRoute =
     path: '/find-your-reason-to-smile',
     getParentRoute: () => BooksRoute,
   } as any)
-const ElIndexRoute = ElIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ElRoute,
-} as any)
-const ElAboutRoute = ElAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => ElRoute,
-} as any)
-const ElBlogRoute = ElBlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => ElRoute,
-} as any)
-const ElBooksRoute = ElBooksRouteImport.update({
-  id: '/books',
-  path: '/books',
-  getParentRoute: () => ElRoute,
-} as any)
-const ElContactRoute = ElContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => ElRoute,
-} as any)
-const ElFoundationRoute = ElFoundationRouteImport.update({
-  id: '/foundation',
-  path: '/foundation',
-  getParentRoute: () => ElRoute,
-} as any)
-const ElGalleryRoute = ElGalleryRouteImport.update({
-  id: '/gallery',
-  path: '/gallery',
-  getParentRoute: () => ElRoute,
-} as any)
-const ElMasterclassesRoute = ElMasterclassesRouteImport.update({
-  id: '/masterclasses',
-  path: '/masterclasses',
-  getParentRoute: () => ElRoute,
-} as any)
-const ElShopRoute = ElShopRouteImport.update({
-  id: '/shop',
-  path: '/shop',
-  getParentRoute: () => ElRoute,
-} as any)
-const ElStartRoute = ElStartRouteImport.update({
-  id: '/start',
-  path: '/start',
-  getParentRoute: () => ElRoute,
-} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -286,27 +216,6 @@ const ApiPublicUnsubscribeRoute = ApiPublicUnsubscribeRouteImport.update({
   path: '/api/public/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ElBlogIndexRoute = ElBlogIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ElBlogRoute,
-} as any)
-const ElBlogSlugRoute = ElBlogSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => ElBlogRoute,
-} as any)
-const ElBooksIndexRoute = ElBooksIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ElBooksRoute,
-} as any)
-const ElBooksFindYourReasonToSmileRoute =
-  ElBooksFindYourReasonToSmileRouteImport.update({
-    id: '/find-your-reason-to-smile',
-    path: '/find-your-reason-to-smile',
-    getParentRoute: () => ElBooksRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -315,7 +224,6 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRouteWithChildren
   '/books': typeof BooksRouteWithChildren
   '/contact': typeof ContactRoute
-  '/el': typeof ElRouteWithChildren
   '/foundation': typeof FoundationRoute
   '/gallery': typeof GalleryRoute
   '/masterclasses': typeof MasterclassesRoute
@@ -326,18 +234,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/books/find-your-reason-to-smile': typeof BooksFindYourReasonToSmileRoute
-  '/el/about': typeof ElAboutRoute
-  '/el/blog': typeof ElBlogRouteWithChildren
-  '/el/books': typeof ElBooksRouteWithChildren
-  '/el/contact': typeof ElContactRoute
-  '/el/foundation': typeof ElFoundationRoute
-  '/el/gallery': typeof ElGalleryRoute
-  '/el/masterclasses': typeof ElMasterclassesRoute
-  '/el/shop': typeof ElShopRoute
-  '/el/start': typeof ElStartRoute
   '/blog/': typeof BlogIndexRoute
   '/books/': typeof BooksIndexRoute
-  '/el/': typeof ElIndexRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -351,11 +249,7 @@ export interface FileRoutesByFullPath {
   '/admin/start': typeof AuthenticatedAdminStartRoute
   '/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
-  '/el/blog/$slug': typeof ElBlogSlugRoute
-  '/el/books/find-your-reason-to-smile': typeof ElBooksFindYourReasonToSmileRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
-  '/el/blog/': typeof ElBlogIndexRoute
-  '/el/books/': typeof ElBooksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -371,16 +265,8 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/books/find-your-reason-to-smile': typeof BooksFindYourReasonToSmileRoute
-  '/el/about': typeof ElAboutRoute
-  '/el/contact': typeof ElContactRoute
-  '/el/foundation': typeof ElFoundationRoute
-  '/el/gallery': typeof ElGalleryRoute
-  '/el/masterclasses': typeof ElMasterclassesRoute
-  '/el/shop': typeof ElShopRoute
-  '/el/start': typeof ElStartRoute
   '/blog': typeof BlogIndexRoute
   '/books': typeof BooksIndexRoute
-  '/el': typeof ElIndexRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -394,11 +280,7 @@ export interface FileRoutesByTo {
   '/admin/start': typeof AuthenticatedAdminStartRoute
   '/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
-  '/el/blog/$slug': typeof ElBlogSlugRoute
-  '/el/books/find-your-reason-to-smile': typeof ElBooksFindYourReasonToSmileRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
-  '/el/blog': typeof ElBlogIndexRoute
-  '/el/books': typeof ElBooksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -409,7 +291,6 @@ export interface FileRoutesById {
   '/blog': typeof BlogRouteWithChildren
   '/books': typeof BooksRouteWithChildren
   '/contact': typeof ContactRoute
-  '/el': typeof ElRouteWithChildren
   '/foundation': typeof FoundationRoute
   '/gallery': typeof GalleryRoute
   '/masterclasses': typeof MasterclassesRoute
@@ -420,18 +301,8 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/blog/$slug': typeof BlogSlugRoute
   '/books/find-your-reason-to-smile': typeof BooksFindYourReasonToSmileRoute
-  '/el/about': typeof ElAboutRoute
-  '/el/blog': typeof ElBlogRouteWithChildren
-  '/el/books': typeof ElBooksRouteWithChildren
-  '/el/contact': typeof ElContactRoute
-  '/el/foundation': typeof ElFoundationRoute
-  '/el/gallery': typeof ElGalleryRoute
-  '/el/masterclasses': typeof ElMasterclassesRoute
-  '/el/shop': typeof ElShopRoute
-  '/el/start': typeof ElStartRoute
   '/blog/': typeof BlogIndexRoute
   '/books/': typeof BooksIndexRoute
-  '/el/': typeof ElIndexRoute
   '/_authenticated/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/_authenticated/admin/books': typeof AuthenticatedAdminBooksRoute
   '/_authenticated/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -445,11 +316,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/start': typeof AuthenticatedAdminStartRoute
   '/_authenticated/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
   '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
-  '/el/blog/$slug': typeof ElBlogSlugRoute
-  '/el/books/find-your-reason-to-smile': typeof ElBooksFindYourReasonToSmileRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
-  '/el/blog/': typeof ElBlogIndexRoute
-  '/el/books/': typeof ElBooksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -460,7 +327,6 @@ export interface FileRouteTypes {
     | '/blog'
     | '/books'
     | '/contact'
-    | '/el'
     | '/foundation'
     | '/gallery'
     | '/masterclasses'
@@ -471,18 +337,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/blog/$slug'
     | '/books/find-your-reason-to-smile'
-    | '/el/about'
-    | '/el/blog'
-    | '/el/books'
-    | '/el/contact'
-    | '/el/foundation'
-    | '/el/gallery'
-    | '/el/masterclasses'
-    | '/el/shop'
-    | '/el/start'
     | '/blog/'
     | '/books/'
-    | '/el/'
     | '/admin/blog'
     | '/admin/books'
     | '/admin/foundation'
@@ -496,11 +352,7 @@ export interface FileRouteTypes {
     | '/admin/start'
     | '/admin/subscribers'
     | '/api/public/unsubscribe'
-    | '/el/blog/$slug'
-    | '/el/books/find-your-reason-to-smile'
     | '/admin/'
-    | '/el/blog/'
-    | '/el/books/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -516,16 +368,8 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/blog/$slug'
     | '/books/find-your-reason-to-smile'
-    | '/el/about'
-    | '/el/contact'
-    | '/el/foundation'
-    | '/el/gallery'
-    | '/el/masterclasses'
-    | '/el/shop'
-    | '/el/start'
     | '/blog'
     | '/books'
-    | '/el'
     | '/admin/blog'
     | '/admin/books'
     | '/admin/foundation'
@@ -539,11 +383,7 @@ export interface FileRouteTypes {
     | '/admin/start'
     | '/admin/subscribers'
     | '/api/public/unsubscribe'
-    | '/el/blog/$slug'
-    | '/el/books/find-your-reason-to-smile'
     | '/admin'
-    | '/el/blog'
-    | '/el/books'
   id:
     | '__root__'
     | '/'
@@ -553,7 +393,6 @@ export interface FileRouteTypes {
     | '/blog'
     | '/books'
     | '/contact'
-    | '/el'
     | '/foundation'
     | '/gallery'
     | '/masterclasses'
@@ -564,18 +403,8 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/blog/$slug'
     | '/books/find-your-reason-to-smile'
-    | '/el/about'
-    | '/el/blog'
-    | '/el/books'
-    | '/el/contact'
-    | '/el/foundation'
-    | '/el/gallery'
-    | '/el/masterclasses'
-    | '/el/shop'
-    | '/el/start'
     | '/blog/'
     | '/books/'
-    | '/el/'
     | '/_authenticated/admin/blog'
     | '/_authenticated/admin/books'
     | '/_authenticated/admin/foundation'
@@ -589,11 +418,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/start'
     | '/_authenticated/admin/subscribers'
     | '/api/public/unsubscribe'
-    | '/el/blog/$slug'
-    | '/el/books/find-your-reason-to-smile'
     | '/_authenticated/admin/'
-    | '/el/blog/'
-    | '/el/books/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -604,7 +429,6 @@ export interface RootRouteChildren {
   BlogRoute: typeof BlogRouteWithChildren
   BooksRoute: typeof BooksRouteWithChildren
   ContactRoute: typeof ContactRoute
-  ElRoute: typeof ElRouteWithChildren
   FoundationRoute: typeof FoundationRoute
   GalleryRoute: typeof GalleryRoute
   MasterclassesRoute: typeof MasterclassesRoute
@@ -664,13 +488,6 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/el': {
-      id: '/el'
-      path: '/el'
-      fullPath: '/el'
-      preLoaderRoute: typeof ElRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/foundation': {
@@ -756,76 +573,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/books/find-your-reason-to-smile'
       preLoaderRoute: typeof BooksFindYourReasonToSmileRouteImport
       parentRoute: typeof BooksRoute
-    }
-    '/el/': {
-      id: '/el/'
-      path: '/'
-      fullPath: '/el/'
-      preLoaderRoute: typeof ElIndexRouteImport
-      parentRoute: typeof ElRoute
-    }
-    '/el/about': {
-      id: '/el/about'
-      path: '/about'
-      fullPath: '/el/about'
-      preLoaderRoute: typeof ElAboutRouteImport
-      parentRoute: typeof ElRoute
-    }
-    '/el/blog': {
-      id: '/el/blog'
-      path: '/blog'
-      fullPath: '/el/blog'
-      preLoaderRoute: typeof ElBlogRouteImport
-      parentRoute: typeof ElRoute
-    }
-    '/el/books': {
-      id: '/el/books'
-      path: '/books'
-      fullPath: '/el/books'
-      preLoaderRoute: typeof ElBooksRouteImport
-      parentRoute: typeof ElRoute
-    }
-    '/el/contact': {
-      id: '/el/contact'
-      path: '/contact'
-      fullPath: '/el/contact'
-      preLoaderRoute: typeof ElContactRouteImport
-      parentRoute: typeof ElRoute
-    }
-    '/el/foundation': {
-      id: '/el/foundation'
-      path: '/foundation'
-      fullPath: '/el/foundation'
-      preLoaderRoute: typeof ElFoundationRouteImport
-      parentRoute: typeof ElRoute
-    }
-    '/el/gallery': {
-      id: '/el/gallery'
-      path: '/gallery'
-      fullPath: '/el/gallery'
-      preLoaderRoute: typeof ElGalleryRouteImport
-      parentRoute: typeof ElRoute
-    }
-    '/el/masterclasses': {
-      id: '/el/masterclasses'
-      path: '/masterclasses'
-      fullPath: '/el/masterclasses'
-      preLoaderRoute: typeof ElMasterclassesRouteImport
-      parentRoute: typeof ElRoute
-    }
-    '/el/shop': {
-      id: '/el/shop'
-      path: '/shop'
-      fullPath: '/el/shop'
-      preLoaderRoute: typeof ElShopRouteImport
-      parentRoute: typeof ElRoute
-    }
-    '/el/start': {
-      id: '/el/start'
-      path: '/start'
-      fullPath: '/el/start'
-      preLoaderRoute: typeof ElStartRouteImport
-      parentRoute: typeof ElRoute
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -925,34 +672,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/el/blog/': {
-      id: '/el/blog/'
-      path: '/'
-      fullPath: '/el/blog/'
-      preLoaderRoute: typeof ElBlogIndexRouteImport
-      parentRoute: typeof ElBlogRoute
-    }
-    '/el/blog/$slug': {
-      id: '/el/blog/$slug'
-      path: '/$slug'
-      fullPath: '/el/blog/$slug'
-      preLoaderRoute: typeof ElBlogSlugRouteImport
-      parentRoute: typeof ElBlogRoute
-    }
-    '/el/books/': {
-      id: '/el/books/'
-      path: '/'
-      fullPath: '/el/books/'
-      preLoaderRoute: typeof ElBooksIndexRouteImport
-      parentRoute: typeof ElBooksRoute
-    }
-    '/el/books/find-your-reason-to-smile': {
-      id: '/el/books/find-your-reason-to-smile'
-      path: '/find-your-reason-to-smile'
-      fullPath: '/el/books/find-your-reason-to-smile'
-      preLoaderRoute: typeof ElBooksFindYourReasonToSmileRouteImport
-      parentRoute: typeof ElBooksRoute
-    }
   }
 }
 
@@ -1026,60 +745,6 @@ const BooksRouteChildren: BooksRouteChildren = {
 
 const BooksRouteWithChildren = BooksRoute._addFileChildren(BooksRouteChildren)
 
-interface ElBlogRouteChildren {
-  ElBlogSlugRoute: typeof ElBlogSlugRoute
-  ElBlogIndexRoute: typeof ElBlogIndexRoute
-}
-
-const ElBlogRouteChildren: ElBlogRouteChildren = {
-  ElBlogSlugRoute: ElBlogSlugRoute,
-  ElBlogIndexRoute: ElBlogIndexRoute,
-}
-
-const ElBlogRouteWithChildren =
-  ElBlogRoute._addFileChildren(ElBlogRouteChildren)
-
-interface ElBooksRouteChildren {
-  ElBooksFindYourReasonToSmileRoute: typeof ElBooksFindYourReasonToSmileRoute
-  ElBooksIndexRoute: typeof ElBooksIndexRoute
-}
-
-const ElBooksRouteChildren: ElBooksRouteChildren = {
-  ElBooksFindYourReasonToSmileRoute: ElBooksFindYourReasonToSmileRoute,
-  ElBooksIndexRoute: ElBooksIndexRoute,
-}
-
-const ElBooksRouteWithChildren =
-  ElBooksRoute._addFileChildren(ElBooksRouteChildren)
-
-interface ElRouteChildren {
-  ElAboutRoute: typeof ElAboutRoute
-  ElBlogRoute: typeof ElBlogRouteWithChildren
-  ElBooksRoute: typeof ElBooksRouteWithChildren
-  ElContactRoute: typeof ElContactRoute
-  ElFoundationRoute: typeof ElFoundationRoute
-  ElGalleryRoute: typeof ElGalleryRoute
-  ElMasterclassesRoute: typeof ElMasterclassesRoute
-  ElShopRoute: typeof ElShopRoute
-  ElStartRoute: typeof ElStartRoute
-  ElIndexRoute: typeof ElIndexRoute
-}
-
-const ElRouteChildren: ElRouteChildren = {
-  ElAboutRoute: ElAboutRoute,
-  ElBlogRoute: ElBlogRouteWithChildren,
-  ElBooksRoute: ElBooksRouteWithChildren,
-  ElContactRoute: ElContactRoute,
-  ElFoundationRoute: ElFoundationRoute,
-  ElGalleryRoute: ElGalleryRoute,
-  ElMasterclassesRoute: ElMasterclassesRoute,
-  ElShopRoute: ElShopRoute,
-  ElStartRoute: ElStartRoute,
-  ElIndexRoute: ElIndexRoute,
-}
-
-const ElRouteWithChildren = ElRoute._addFileChildren(ElRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1088,7 +753,6 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRouteWithChildren,
   BooksRoute: BooksRouteWithChildren,
   ContactRoute: ContactRoute,
-  ElRoute: ElRouteWithChildren,
   FoundationRoute: FoundationRoute,
   GalleryRoute: GalleryRoute,
   MasterclassesRoute: MasterclassesRoute,

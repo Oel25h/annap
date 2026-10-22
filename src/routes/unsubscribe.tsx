@@ -1,11 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/unsubscribe")({
   component: Unsubscribe,
-  head: () => ({
-    meta: [{ title: "Unsubscribe" }, { name: "robots", content: "noindex" }],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({
+      locale,
+      path: "/unsubscribe",
+      ...getMessages(locale).seo.unsubscribe,
+      noindex: true,
+    });
+  },
   validateSearch: (s: Record<string, unknown>) => ({
     token: typeof s.token === "string" ? s.token : "",
   }),

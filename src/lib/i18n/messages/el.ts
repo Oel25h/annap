@@ -396,4 +396,66 @@ export const el: Messages = {
     moreStories: "Περισσότερες ιστορίες",
     filterAll: "Όλα",
   },
+  seo: {
+    siteName: "Anastasia Patience",
+    home: {
+      title: "Anastasia Patience — Βρες τον λόγο σου να χαμογελάς",
+      description:
+        "Συγγραφέας, αφηγήτρια, επιχειρηματίας. Ιδρύτρια της Patience Media House. Κάνε τον πόνο σκοπό, τις ιδέες προϊόντα και τη γνώση ευκαιρίες.",
+    },
+    about: {
+      title: "Σχετικά — Anastasia Patience",
+      description:
+        "Από τη Γκάνα στην Κύπρο, μέσα από την απώλεια, την πίστη και τη μητρότητα: πώς η Αναστασία έγινε συγγραφέας, επιχειρηματίας και ιδρύτρια της Patience Media House.",
+    },
+    books: {
+      title: "Βιβλία — Anastasia Patience",
+      description:
+        "Βιβλία που σε συντροφεύουν: απομνημονεύματα, βιβλίο εργασίας και τρυφερή σοφία από την Anastasia Patience.",
+    },
+    fyrts: {
+      title: "Find Your Reason to Smile — Anastasia Patience",
+      description:
+        "Ένα ταξίδι πίστης, απώλειας, ανθεκτικότητας και ελπίδας. Τα απομνημονεύματα της Anastasia Patience για την πίστη, την απώλεια και την ελπίδα που ξαναβρίσκεται.",
+    },
+    blog: {
+      title: "Ιστολόγιο — Anastasia Patience",
+      description:
+        "Επιστολές για πίστη, σκοπό, γυναίκες στην επιχειρηματικότητα, ψηφιακές δεξιότητες και μια ζωή που ξαναχτίζεται μετά την απώλεια.",
+    },
+    contact: {
+      title: "Επικοινωνία — Anastasia Patience",
+      description:
+        "Για προσκλήσεις ομιλίας, αιτήματα από τα μέσα ενημέρωσης, συνεργασίες ή ένα ζεστό γεια.",
+    },
+    gallery: {
+      title: "Γκαλερί — Anastasia Patience",
+      description:
+        "Μια γκαλερί ιστοριών: Γκάνα, Κύπρος, οικογένεια, ομιλίες, κοινότητα και παρασκήνια.",
+    },
+    masterclasses: {
+      title: "Masterclasses — Anastasia Patience",
+      description:
+        "Κάνε τη γνώση και τις ιδέες σου ψηφιακά προϊόντα και δεξιότητες που φέρνουν εισόδημα.",
+    },
+    shop: {
+      title: "Κατάστημα — Anastasia Patience",
+      description:
+        "Ψηφιακά προϊόντα, πρότυπα, μαθήματα και masterclasses από την Patience Media House.",
+    },
+    start: {
+      title: "Ξεκίνα εδώ — Anastasia Patience",
+      description:
+        "Όλα σε ένα μέρος: δωρεάν οδηγός, κοινότητα, masterclass, βιβλία, προσευχή, στοχασμοί και άλλα.",
+    },
+    foundation: {
+      title: "Ίδρυμα Patience Humanitarian",
+      description:
+        "Όπου κανείς δεν μένει πίσω. Τρόφιμα, φροντίδα, κοινοτική υποστήριξη και φροντίδα για ζώα υπό διάσωση.",
+    },
+    unsubscribe: {
+      title: "Διαγραφή — Anastasia Patience",
+      description: "Διαχειρίσου τις επιστολές σου από την Anastasia Patience.",
+    },
+  },
 };

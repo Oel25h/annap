@@ -19,3 +19,12 @@ is `src/routes/__root.tsx`.
 | `__root.tsx`             | app shell — wraps every page; preserve `<Outlet />`     |
 
 `routeTree.gen.ts` is auto-generated. Don't edit it by hand.
+
+## Languages
+
+There are no Greek route files. `src/lib/i18n/rewrite.ts` strips the `/el`
+prefix on the way in (it becomes the `lang=el` search param, retained on every
+link) and adds it back on the way out. Read the language with `useLocale()` in
+components, `localeFromSearch(match.search)` in `head`, and
+`loaderDeps: ({ search }) => ({ locale: localeFromSearch(search) })` in loaders.
+Use `seoHead()` from `src/lib/seo.ts` for every page's head.

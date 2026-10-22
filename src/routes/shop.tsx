@@ -6,29 +6,15 @@ import { EmailCapture } from "@/components/EmailCapture";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocale, useT } from "@/lib/i18n/context";
 import { getApprovedTranslation, mergeTranslation } from "@/lib/i18n/translations";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/shop")({
-  head: () => ({
-    meta: [
-      { title: "Shop — Anastasia Patience" },
-      {
-        name: "description",
-        content:
-          "Digital products, templates, courses, and masterclasses from Patience Media House.",
-      },
-      { property: "og:title", content: "Shop — Anastasia Patience" },
-      {
-        property: "og:description",
-        content: "Digital products and courses from Patience Media House.",
-      },
-    ],
-    links: [
-      { rel: "canonical", href: "/shop" },
-      { rel: "alternate", hrefLang: "en", href: "/shop" },
-      { rel: "alternate", hrefLang: "el", href: "/el/shop" },
-      { rel: "alternate", hrefLang: "x-default", href: "/shop" },
-    ],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({ locale, path: "/shop", ...getMessages(locale).seo.shop });
+  },
   component: Shop,
 });
 

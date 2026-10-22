@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   createRootRouteWithContext,
+  retainSearchParams,
   useRouter,
   useRouterState,
   HeadContent,
@@ -11,13 +12,10 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportClientError } from "../lib/error-reporting";
-import { absoluteUrl } from "../lib/site-url";
 import { getPublicConfig, publicConfigScript } from "../lib/public-config";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
-import { LocaleProvider, useT } from "../lib/i18n/context";
-import { LocaleDetect } from "../components/LocaleDetect";
-import { getLocaleFromPath } from "../lib/i18n/locale";
+import { LocaleProvider, localeFromSearch, useT } from "../lib/i18n/context";
 import { LocaleLink } from "../components/LocaleLink";
 
 function NotFoundComponent() {
@@ -78,38 +76,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  // `lang` is set by the locale rewrite (src/lib/i18n/rewrite.ts) and retained on every link.
+  validateSearch: (search: Record<string, unknown>): { lang?: "el" } =>
+    search.lang === "el" ? { lang: "el" } : {},
+  search: { middlewares: [retainSearchParams(["lang"])] },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Anastasia Patience — Find Your Reason to Smile" },
-      {
-        name: "description",
-        content:
-          "Author, storyteller, entrepreneur. Founder of Patience Media House. Turn your pain into purpose, your ideas into products, your knowledge into opportunities.",
-      },
       { name: "author", content: "Anastasia Patience" },
       { property: "og:site_name", content: "Anastasia Patience" },
-      { property: "og:type", content: "website" },
-      { property: "og:title", content: "Anastasia Patience — Find Your Reason to Smile" },
-      {
-        property: "og:description",
-        content:
-          "Author, storyteller, entrepreneur. Founder of Patience Media House. Turn your pain into purpose, your ideas into products, your knowledge into opportunities.",
-      },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Anastasia Patience — Find Your Reason to Smile" },
-      {
-        name: "twitter:description",
-        content:
-          "Author, storyteller, entrepreneur. Founder of Patience Media House. Turn your pain into purpose, your ideas into products, your knowledge into opportunities.",
-      },
-      { property: "og:url", content: absoluteUrl("/") },
-      { property: "og:image", content: absoluteUrl("/og.jpg") },
-      { name: "twitter:image", content: absoluteUrl("/og.jpg") },
     ],
     links: [
-      { rel: "canonical", href: absoluteUrl("/") },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" },
@@ -125,8 +103,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const lang = useRouterState({ select: (s) => localeFromSearch(s.location.search) });
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={lang} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: publicConfigScript(getPublicConfig()) }} />
         <HeadContent />
@@ -139,28 +118,14 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-function HtmlLang() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  useEffect(() => {
-    document.documentElement.lang = getLocaleFromPath(pathname);
-  }, [pathname]);
-  return null;
-}
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   // Hide public site chrome on /start (link-in-bio), /admin (dashboard), and /auth.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const bare =
-    pathname === "/start" ||
-    pathname === "/el/start" ||
-    pathname === "/auth" ||
-    pathname.startsWith("/admin");
+  const bare = pathname === "/start" || pathname === "/auth" || pathname.startsWith("/admin");
   return (
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
-        <HtmlLang />
-        <LocaleDetect />
         {!bare && <SiteHeader />}
         <Outlet />
         {!bare && <SiteFooter />}

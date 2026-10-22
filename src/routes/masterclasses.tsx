@@ -8,18 +8,15 @@ import { EmailCapture } from "@/components/EmailCapture";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocale, useT } from "@/lib/i18n/context";
 import { getApprovedTranslation, mergeTranslation } from "@/lib/i18n/translations";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/masterclasses")({
-  head: () => ({
-    meta: [
-      { title: "Masterclasses — Anastasia Patience" },
-      {
-        name: "description",
-        content: "Turn your knowledge and ideas into digital products and income skills.",
-      },
-    ],
-    links: [{ rel: "canonical", href: "/masterclasses" }],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({ locale, path: "/masterclasses", ...getMessages(locale).seo.masterclasses });
+  },
   component: Master,
 });
 

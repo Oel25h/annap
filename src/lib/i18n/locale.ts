@@ -8,33 +8,11 @@ export function isLocale(value: string | undefined | null): value is Locale {
   return value === "en" || value === "el";
 }
 
-/** Pathname → locale (English is unprefixed). */
-export function getLocaleFromPath(pathname: string): Locale {
-  if (pathname === "/el" || pathname.startsWith("/el/")) return "el";
-  return "en";
-}
-
-/** Strip `/el` prefix for the underlying English path. */
-export function stripLocale(pathname: string): string {
-  if (pathname === "/el") return "/";
-  if (pathname.startsWith("/el/")) {
-    const rest = pathname.slice(3);
-    return rest.startsWith("/") ? rest : `/${rest}`;
-  }
-  return pathname;
-}
-
-/** Prefix a site-relative path for the given locale. */
+/** Public path for a locale (English is unprefixed). Pass an English path such as `/about`. */
 export function localizePath(path: string, locale: Locale): string {
-  const bare = stripLocale(path.startsWith("/") ? path : `/${path}`);
-  if (locale === "en") return bare === "" ? "/" : bare;
-  if (bare === "/") return "/el";
-  return `/el${bare}`;
-}
-
-/** Switch current pathname to another locale, preserving path + search. */
-export function switchLocalePath(pathname: string, next: Locale, search = ""): string {
-  return `${localizePath(pathname, next)}${search}`;
+  const bare = path.startsWith("/") ? path : `/${path}`;
+  if (locale === "en") return bare;
+  return bare === "/" ? "/el" : `/el${bare}`;
 }
 
 export function readLocaleCookie(): Locale | null {

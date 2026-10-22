@@ -1,10 +1,12 @@
-import { useRouterState } from "@tanstack/react-router";
-import type { ReactNode, MouseEventHandler } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import type { MouseEventHandler, ReactNode } from "react";
 import { useLocale } from "@/lib/i18n/context";
-import { localizePath, stripLocale, type Locale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/locale";
 
 type Props = {
+  /** An English, site-relative path such as `/about` or `/blog?category=faith#latest`, or an external URL. */
   to: string;
+  /** Link into the other language. Defaults to the current one. */
   locale?: Locale;
   children: ReactNode;
   className?: string;
@@ -15,7 +17,12 @@ type Props = {
   role?: string;
 };
 
-/** Locale-aware anchor. Pass English paths (`/about`); prefixes `/el` when needed. */
+const EXTERNAL = /^(https?:|mailto:|tel:)/i;
+
+/**
+ * Locale-aware client-side link with intent preloading. Paths may come from the
+ * CMS at runtime, so `to` is a plain string rather than a typed route.
+ */
 export function LocaleLink({
   to,
   locale: localeOverride,
@@ -28,24 +35,39 @@ export function LocaleLink({
 }: Props) {
   const ctxLocale = useLocale();
   const locale = localeOverride ?? ctxLocale;
-  const href = localizePath(to, locale);
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const currentBare = stripLocale(pathname);
-  const targetBare = stripLocale(to);
+  const currentPath = useRouterState({ select: (s) => s.location.pathname });
+
+  if (EXTERNAL.test(to)) {
+    return (
+      <a href={to} onClick={onClick} className={className} {...rest}>
+        {children}
+      </a>
+    );
+  }
+
+  const url = new URL(to, "http://local");
+  const target = url.pathname;
   const active = exact
-    ? currentBare === targetBare
-    : targetBare === "/"
-      ? currentBare === "/"
-      : currentBare === targetBare || currentBare.startsWith(`${targetBare}/`);
+    ? currentPath === target
+    : target === "/"
+      ? currentPath === "/"
+      : currentPath === target || currentPath.startsWith(`${target}/`);
+  const search = {
+    ...Object.fromEntries(url.searchParams),
+    lang: locale === "el" ? "el" : undefined,
+  };
 
   return (
-    <a
-      href={href}
+    <Link
+      to={target as "/"}
+      search={search as never}
+      hash={url.hash ? url.hash.slice(1) : undefined}
       onClick={onClick}
       className={`${className}${active && activeClassName ? ` ${activeClassName}` : ""}`}
+      aria-current={active ? "page" : undefined}
       {...rest}
     >
       {children}
-    </a>
+    </Link>
   );
 }

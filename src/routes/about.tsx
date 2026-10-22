@@ -12,32 +12,15 @@ import { sanitizeHtml } from "@/lib/sanitize-html";
 import { useLocale, useT } from "@/lib/i18n/context";
 import { resolveMediaUrl } from "@/lib/media";
 import bookDesk from "@/assets/anastasia-book-desk.jpg";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({
-    meta: [
-      { title: "About — Anastasia Patience" },
-      {
-        name: "description",
-        content:
-          "From Ghana to Cyprus, through loss, faith, and motherhood — how Anastasia became an author, entrepreneur, and founder of Patience Media House.",
-      },
-      { property: "og:title", content: "About — Anastasia Patience" },
-      {
-        property: "og:description",
-        content: "The full story: Ghana roots, migration, loss, faith, and a miracle son.",
-      },
-      { property: "og:url", content: "/about" },
-      { property: "og:locale", content: "en_US" },
-      { property: "og:locale:alternate", content: "el_GR" },
-    ],
-    links: [
-      { rel: "canonical", href: "/about" },
-      { rel: "alternate", hrefLang: "en", href: "/about" },
-      { rel: "alternate", hrefLang: "el", href: "/el/about" },
-      { rel: "alternate", hrefLang: "x-default", href: "/about" },
-    ],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({ locale, path: "/about", ...getMessages(locale).seo.about });
+  },
   component: About,
 });
 

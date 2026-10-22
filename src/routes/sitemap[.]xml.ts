@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { siteUrl } from "@/lib/site-url";
 import { localizePath } from "@/lib/i18n/locale";
 
+const BOOK_DETAIL_SLUGS = new Set(["find-your-reason-to-smile"]);
+
 function escapeXml(s: string) {
   return s
     .replace(/&/g, "&amp;")
@@ -29,39 +31,59 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/start",
         ];
 
-        const [{ data: posts }, { data: books }] = await Promise.all([
-          supabase.from("blog_posts").select("slug, publish_date").eq("status", "published"),
+        const [{ data: posts }, { data: books }, { data: greekPosts }] = await Promise.all([
+          supabase.from("blog_posts").select("id, slug, publish_date").eq("status", "published"),
           supabase.from("books").select("slug, updated_at").eq("status", "published"),
+          supabase
+            .from("content_translations")
+            .select("entity_id")
+            .eq("entity_type", "blog_post")
+            .eq("locale", "el")
+            .eq("status", "approved"),
         ]);
+        const greekPostIds = new Set((greekPosts ?? []).map((r) => r.entity_id));
 
-        const urls: Array<{ loc: string; lastmod?: string }> = [];
-
-        for (const p of staticPaths) {
-          urls.push({ loc: `${base}${p === "/" ? "" : p}` });
-          urls.push({ loc: `${base}${localizePath(p, "el")}` });
-        }
-
+        type Entry = { path: string; greek: boolean; lastmod?: string };
+        const entries: Entry[] = staticPaths.map((path) => ({ path, greek: true }));
         for (const p of posts ?? []) {
-          urls.push({ loc: `${base}/blog/${p.slug}`, lastmod: p.publish_date || undefined });
-          urls.push({
-            loc: `${base}/el/blog/${p.slug}`,
+          entries.push({
+            path: `/blog/${p.slug}`,
+            greek: greekPostIds.has(p.id),
             lastmod: p.publish_date || undefined,
           });
         }
+        // Only books with a detail page are listed (the catalogue page covers the rest).
         for (const b of books ?? []) {
-          urls.push({ loc: `${base}/books/${b.slug}`, lastmod: b.updated_at || undefined });
-          urls.push({
-            loc: `${base}/el/books/${b.slug}`,
+          if (!BOOK_DETAIL_SLUGS.has(b.slug)) continue;
+          entries.push({
+            path: `/books/${b.slug}`,
+            greek: true,
             lastmod: b.updated_at || undefined,
           });
         }
 
+        const abs = (path: string) => `${base}${path}`;
+        const urls: Array<{ loc: string; lastmod?: string; alternates: string }> = [];
+        for (const e of entries) {
+          const en = abs(e.path);
+          const el = abs(localizePath(e.path, "el"));
+          const alternates = e.greek
+            ? [
+                `    <xhtml:link rel="alternate" hreflang="en" href="${escapeXml(en)}"/>`,
+                `    <xhtml:link rel="alternate" hreflang="el" href="${escapeXml(el)}"/>`,
+                `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(en)}"/>`,
+              ].join("\n")
+            : "";
+          urls.push({ loc: en, lastmod: e.lastmod, alternates });
+          if (e.greek) urls.push({ loc: el, lastmod: e.lastmod, alternates });
+        }
+
         const body = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${urls
   .map(
     (u) => `  <url>
-    <loc>${escapeXml(u.loc)}</loc>${u.lastmod ? `\n    <lastmod>${escapeXml(u.lastmod.slice(0, 10))}</lastmod>` : ""}
+    <loc>${escapeXml(u.loc)}</loc>${u.lastmod ? `\n    <lastmod>${escapeXml(u.lastmod.slice(0, 10))}</lastmod>` : ""}${u.alternates ? `\n${u.alternates}` : ""}
   </url>`,
   )
   .join("\n")}

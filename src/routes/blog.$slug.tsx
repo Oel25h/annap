@@ -5,8 +5,8 @@ import { LocaleLink } from "@/components/LocaleLink";
 import { supabase } from "@/integrations/supabase/client";
 import { sanitizeHtml } from "@/lib/sanitize-html";
 import { absoluteUrl } from "@/lib/site-url";
-import { useT } from "@/lib/i18n/context";
-import { useLocale } from "@/lib/i18n/context";
+import { localeFromSearch, useLocale, useT } from "@/lib/i18n/context";
+import { seoHead } from "@/lib/seo";
 import { labelBlogCategory } from "@/lib/i18n/blog-categories";
 import { getMessages } from "@/lib/i18n/messages";
 import { getApprovedTranslation, mergeTranslation } from "@/lib/i18n/translations";
@@ -69,42 +69,24 @@ export async function loadPost(slug: string, locale: "en" | "el" = "en"): Promis
 }
 
 export const Route = createFileRoute("/blog/$slug")({
-  loader: async ({ params }) => {
-    const post = await loadPost(params.slug, "en");
+  loaderDeps: ({ search }) => ({ locale: localeFromSearch(search) }),
+  loader: async ({ params, deps }) => {
+    const post = await loadPost(params.slug, deps.locale);
     if (!post) throw notFound();
     return { post };
   },
-  head: ({ loaderData, params }) => {
+  head: ({ loaderData, params, match }) => {
+    const locale = localeFromSearch(match.search);
     const post = loaderData?.post;
-    const title = post ? `${post.title} — Anastasia Patience` : "Article — Anastasia Patience";
-    const description =
-      post?.excerpt?.trim() ||
-      "Letters on faith, purpose, and building a life you love — from Anastasia Patience.";
-    const image = post?.cover_url?.trim() || absoluteUrl("/og.jpg");
-    const url = `/blog/${params.slug}`;
-    return {
-      meta: [
-        { title },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-        { property: "og:url", content: url },
-        { property: "og:type", content: "article" },
-        { property: "og:locale", content: "en_US" },
-        { property: "og:locale:alternate", content: "el_GR" },
-        { property: "og:image", content: image },
-        { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:title", content: title },
-        { name: "twitter:description", content: description },
-        { name: "twitter:image", content: image },
-      ],
-      links: [
-        { rel: "canonical", href: url },
-        { rel: "alternate", hrefLang: "en", href: url },
-        { rel: "alternate", hrefLang: "el", href: `/el/blog/${params.slug}` },
-        { rel: "alternate", hrefLang: "x-default", href: url },
-      ],
-    };
+    const t = getMessages(locale);
+    return seoHead({
+      locale,
+      path: `/blog/${params.slug}`,
+      title: post ? `${post.title} — ${t.seo.siteName}` : t.seo.blog.title,
+      description: post?.excerpt?.trim() || t.seo.blog.description,
+      image: post?.cover_url?.trim() || undefined,
+      type: "article",
+    });
   },
   component: PostPage,
 });

@@ -16,26 +16,15 @@ import { useLocale, useT } from "@/lib/i18n/context";
 import { labelBlogCategory } from "@/lib/i18n/blog-categories";
 import { getApprovedTranslation, mergeTranslation } from "@/lib/i18n/translations";
 import { resolveMediaUrl } from "@/lib/media";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Anastasia Patience — Find Your Reason to Smile" },
-      {
-        name: "description",
-        content:
-          "Author, storyteller, entrepreneur. Founder of Patience Media House. Turn your pain into purpose, your ideas into products, your knowledge into opportunities.",
-      },
-      { property: "og:title", content: "Anastasia Patience — Find Your Reason to Smile" },
-      {
-        property: "og:description",
-        content:
-          "Author, storyteller, entrepreneur. Founder of Patience Media House. Turn your pain into purpose, your ideas into products, your knowledge into opportunities.",
-      },
-      { property: "og:url", content: "/" },
-    ],
-    links: [{ rel: "canonical", href: "/" }],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({ locale, path: "/", ...getMessages(locale).seo.home });
+  },
   component: Home,
 });
 

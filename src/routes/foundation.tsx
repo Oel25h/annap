@@ -1,11 +1,13 @@
-import { createFileRoute, useLoaderData } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, MapPin, Heart } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { Eyebrow } from "@/components/Eyebrow";
 import { EmailCapture } from "@/components/EmailCapture";
 import { supabase } from "@/integrations/supabase/client";
-import { useLocale, useT } from "@/lib/i18n/context";
+import { localeFromSearch, useLocale, useT } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 import { getApprovedTranslation, mergeTranslation } from "@/lib/i18n/translations";
 import { resolveMediaUrl } from "@/lib/media";
 import { LocaleLink } from "@/components/LocaleLink";
@@ -42,7 +44,7 @@ type Story = {
 
 type Cat = { id: string; name: string; slug: string; sort_order: number };
 
-export async function loadFoundation() {
+async function loadFoundation() {
   const [{ data: settings }, { data: stories }, { data: cats }] = await Promise.all([
     supabase
       .from("foundation_settings" as never)
@@ -71,35 +73,17 @@ export async function loadFoundation() {
 
 export const Route = createFileRoute("/foundation")({
   loader: async () => loadFoundation(),
-  head: ({ loaderData }) => {
+  head: ({ loaderData, match }) => {
+    const locale = localeFromSearch(match.search);
+    const t = getMessages(locale).seo.foundation;
     const settings = loaderData?.settings;
-    const title = "Patience Humanitarian Foundation";
-    const description =
-      settings?.subheadline?.trim() ||
-      "Where no one feels left behind. Food assistance, compassionate care, community support, and care for rescued animals.";
-    const image =
-      resolveMediaUrl(settings?.hero_image_url) || absoluteUrl("/foundation-hero-mark.jpg");
-    const imageAbs = image.startsWith("http") ? image : absoluteUrl(image);
-    return {
-      meta: [
-        { title },
-        { name: "description", content: description },
-        { property: "og:title", content: title },
-        { property: "og:description", content: description },
-        { property: "og:url", content: absoluteUrl("/foundation") },
-        { property: "og:image", content: imageAbs },
-        { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:title", content: title },
-        { name: "twitter:description", content: description },
-        { name: "twitter:image", content: imageAbs },
-      ],
-      links: [
-        { rel: "canonical", href: absoluteUrl("/foundation") },
-        { rel: "alternate", hrefLang: "en", href: absoluteUrl("/foundation") },
-        { rel: "alternate", hrefLang: "el", href: absoluteUrl("/el/foundation") },
-        { rel: "alternate", hrefLang: "x-default", href: absoluteUrl("/foundation") },
-      ],
-    };
+    return seoHead({
+      locale,
+      path: "/foundation",
+      title: t.title,
+      description: (locale === "en" && settings?.subheadline?.trim()) || t.description,
+      image: resolveMediaUrl(settings?.hero_image_url) || "/foundation-hero-mark.jpg",
+    });
   },
   component: FoundationPage,
 });
@@ -112,9 +96,7 @@ const btnGhost = `${btnBase} border border-plum/20 bg-ivory text-plum hover:bord
 export function FoundationPage() {
   const locale = useLocale();
   const t = useT();
-  // Shared by /foundation and /el/foundation, so read the loader data of whichever route matched.
-  const loaded = useLoaderData({ strict: false }) as
-    Awaited<ReturnType<typeof loadFoundation>> | undefined;
+  const loaded = Route.useLoaderData();
   const [settings, setSettings] = useState<Settings | null>(loaded?.settings ?? null);
   const [settingsEl, setSettingsEl] = useState(false);
   const [stories, setStories] = useState<Story[]>(loaded?.stories ?? []);

@@ -17,26 +17,17 @@ import { resolveMediaUrl } from "@/lib/media";
 import blogOne from "@/assets/blog-one.jpg";
 import blogTwo from "@/assets/blog-two.jpg";
 import blogThree from "@/assets/blog-three.jpg";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 const FALLBACK_COVERS = [blogOne, blogTwo, blogThree];
 
 export const Route = createFileRoute("/blog/")({
-  head: () => ({
-    meta: [
-      { title: "Blog — Anastasia Patience" },
-      {
-        name: "description",
-        content:
-          "Letters on faith, purpose, women in business, digital skills, and a life rebuilt after loss.",
-      },
-      { property: "og:title", content: "Blog — Anastasia Patience" },
-      {
-        property: "og:description",
-        content: "Letters on faith, purpose, women in business, and building after loss.",
-      },
-    ],
-    links: [{ rel: "canonical", href: "/blog" }],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({ locale, path: "/blog", ...getMessages(locale).seo.blog });
+  },
   component: BlogIndex,
 });
 

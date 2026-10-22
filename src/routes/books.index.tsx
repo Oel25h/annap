@@ -9,6 +9,9 @@ import { useLocale, useT } from "@/lib/i18n/context";
 import { getApprovedTranslation, mergeTranslation } from "@/lib/i18n/translations";
 import { resolveMediaUrl } from "@/lib/media";
 import { LocaleLink } from "@/components/LocaleLink";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 const focusRing =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-ivory";
@@ -16,21 +19,10 @@ const btnPrimary = `group inline-flex min-h-11 items-center gap-3 rounded-full b
 const btnOutline = `inline-flex min-h-11 items-center gap-2 rounded-full border border-plum/15 bg-ivory px-6 py-4 text-[11px] font-medium uppercase tracking-[0.24em] text-plum transition hover:-translate-y-0.5 hover:border-burgundy hover:text-burgundy ${focusRing}`;
 
 export const Route = createFileRoute("/books/")({
-  head: () => ({
-    meta: [
-      { title: "Books — Anastasia Patience" },
-      {
-        name: "description",
-        content: "Books to carry you: memoir, workbook, and gentle wisdom from Anastasia Patience.",
-      },
-    ],
-    links: [
-      { rel: "canonical", href: "/books" },
-      { rel: "alternate", hrefLang: "en", href: "/books" },
-      { rel: "alternate", hrefLang: "el", href: "/el/books" },
-      { rel: "alternate", hrefLang: "x-default", href: "/books" },
-    ],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({ locale, path: "/books", ...getMessages(locale).seo.books });
+  },
   component: BooksPage,
 });
 

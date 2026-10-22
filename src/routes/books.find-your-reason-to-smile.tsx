@@ -10,6 +10,9 @@ import { absoluteUrl } from "@/lib/site-url";
 import cover from "@/assets/fyrts-cover.jpg";
 import author from "@/assets/fyrts-author.jpg";
 import quoteBg from "@/assets/fyrts-quote.jpg";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 const SLUG = "find-your-reason-to-smile";
 
@@ -21,41 +24,15 @@ const btnPrimary = `group inline-flex min-h-11 items-center justify-center gap-3
 const btnOutline = `inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-plum/20 bg-ivory px-6 py-4 text-[11px] font-medium uppercase tracking-[0.24em] text-plum transition duration-300 hover:border-burgundy hover:text-burgundy ${focusRing}`;
 
 export const Route = createFileRoute("/books/find-your-reason-to-smile")({
-  head: () => ({
-    meta: [
-      { title: "Find Your Reason to Smile — Anastasia Patience" },
-      {
-        name: "description",
-        content:
-          "A Journey of Faith, Loss, Resilience, and Hope. A memoir by Anastasia Patience about faith, loss, and finding hope again.",
-      },
-      { property: "og:title", content: "Find Your Reason to Smile — Anastasia Patience" },
-      {
-        property: "og:description",
-        content:
-          "A Journey of Faith, Loss, Resilience, and Hope. A memoir about faith, loss, and hope.",
-      },
-      { property: "og:type", content: "book" },
-      { property: "og:url", content: absoluteUrl("/books/find-your-reason-to-smile") },
-      { property: "og:image", content: absoluteUrl("/fyrts-cover.jpg") },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: absoluteUrl("/fyrts-cover.jpg") },
-    ],
-    links: [
-      { rel: "canonical", href: absoluteUrl("/books/find-your-reason-to-smile") },
-      { rel: "alternate", hrefLang: "en", href: absoluteUrl("/books/find-your-reason-to-smile") },
-      {
-        rel: "alternate",
-        hrefLang: "el",
-        href: absoluteUrl("/el/books/find-your-reason-to-smile"),
-      },
-      {
-        rel: "alternate",
-        hrefLang: "x-default",
-        href: absoluteUrl("/books/find-your-reason-to-smile"),
-      },
-    ],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({
+      locale,
+      path: "/books/find-your-reason-to-smile",
+      ...getMessages(locale).seo.fyrts,
+      type: "book" as const,
+    });
+  },
   component: BookDetail,
 });
 

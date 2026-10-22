@@ -392,6 +392,66 @@ export const en = {
     moreStories: "More stories",
     filterAll: "All",
   },
+  seo: {
+    siteName: "Anastasia Patience",
+    home: {
+      title: "Anastasia Patience — Find Your Reason to Smile",
+      description:
+        "Author, storyteller, entrepreneur. Founder of Patience Media House. Turn your pain into purpose, your ideas into products, your knowledge into opportunities.",
+    },
+    about: {
+      title: "About — Anastasia Patience",
+      description:
+        "From Ghana to Cyprus, through loss, faith, and motherhood — how Anastasia became an author, entrepreneur, and founder of Patience Media House.",
+    },
+    books: {
+      title: "Books — Anastasia Patience",
+      description:
+        "Books to carry you: memoir, workbook, and gentle wisdom from Anastasia Patience.",
+    },
+    fyrts: {
+      title: "Find Your Reason to Smile — Anastasia Patience",
+      description:
+        "A Journey of Faith, Loss, Resilience, and Hope. A memoir by Anastasia Patience about faith, loss, and finding hope again.",
+    },
+    blog: {
+      title: "Blog — Anastasia Patience",
+      description:
+        "Letters on faith, purpose, women in business, digital skills, and a life rebuilt after loss.",
+    },
+    contact: {
+      title: "Contact — Anastasia Patience",
+      description: "For speaking invitations, media enquiries, partnerships, or a warm hello.",
+    },
+    gallery: {
+      title: "Gallery — Anastasia Patience",
+      description:
+        "A storytelling gallery: Ghana, Cyprus, family, speaking, community, and behind the scenes.",
+    },
+    masterclasses: {
+      title: "Masterclasses — Anastasia Patience",
+      description: "Turn your knowledge and ideas into digital products and income skills.",
+    },
+    shop: {
+      title: "Shop — Anastasia Patience",
+      description:
+        "Digital products, templates, courses, and masterclasses from Patience Media House.",
+    },
+    start: {
+      title: "Start Here — Anastasia Patience",
+      description:
+        "Everything in one place: free guide, community, masterclass, books, prayer, devotions and more.",
+    },
+    foundation: {
+      title: "Patience Humanitarian Foundation",
+      description:
+        "Where no one feels left behind. Food assistance, compassionate care, community support, and care for rescued animals.",
+    },
+    unsubscribe: {
+      title: "Unsubscribe — Anastasia Patience",
+      description: "Manage your letters from Anastasia Patience.",
+    },
+  },
 } as const;
 
 /** Deep-map leaf strings → `string` so EL (and future locales) can diverge in copy. */

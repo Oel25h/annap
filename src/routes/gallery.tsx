@@ -6,24 +6,15 @@ import { Reveal } from "@/components/Reveal";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocale, useT } from "@/lib/i18n/context";
 import { getApprovedTranslation, mergeTranslation } from "@/lib/i18n/translations";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/gallery")({
-  head: () => ({
-    meta: [
-      { title: "Gallery — Anastasia Patience" },
-      {
-        name: "description",
-        content:
-          "A storytelling gallery: Ghana, Cyprus, family, speaking, community, and behind the scenes.",
-      },
-    ],
-    links: [
-      { rel: "canonical", href: "/gallery" },
-      { rel: "alternate", hrefLang: "en", href: "/gallery" },
-      { rel: "alternate", hrefLang: "el", href: "/el/gallery" },
-      { rel: "alternate", hrefLang: "x-default", href: "/gallery" },
-    ],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({ locale, path: "/gallery", ...getMessages(locale).seo.gallery });
+  },
   component: Gallery,
 });
 

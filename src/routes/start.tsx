@@ -9,6 +9,9 @@ import { useLocale, useT } from "@/lib/i18n/context";
 import { LocaleLink } from "@/components/LocaleLink";
 import { getApprovedTranslation, mergeTranslation } from "@/lib/i18n/translations";
 import { absoluteUrl } from "@/lib/site-url";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 /** Temporary EL display map until CMS start_link translations are approved. */
 const START_LABEL_EL: Record<string, string> = {
@@ -38,25 +41,10 @@ function localizeStartText(locale: string, value: string | null | undefined, fal
 }
 
 export const Route = createFileRoute("/start")({
-  head: () => ({
-    meta: [
-      { title: "Start Here — Anastasia Patience" },
-      {
-        name: "description",
-        content:
-          "Everything in one place: free guide, community, masterclass, books, prayer, devotions and more.",
-      },
-      { property: "og:title", content: "Start Here — Anastasia Patience" },
-      {
-        property: "og:description",
-        content:
-          "Everything in one place: free guide, community, masterclass, books, prayer, devotions and more.",
-      },
-      { property: "og:url", content: absoluteUrl("/start") },
-      { name: "robots", content: "index,follow" },
-    ],
-    links: [{ rel: "canonical", href: absoluteUrl("/start") }],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({ locale, path: "/start", ...getMessages(locale).seo.start });
+  },
   component: Start,
 });
 

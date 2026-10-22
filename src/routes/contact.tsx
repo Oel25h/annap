@@ -6,23 +6,15 @@ import { useSiteSocials } from "@/lib/site-socials";
 import { SOCIAL_ICONS } from "@/lib/start-icons";
 import { submitContact } from "@/lib/public.functions";
 import { useT } from "@/lib/i18n/context";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
+import { seoHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({
-    meta: [
-      { title: "Contact — Anastasia Patience" },
-      {
-        name: "description",
-        content: "For speaking invitations, media enquiries, partnerships, or a warm hello.",
-      },
-    ],
-    links: [
-      { rel: "canonical", href: "/contact" },
-      { rel: "alternate", hrefLang: "en", href: "/contact" },
-      { rel: "alternate", hrefLang: "el", href: "/el/contact" },
-      { rel: "alternate", hrefLang: "x-default", href: "/contact" },
-    ],
-  }),
+  head: ({ match }) => {
+    const locale = localeFromSearch(match.search);
+    return seoHead({ locale, path: "/contact", ...getMessages(locale).seo.contact });
+  },
   component: Contact,
 });
 

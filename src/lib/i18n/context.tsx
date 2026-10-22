@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { DEFAULT_LOCALE, getLocaleFromPath, type Locale } from "./locale";
+import { DEFAULT_LOCALE, type Locale } from "./locale";
 import { getMessages, type Messages } from "./messages";
 
 type LocaleContextValue = {
@@ -14,12 +14,14 @@ const LocaleContext = createContext<LocaleContextValue>({
 });
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const value = useMemo(() => {
-    const locale = getLocaleFromPath(pathname);
-    return { locale, t: getMessages(locale) };
-  }, [pathname]);
+  // The locale rewrite (./rewrite.ts) turns the /el prefix into the `lang` search param.
+  const locale = useRouterState({ select: (s) => localeFromSearch(s.location.search) });
+  const value = useMemo(() => ({ locale, t: getMessages(locale) }), [locale]);
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+}
+
+export function localeFromSearch(search: unknown): Locale {
+  return (search as { lang?: string } | undefined)?.lang === "el" ? "el" : "en";
 }
 
 export function useLocale(): Locale {
