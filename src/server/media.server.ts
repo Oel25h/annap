@@ -76,6 +76,7 @@ export async function resolveMedia(
       id: row.id,
       kind,
       src,
+      original: publicObjectUrl(row.bucket, row.path),
       srcSet,
       mime: fallback ? "image/webp" : row.mime,
       width: row.width,

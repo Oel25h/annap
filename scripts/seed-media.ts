@@ -196,7 +196,7 @@ async function fixtures() {
         chapters: [
           [
             "My Greatest Teachers",
-            "My mother taught me the power of prayer and how to stay resilient through life's difficulties.",
+            "My mother taught me the power of prayer and how to stay resilient through life’s difficulties.",
           ],
           [
             "A Young Girl Full of Dreams",
@@ -205,7 +205,7 @@ async function fixtures() {
           ["Two Suitcases", "I boarded a plane with two suitcases and a promise."],
           [
             "My Brother",
-            "When my younger brother died, something inside me broke that I didn't know could break.",
+            "When my younger brother died, something inside me broke that I didn’t know could break.",
           ],
           [
             "My Biggest Question to God",

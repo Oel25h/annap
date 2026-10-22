@@ -11,6 +11,8 @@ export type ResolvedMedia = {
   kind: "image" | "audio" | "video" | "document";
   /** The largest variant up to 1600 px wide, or the original. */
   src: string;
+  /** The uploaded file itself, full size and in its own format (for downloads). */
+  original: string;
   /** `url 480w, url 960w, …` for images with variants. */
   srcSet: string | null;
   mime: string;
@@ -76,6 +78,8 @@ export type AudiobookItem = {
   coverMediaId: string | null;
   /** The language of the recording. */
   locale: Locale;
+  /** The book it records: a page offers one edition per book, in its own language first. */
+  bookId: string | null;
   bookSlug: string | null;
   tracks: AudiobookTrack[];
 };
@@ -124,6 +128,12 @@ export type ProductCard = {
   priceLabel: string;
   coverMediaId: string | null;
   textLang: Locale;
+  /**
+   * Another page of this site that sells it (a companion that bridges to its
+   * book's page): the card leads straight there. Null when it is sold here or
+   * elsewhere, where its own page has the buy button. Set by the list loader.
+   */
+  checkoutUrl?: string | null;
 };
 
 export type MasterclassCard = {
@@ -196,14 +206,20 @@ type SectionDataByType = {
   ebook_gate: { book: BookSummary };
   book_list: { books: BookSummary[] };
   book_excerpts: { book: { slug: string; title: string } | null };
-  audiobook_player: { audiobooks: AudiobookItem[]; fallbackToEnglish: boolean };
+  /** `onlyOtherLanguage`: nothing is recorded in the page's language yet, so a quiet note says so. */
+  audiobook_player: { audiobooks: AudiobookItem[]; onlyOtherLanguage: boolean };
   latest_posts: {
     posts: PostCard[];
-    categories: { slug: string; name: string }[];
+    /** Themes in shelf order, with how many stories each has (so an empty theme can point to one that has some). */
+    categories: { slug: string; name: string; count: number }[];
     /** Present on the journal index (a section with `paginate`). */
     pagination: PostPagination | null;
   };
-  video: { videos: VideoCard[] };
+  video: {
+    videos: VideoCard[];
+    /** The site's YouTube social link, for a section without its own channel link. */
+    channelUrl: string | null;
+  };
   testimonials: { items: TestimonialItem[] };
   gallery: { imageMediaIds: string[] };
   donation: { payments: boolean };
@@ -269,7 +285,12 @@ export type ItemIntro =
       enrolProductId: string | null;
       payments: boolean;
     }
-  | { kind: "event"; event: EventCard }
+  | {
+      kind: "event";
+      event: EventCard;
+      /** Decided on the server, so the server and browser renders agree. */
+      ended: boolean;
+    }
   | { kind: "story"; story: StoryCard; bodyHtml: string };
 
 export type PageData = {

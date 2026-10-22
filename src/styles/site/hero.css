@@ -1,0 +1,217 @@
+/* Hero variants and the About facts (DESIGN.md §9 Hero, §9 About). Always ivory. */
+@layer components {
+  /* ---------- Shared: one column on phones, the 12-column grid from 1024 ---------- */
+  .hero {
+    padding-block: var(--space-7) var(--space-8);
+  }
+  .hero-lead {
+    margin-top: var(--space-5);
+    max-width: 30em;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4) var(--space-6);
+    margin-top: var(--space-6);
+  }
+  .frontis {
+    margin-top: var(--space-6);
+    max-width: 24em;
+  }
+  /* Her portrait in the arch: framed at its focal point, or by an art-directed crop */
+  .hero .arch > img:not(.crop) {
+    object-position: var(--focal, 50% 30%);
+  }
+  @media (min-width: 1024px) {
+    .hero {
+      padding-block: var(--space-9);
+    }
+  }
+
+  /* ---------- Listen: a 56px Tangerine disc and a two-line label, one link, no box ---------- */
+  .listen {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--size-row);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .listen-disc {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--size-listen-disc);
+    height: var(--size-listen-disc);
+    border-radius: 50%;
+    background: var(--color-action);
+    color: var(--color-on-action);
+    transition:
+      background-color var(--duration-hover),
+      color var(--duration-hover);
+  }
+  .listen:hover .listen-disc {
+    background: var(--color-action-hover);
+    color: var(--color-on-action-hover);
+  }
+  /* The play glyph sits optically centred */
+  .listen-disc svg.i {
+    width: 24px;
+    height: 24px;
+    margin-left: 2px;
+  }
+  .listen-text {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .listen-text strong {
+    font: 600 var(--text-ui) / 1.25 var(--font-sans);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.4em;
+    transition: text-decoration-color var(--duration-hover);
+  }
+  .listen:hover .listen-text strong {
+    text-decoration-color: var(--color-accent-text);
+  }
+  /* ---------- portrait_arch (home): portrait 1–5, words 7–12, caption on the portrait's base ---------- */
+  .hero--portrait-arch {
+    padding-block: var(--space-4) var(--space-7);
+  }
+  .hero--portrait-arch .hero-fig .arch-wrap {
+    width: min(66vw, 264px);
+  }
+  .hero--portrait-arch .hero-text :is(h1, h2) {
+    max-width: 11ch;
+  }
+  .hero--portrait-arch .hero-text :is(h1, h2):lang(el) {
+    max-width: 12ch;
+  }
+  .hero--portrait-arch .hero-lead {
+    margin-top: var(--space-4);
+    max-width: 24em;
+  }
+  /* Its bottom padding is short, so a following ivory section keeps its own top */
+  .section.hero--portrait-arch + .section.band-ivory {
+    padding-top: var(--section-pt);
+  }
+  @media (min-width: 720px) {
+    .hero--portrait-arch .hero-fig .arch-wrap {
+      width: 320px;
+    }
+  }
+  @media (min-width: 1024px) {
+    .hero--portrait-arch {
+      padding-block: var(--space-5);
+    }
+    .hero--portrait-arch .hero-fig {
+      grid-column: 1 / 6;
+    }
+    .hero--portrait-arch .hero-fig .arch-wrap {
+      width: 100%;
+    }
+    .hero--portrait-arch .hero-text {
+      grid-column: 7 / 13;
+      display: flex;
+      flex-direction: column;
+    }
+    .hero--portrait-arch .hero-main {
+      margin-block: auto;
+      padding-block: var(--space-7);
+    }
+    .hero--portrait-arch .frontis {
+      margin-top: 0;
+    }
+  }
+
+  /* ---------- portrait_right (About): words and facts 1–7, the arch 9–12 on the bottom line ---------- */
+  .hero--portrait-right .hero-grid {
+    row-gap: var(--space-7);
+  }
+  .hero--portrait-right .hero-fig .arch-wrap {
+    width: min(56vw, 240px);
+  }
+  .facts {
+    display: grid;
+    margin-top: var(--space-7);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .facts > div {
+    display: grid;
+    align-content: start;
+    gap: var(--space-1);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .facts dt {
+    font: 600 var(--text-meta) / 1.4 var(--font-sans);
+    color: var(--color-text-tertiary);
+    text-wrap: pretty;
+  }
+  .facts dd {
+    margin: 0;
+    font: 400 var(--text-title) / 1.3 var(--font-serif);
+    /* Dates, times and prices: lining figures */
+    font-variant-numeric: lining-nums;
+  }
+  @media (min-width: 720px) {
+    .facts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: var(--grid-gap);
+      border-bottom: 1px solid var(--color-hairline);
+    }
+    .facts > div {
+      border-bottom: 0;
+    }
+  }
+  @media (min-width: 1024px) {
+    .hero--portrait-right .hero-grid {
+      align-items: end;
+    }
+    .hero--portrait-right .hero-text {
+      grid-column: 1 / 8;
+    }
+    .hero--portrait-right .hero-fig {
+      grid-column: 9 / 13;
+    }
+    .hero--portrait-right .hero-fig .arch-wrap {
+      width: 100%;
+    }
+  }
+
+  /* ---------- photo: a 3:2 photograph 1–6 (no arch), the words 7–12 ---------- */
+  .hero--photo .hero-fig img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    object-position: var(--focal, 50% 50%);
+    border-radius: var(--radius);
+    background: var(--color-surface-alt);
+  }
+  .hero--photo .frontis {
+    margin-top: var(--space-3);
+  }
+  @media (min-width: 1024px) {
+    .hero--photo .hero-grid {
+      align-items: center;
+    }
+    .hero--photo .hero-fig {
+      grid-column: 1 / 7;
+    }
+    .hero--photo .hero-text {
+      grid-column: 7 / 13;
+    }
+  }
+
+  /* ---------- text_only: the words 1–8, sitting over the content like a title band ---------- */
+  .hero--text-only {
+    padding-block: var(--section-pt) var(--head-gap);
+  }
+  @media (min-width: 1024px) {
+    .hero--text-only .hero-text {
+      grid-column: 1 / 9;
+    }
+  }
+}

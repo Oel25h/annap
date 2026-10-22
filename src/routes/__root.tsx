@@ -7,7 +7,7 @@ import {
   useRouter,
   useRouterState,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportClientError } from "../lib/error-reporting";
@@ -16,14 +16,14 @@ import { getPublicConfig, publicConfigScript } from "../lib/public-config";
 import { LocaleProvider, localeFromSearch, useT } from "../lib/i18n/context";
 import { SiteHeader } from "../components/site/SiteHeader";
 import { SiteFooter } from "../components/site/SiteFooter";
-import { SiteLink } from "../components/site/SiteLink";
-import { StatusPage } from "../components/site/StatusPage";
+import { NotFoundPage, StatusPage } from "../components/site/StatusPage";
 import { LanguageSuggestion } from "../components/site/LanguageSuggestion";
 import { AudioProvider } from "../components/audio/AudioProvider";
 import { MiniPlayer } from "../components/audio/MiniPlayer";
 
 /** Routes with their own chrome: the studio, sign-in and the link-in-bio page. */
 const BARE = /^\/(admin|auth|start)(\/|$)/;
+const START = /^\/start\/?$/;
 
 export const Route = createRootRoute({
   // `lang` is set by the locale rewrite (src/lib/i18n/rewrite.ts) and retained on every link.
@@ -53,7 +53,7 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootShell,
   component: RootComponent,
-  notFoundComponent: NotFound,
+  notFoundComponent: NotFoundPage,
   errorComponent: ErrorPage,
 });
 
@@ -82,7 +82,12 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <LocaleProvider>
-      {BARE.test(pathname) ? (
+      {START.test(pathname) ? (
+        // The link page has no site chrome, but it is still the page's main content.
+        <main id="main" tabIndex={-1}>
+          <Outlet />
+        </main>
+      ) : BARE.test(pathname) ? (
         <Outlet />
       ) : (
         <SiteChrome>
@@ -93,12 +98,25 @@ function RootComponent() {
   );
 }
 
+/** A thin line at the top, shown once a navigation has been pending for 400ms. */
+function NavProgress() {
+  const pending = useRouterState({ select: (s) => s.status === "pending" });
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!pending) return setSlow(false);
+    const timer = setTimeout(() => setSlow(true), 400);
+    return () => clearTimeout(timer);
+  }, [pending]);
+  return slow ? <div className="nav-progress" aria-hidden="true" /> : null;
+}
+
 /** Header, main landmark and footer around every public page. */
 function SiteChrome({ children }: { children: ReactNode }) {
   const t = useT();
   const shell = Route.useLoaderData();
   return (
     <AudioProvider>
+      <NavProgress />
       <a className="skip" href="#main">
         {t.site.skipToContent}
       </a>
@@ -114,37 +132,6 @@ function SiteChrome({ children }: { children: ReactNode }) {
       <MiniPlayer />
       <LanguageSuggestion />
     </AudioProvider>
-  );
-}
-
-function NotFound() {
-  const t = useT();
-  return (
-    <StatusPage label={t.site.notFound.label} title={t.site.notFound.title}>
-      <p className="lead">{t.site.notFound.body}</p>
-      <ul className="status-links">
-        <li>
-          <SiteLink className="link" href="/books">
-            {t.site.notFound.books}
-          </SiteLink>
-        </li>
-        <li>
-          <SiteLink className="link" href="/blog">
-            {t.site.notFound.journal}
-          </SiteLink>
-        </li>
-        <li>
-          <SiteLink className="link" href="/contact">
-            {t.site.notFound.contact}
-          </SiteLink>
-        </li>
-        <li>
-          <SiteLink className="link" href="/">
-            {t.site.notFound.home}
-          </SiteLink>
-        </li>
-      </ul>
-    </StatusPage>
   );
 }
 

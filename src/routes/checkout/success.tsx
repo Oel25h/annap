@@ -1,10 +1,10 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { DownloadButton } from "@/components/site/DownloadButton";
-import { SiteLink } from "@/components/site/SiteLink";
-import { StatusPage } from "@/components/site/StatusPage";
+import { StatusLinks, StatusPage } from "@/components/site/StatusPage";
 import { localeFromSearch, useLocale, useT } from "@/lib/i18n/context";
 import { fmt, formatMoney } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
 import { getMessages } from "@/lib/i18n/messages";
 import { checkoutStatus, type CheckoutStatus } from "@/lib/payments.functions";
 import { utilityHead } from "@/lib/seo";
@@ -67,8 +67,8 @@ function SuccessPage() {
 
   if (status.status === "pending") {
     return (
-      <StatusPage label={c.label} title={c.pendingTitle}>
-        <p className="lead" role="status" aria-live="polite">
+      <StatusPage title={c.pendingTitle}>
+        <p className="lead" role="status">
           {polls >= POLLS ? c.pendingSlow : c.pendingBody}
         </p>
       </StatusPage>
@@ -82,50 +82,40 @@ function SuccessPage() {
       refunded: [c.refundedTitle, c.refundedBody],
     }[status.status];
     return (
-      <StatusPage label={c.label} title={copy[0]}>
+      <StatusPage title={copy[0]}>
         <p className="lead">{copy[1]}</p>
-        <ul className="status-links">
-          <li>
-            <SiteLink className="link" href="/contact">
-              {c.contact}
-            </SiteLink>
-          </li>
-          <li>
-            <SiteLink className="link" href="/">
-              {c.home}
-            </SiteLink>
-          </li>
-        </ul>
+        <StatusLinks
+          links={[
+            { label: c.contact, href: "/contact" },
+            { label: c.home, href: "/" },
+          ]}
+        />
       </StatusPage>
     );
   }
 
   const receipt = status.email ? fmt(c.receipt, { email: status.email }) : c.receiptNoEmail;
+  // A title in the other language is marked as such.
+  const titleLang = (lang: Locale) => (lang !== locale ? lang : undefined);
 
   if (status.kind === "donation") {
     const amount = formatMoney(status.amountCents, status.currency, locale);
     return (
-      <StatusPage label={c.label} title={c.giftTitle}>
+      <StatusPage title={c.giftTitle}>
         <p className="lead">{fmt(status.monthly ? c.giftMonthly : c.giftBody, { amount })}</p>
         <p className="status-note">{receipt}</p>
-        <ul className="status-links">
-          <li>
-            <SiteLink className="link" href="/foundation">
-              {c.foundation}
-            </SiteLink>
-          </li>
-          <li>
-            <SiteLink className="link" href="/">
-              {c.home}
-            </SiteLink>
-          </li>
-        </ul>
+        <StatusLinks
+          links={[
+            { label: c.foundation, href: "/foundation" },
+            { label: c.home, href: "/" },
+          ]}
+        />
       </StatusPage>
     );
   }
 
   return (
-    <StatusPage label={c.label} title={c.orderTitle}>
+    <StatusPage title={c.orderTitle}>
       <p className="lead">{receipt}</p>
 
       <div className="receipt">
@@ -133,7 +123,7 @@ function SuccessPage() {
         <ul className="receipt-lines">
           {status.lines.map((line, i) => (
             <li key={i}>
-              <span className="receipt-item">
+              <span className="receipt-item" lang={titleLang(line.textLang)}>
                 {line.title}
                 {line.quantity > 1 && (
                   <span className="receipt-qty">{fmt(c.quantity, { n: line.quantity })}</span>
@@ -159,10 +149,12 @@ function SuccessPage() {
           <p className="status-note">{c.downloadsBody}</p>
           {status.downloads.map((item) => (
             <div key={item.title} className="receipt-download">
-              <p className="receipt-item">{item.title}</p>
+              <p className="receipt-item" lang={titleLang(item.textLang)}>
+                {item.title}
+              </p>
               <div className="actions">
                 {item.links.map((link) => (
-                  <DownloadButton key={link.action} action={link.action}>
+                  <DownloadButton key={link.action} action={link.action} variant="quiet">
                     {fmt(t.utility.download.button, { format: link.label })}
                   </DownloadButton>
                 ))}
@@ -173,18 +165,12 @@ function SuccessPage() {
       )}
       {status.downloadsByEmail && <p className="status-note">{c.downloadsByEmail}</p>}
 
-      <ul className="status-links">
-        <li>
-          <SiteLink className="link" href="/books">
-            {c.books}
-          </SiteLink>
-        </li>
-        <li>
-          <SiteLink className="link" href="/">
-            {c.home}
-          </SiteLink>
-        </li>
-      </ul>
+      <StatusLinks
+        links={[
+          { label: c.books, href: "/books" },
+          { label: c.home, href: "/" },
+        ]}
+      />
     </StatusPage>
   );
 }

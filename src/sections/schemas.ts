@@ -51,13 +51,38 @@ const optionalLink = z
   .object({ label: text(60), href: z.union([safeUrl, z.literal("")]).default("") })
   .default({ label: "", href: "" });
 
+/**
+ * One of `values`, also reading the old names in `renamed`, so data stored
+ * before a rename (and not yet migrated) still renders.
+ */
+function renamedEnum<V extends readonly [string, ...string[]]>(
+  values: V,
+  renamed: Partial<Record<string, V[number]>>,
+) {
+  return z.preprocess(
+    (value) =>
+      typeof value === "string" && Object.hasOwn(renamed, value) ? renamed[value] : value,
+    z.enum(values),
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Settings shared by every section
 // ---------------------------------------------------------------------------
 
-export const SECTION_WIDTHS = ["narrow", "default", "wide", "full"] as const;
+/** narrow: the 720 reading column. default: the 1280 grid. full: edge to edge. */
+export const SECTION_WIDTHS = ["narrow", "default", "full"] as const;
 export const SECTION_SPACINGS = ["compact", "default", "generous"] as const;
 export const SECTION_BACKGROUNDS = ["ivory", "cream", "cocoa"] as const;
+
+export type SectionWidth = (typeof SECTION_WIDTHS)[number];
+
+/** The width names the studio shows. */
+export const SECTION_WIDTH_LABELS: Record<SectionWidth, string> = {
+  narrow: "Text 720",
+  default: "Wide 1280",
+  full: "Edge to edge",
+};
 
 export const sectionSettingsSchema = z.object({
   hidden: z.boolean().default(false),
@@ -67,7 +92,8 @@ export const sectionSettingsSchema = z.object({
     .max(40)
     .regex(/^([a-z0-9]+(-[a-z0-9]+)*)?$/, "Use lowercase letters, numbers and dashes")
     .default(""),
-  width: z.enum(SECTION_WIDTHS).default("default"),
+  // "wide" was a fourth width with no layout of its own; it reads as the grid.
+  width: renamedEnum(SECTION_WIDTHS, { wide: "default" }).default("default"),
   spacing: z.enum(SECTION_SPACINGS).default("default"),
   background: z.enum(SECTION_BACKGROUNDS).default("ivory"),
 });
@@ -82,23 +108,28 @@ function section<
   T extends string,
   V extends readonly [string, ...string[]],
   P extends z.ZodTypeAny,
->(type: T, variants: V, props: P) {
+>(type: T, variants: V, props: P, renamedVariants: Partial<Record<string, V[number]>> = {}) {
   return z.object({
     id,
     type: z.literal(type),
-    variant: z.enum(variants).default(variants[0] as V[number] as never),
+    variant: renamedEnum(variants, renamedVariants).default(variants[0] as V[number] as never),
     settings: sectionSettingsSchema.default({}),
     props,
   });
 }
 
+/** A short fact under the About hero: "Based in" / "Cyprus". */
+const fact = z.object({ id, label: requiredText(60), value: requiredText(80) });
+
 const hero = section(
   "hero",
-  ["portrait_arch", "full_bleed", "text_only"],
+  // portrait_arch: her portrait on the left, the words on the right (home).
+  // portrait_right: the words first, her portrait on the right (About).
+  // photo: a 3:2 photograph beside the words. text_only: the words alone.
+  ["portrait_arch", "portrait_right", "photo", "text_only"],
   z.object({
-    eyebrow: text(80),
     title: requiredText(140),
-    /** Words of the title shown in the accent colour (must appear in the title). */
+    /** The hope word of the home h1, set in italic. Shown only on the home page. */
     accent: text(60),
     body: text(600),
     imageMediaId: optionalMediaId,
@@ -107,6 +138,7 @@ const hero = section(
     secondary: optionalLink,
     /** Show "Listen to the audiobook" that jumps to the player on this page. */
     listenCta: z.boolean().default(false),
+    facts: z.array(fact).max(3).default([]),
   }),
 );
 
@@ -114,7 +146,6 @@ const audiobookPlayer = section(
   "audiobook_player",
   ["single", "shelf"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     intro: text(400),
     /** Empty means every published audiobook for the page's language. */
@@ -127,7 +158,6 @@ const featuredBook = section(
   ["cover_left", "cover_right"],
   z.object({
     bookId: id,
-    eyebrow: text(80),
     quote: text(300),
     quoteBy: text(80),
     /** Show the free-ebook form under the book. */
@@ -139,7 +169,6 @@ const bookList = section(
   "book_list",
   ["grid", "rows"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     intro: text(400),
   }),
@@ -149,7 +178,6 @@ const bookExcerpts = section(
   "book_excerpts",
   ["cards", "stacked"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     bookId: id.nullable().default(null),
     items: z
@@ -166,7 +194,6 @@ const ebookGate = section(
   ["inline", "card"],
   z.object({
     bookId: id,
-    eyebrow: text(80),
     title: requiredText(140),
     body: text(500),
     buttonLabel: text(60),
@@ -175,12 +202,11 @@ const ebookGate = section(
 
 const richText = section(
   "rich_text",
-  ["one_column", "with_pull_quote"],
+  // foreword: the heading on the left, the text on the right with a drop cap.
+  ["one_column", "foreword"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     body: rich(),
-    pullQuote: text(300),
   }),
 );
 
@@ -188,23 +214,28 @@ const twoColumn = section(
   "two_column",
   ["image_left", "image_right"],
   z.object({
-    eyebrow: text(80),
     title: requiredText(140),
+    lead: text(400),
     body: rich(20_000),
     imageMediaId: mediaId,
+    caption: text(240),
+    /** The section's one button. */
+    primary: optionalLink,
     link: optionalLink,
+    secondary: optionalLink,
   }),
 );
 
 const quote = section(
   "quote",
-  ["large", "with_portrait"],
+  // centred: one sentence centred under a hairline. statement: left-aligned (a mission).
+  ["centred", "statement"],
   z.object({
     quote: requiredText(400),
-    /** Words of the quote shown in the accent colour. */
-    accent: text(80),
-    by: text(80),
-    imageMediaId: optionalMediaId,
+    /** The title of the book or work it comes from, set as a citation. */
+    source: text(120),
+    /** A person or a caption, such as "My mission". */
+    attribution: text(80),
   }),
 );
 
@@ -221,7 +252,6 @@ const gallery = section(
   "gallery",
   ["grid", "masonry", "carousel", "filmstrip"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     /** An album, or hand-picked images when albumId is empty. */
     albumId: id.nullable().default(null),
@@ -231,21 +261,22 @@ const gallery = section(
 
 const video = section(
   "video",
-  ["single", "grid", "latest"],
+  // filmstrip: the newest film with Up next beside it (home). grid: a feature,
+  // then 16:9 tiles (/videos). single: one film and its caption.
+  ["single", "grid", "filmstrip"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
-    /** For "single" and "grid"; "latest" uses the newest synced videos. */
+    /** For "single" and "grid"; "filmstrip" uses the newest synced videos. */
     videoIds: z.array(id).max(12).default([]),
     channelLink: optionalLink,
   }),
+  { latest: "filmstrip" },
 );
 
 const latestPosts = section(
   "latest_posts",
   ["list", "grid"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     categoryId: id.nullable().default(null),
     count: z.number().int().min(1).max(12).default(3),
@@ -271,7 +302,6 @@ const timeline = section(
   "timeline",
   ["vertical"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     items: z
       .array(
@@ -280,11 +310,16 @@ const timeline = section(
           label: text(40),
           title: requiredText(140),
           body: text(1200),
+          /** A photograph shown as its own row after this one. */
           imageMediaId: optionalMediaId,
+          caption: text(240),
+          /** A line set large as its own row after this one. */
+          pullQuote: text(200),
         }),
       )
       .min(1)
       .max(30),
+    link: optionalLink,
   }),
 );
 
@@ -292,7 +327,6 @@ const list = section(
   "list",
   ["numbered", "plain"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     intro: text(400),
     items: z
@@ -306,7 +340,6 @@ const testimonials = section(
   "testimonials",
   ["single", "carousel"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     /** Only praise for this book, when set. */
     bookId: id.nullable().default(null),
@@ -318,7 +351,6 @@ const products = section(
   "products",
   ["grid"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     categoryId: id.nullable().default(null),
   }),
@@ -327,26 +359,21 @@ const products = section(
 const masterclasses = section(
   "masterclasses",
   ["list", "cards"],
-  z.object({ eyebrow: text(80), title: text(140), intro: text(400) }),
+  z.object({ title: text(140), intro: text(400) }),
 );
 
 const events = section(
   "events",
   ["upcoming_list", "cards"],
-  z.object({ eyebrow: text(80), title: text(140), showPast: z.boolean().default(true) }),
+  z.object({ title: text(140), showPast: z.boolean().default(true) }),
 );
 
-const press = section(
-  "press",
-  ["logo_row", "list"],
-  z.object({ eyebrow: text(80), title: text(140) }),
-);
+const press = section("press", ["logo_row", "list"], z.object({ title: text(140) }));
 
 const mediaKit = section(
   "media_kit",
   ["default"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     shortBio: requiredText(600),
     longBio: rich(10_000),
@@ -358,7 +385,6 @@ const foundationStories = section(
   "foundation_stories",
   ["grid", "list"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     categoryId: id.nullable().default(null),
     count: z.number().int().min(1).max(24).default(6),
@@ -369,7 +395,6 @@ const donation = section(
   "donation",
   ["card", "band"],
   z.object({
-    eyebrow: text(80),
     title: requiredText(140),
     body: text(600),
     /** Preset amounts in whole euros. */
@@ -381,20 +406,19 @@ const donation = section(
 const newsletter = section(
   "newsletter",
   ["inline", "band"],
-  z.object({ eyebrow: text(80), title: requiredText(140), body: text(400) }),
+  z.object({ title: requiredText(140), body: text(400) }),
 );
 
 const contactForm = section(
   "contact_form",
   ["default"],
-  z.object({ eyebrow: text(80), title: text(140), body: text(600) }),
+  z.object({ title: text(140), body: text(600) }),
 );
 
 const faq = section(
   "faq",
   ["accordion"],
   z.object({
-    eyebrow: text(80),
     title: text(140),
     items: z
       .array(z.object({ id, question: requiredText(200), answer: requiredText(2000) }))
@@ -406,7 +430,13 @@ const faq = section(
 const callToAction = section(
   "call_to_action",
   ["band", "card"],
-  z.object({ eyebrow: text(80), title: requiredText(140), body: text(400), link }),
+  z.object({
+    title: requiredText(140),
+    body: text(400),
+    link,
+    /** A text link beside the button. */
+    secondary: optionalLink,
+  }),
 );
 
 const linkList = section(
@@ -485,6 +515,37 @@ export function isSectionType(value: unknown): value is SectionType {
   return typeof value === "string" && value in SECTION_SCHEMAS;
 }
 
+// ---------------------------------------------------------------------------
+// Page rules, checked before a page is saved or published
+// ---------------------------------------------------------------------------
+
+/**
+ * The home page's fixed opening: the hero, then the audiobook player directly
+ * under it. The studio locks these two rows (no move, hide or delete).
+ */
+export const HOME_PINNED: readonly SectionType[] = ["hero", "audiobook_player"];
+
+export const PAGE_ORDER_MESSAGES = {
+  hero: "Hero: it opens the home page.",
+  player: "Audiobook player: it stays directly under the hero.",
+} as const;
+
+/**
+ * Why a page's sections cannot be saved or published as they are, or null.
+ * Takes the stored sections (parsed or not), so the studio can check a draft
+ * before it validates the rest.
+ */
+export function pageOrderProblem(kind: string, sections: readonly unknown[]): string | null {
+  if (kind !== "home") return null;
+  const visible = (index: number, type: SectionType) => {
+    const s = sections[index] as { type?: unknown; settings?: { hidden?: unknown } } | undefined;
+    return s?.type === type && s.settings?.hidden !== true;
+  };
+  if (!visible(0, HOME_PINNED[0])) return PAGE_ORDER_MESSAGES.hero;
+  if (!visible(1, HOME_PINNED[1])) return PAGE_ORDER_MESSAGES.player;
+  return null;
+}
+
 /**
  * Translatable fields per section type. Plain keys are props; `items[].x`
  * is field x of every item in the items array. Kinds: "text" is plain text,
@@ -492,59 +553,73 @@ export function isSectionType(value: unknown): value is SectionType {
  */
 export const TRANSLATABLE: { [T in SectionType]: Record<string, "text" | "rich"> } = {
   hero: {
-    eyebrow: "text",
     title: "text",
     accent: "text",
     body: "text",
     caption: "text",
     "primary.label": "text",
     "secondary.label": "text",
+    "facts[].label": "text",
+    "facts[].value": "text",
   },
-  audiobook_player: { eyebrow: "text", title: "text", intro: "text" },
-  featured_book: { eyebrow: "text", quote: "text", quoteBy: "text" },
-  book_list: { eyebrow: "text", title: "text", intro: "text" },
+  audiobook_player: { title: "text", intro: "text" },
+  featured_book: { quote: "text", quoteBy: "text" },
+  book_list: { title: "text", intro: "text" },
   book_excerpts: {
-    eyebrow: "text",
     title: "text",
     "items[].label": "text",
     "items[].title": "text",
     "items[].excerpt": "text",
   },
-  ebook_gate: { eyebrow: "text", title: "text", body: "text", buttonLabel: "text" },
-  rich_text: { eyebrow: "text", title: "text", body: "rich", pullQuote: "text" },
-  two_column: { eyebrow: "text", title: "text", body: "rich", "link.label": "text" },
-  quote: { quote: "text", accent: "text", by: "text" },
+  ebook_gate: { title: "text", body: "text", buttonLabel: "text" },
+  rich_text: { title: "text", body: "rich" },
+  two_column: {
+    title: "text",
+    lead: "text",
+    body: "rich",
+    caption: "text",
+    "primary.label": "text",
+    "link.label": "text",
+    "secondary.label": "text",
+  },
+  quote: { quote: "text", source: "text", attribution: "text" },
   image: { caption: "text" },
-  gallery: { eyebrow: "text", title: "text" },
-  video: { eyebrow: "text", title: "text", "channelLink.label": "text" },
-  latest_posts: { eyebrow: "text", title: "text", "link.label": "text" },
+  gallery: { title: "text" },
+  video: { title: "text", "channelLink.label": "text" },
+  latest_posts: { title: "text", "link.label": "text" },
   stats: { "items[].value": "text", "items[].label": "text" },
   timeline: {
-    eyebrow: "text",
     title: "text",
     "items[].label": "text",
     "items[].title": "text",
     "items[].body": "text",
+    "items[].caption": "text",
+    "items[].pullQuote": "text",
+    "link.label": "text",
   },
   list: {
-    eyebrow: "text",
     title: "text",
     intro: "text",
     "items[].title": "text",
     "items[].body": "text",
   },
-  testimonials: { eyebrow: "text", title: "text" },
-  products: { eyebrow: "text", title: "text" },
-  masterclasses: { eyebrow: "text", title: "text", intro: "text" },
-  events: { eyebrow: "text", title: "text" },
-  press: { eyebrow: "text", title: "text" },
-  media_kit: { eyebrow: "text", title: "text", shortBio: "text", longBio: "rich" },
-  foundation_stories: { eyebrow: "text", title: "text" },
-  donation: { eyebrow: "text", title: "text", body: "text" },
-  newsletter: { eyebrow: "text", title: "text", body: "text" },
-  contact_form: { eyebrow: "text", title: "text", body: "text" },
-  faq: { eyebrow: "text", title: "text", "items[].question": "text", "items[].answer": "text" },
-  call_to_action: { eyebrow: "text", title: "text", body: "text", "link.label": "text" },
+  testimonials: { title: "text" },
+  products: { title: "text" },
+  masterclasses: { title: "text", intro: "text" },
+  events: { title: "text" },
+  press: { title: "text" },
+  media_kit: { title: "text", shortBio: "text", longBio: "rich" },
+  foundation_stories: { title: "text" },
+  donation: { title: "text", body: "text" },
+  newsletter: { title: "text", body: "text" },
+  contact_form: { title: "text", body: "text" },
+  faq: { title: "text", "items[].question": "text", "items[].answer": "text" },
+  call_to_action: {
+    title: "text",
+    body: "text",
+    "link.label": "text",
+    "secondary.label": "text",
+  },
   link_list: { "items[].label": "text", "items[].description": "text" },
   embed: { title: "text" },
 };

@@ -101,6 +101,11 @@ const PATHS = {
       <path d="M6 9l6 6 6-6" />
     </>
   ),
+  "chev-up": (
+    <>
+      <path d="M6 15l6-6 6 6" />
+    </>
+  ),
   "chev-left": (
     <>
       <path d="M15 6l-6 6 6 6" />
@@ -171,26 +176,6 @@ export function Icon({
   return (
     <svg className={className} viewBox="0 0 24 24" {...a11y}>
       {PATHS[name]}
-    </svg>
-  );
-}
-
-/** Three small asterisks, set above an epigraph. */
-export function Asterism() {
-  const star = <path d="M0-6v12M-5.2-3 5.2 3M-5.2 3 5.2-3" />;
-  return (
-    <svg
-      viewBox="0 0 44 40"
-      aria-hidden
-      focusable={false}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-    >
-      <g transform="translate(22 9)">{star}</g>
-      <g transform="translate(11 29)">{star}</g>
-      <g transform="translate(33 29)">{star}</g>
     </svg>
   );
 }

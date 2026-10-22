@@ -32,7 +32,7 @@ function uid(): string {
 type Settings = Partial<{
   anchor: string;
   background: "ivory" | "cream" | "cocoa";
-  width: "narrow" | "default" | "wide" | "full";
+  width: "narrow" | "default" | "full";
   spacing: "compact" | "default" | "generous";
 }>;
 
@@ -76,73 +76,69 @@ const pages: Page[] = [
     status: "published",
     sections: [
       s("hero", "portrait_arch", {
-        eyebrow: "Author · Storyteller · Founder of Patience Media House",
         title: "Turning pain into purpose.",
-        accent: "purpose",
-        body: "I'm Anastasia. I help women turn their scars into stories, their stories into skills, and their skills into a life they love.",
+        accent: "purpose.",
+        body: "I’m Anastasia. I help women turn their scars into stories, their stories into skills, and their skills into a life they love.",
+        caption:
+          "A daughter of Ghana, a woman of Cyprus, a mother by miracle, and a storyteller by calling.",
         imageMediaId: MEDIA.heroPortrait.id,
         primary: { label: "Read my story", href: "/about" },
-        secondary: { label: "Get the free ebook", href: "#free-ebook" },
         listenCta: true,
       }),
       s(
         "audiobook_player",
         "shelf",
-        {
-          eyebrow: "Listen",
-          title: "Hear it in her own voice.",
-          intro:
-            "The first chapters are free. Press play and keep reading the site; the story follows you.",
-        },
-        { anchor: "listen" },
+        { title: "Listen, in my own voice." },
+        { anchor: "listen", background: "cream" },
       ),
-      s("featured_book", "cover_left", {
-        bookId: BOOK.fyrts,
-        eyebrow: "The book",
-        showEbookGate: true,
-      }),
       s(
-        "two_column",
-        "image_right",
+        "featured_book",
+        "cover_left",
         {
-          eyebrow: "Who I am",
-          title: "A woman who chose joy, on purpose.",
-          body: p(
-            "I write for the woman rebuilding after loss, the mother whispering prayers over a sick child, the entrepreneur with a dream she is afraid to name.",
-            "My story is stitched together from grief, faith and stubborn hope, and every book, masterclass and letter I make is a hand extended back to you.",
-          ),
-          imageMediaId: MEDIA.portraitBurgundy.id,
-          link: { label: "My story", href: "/about" },
+          bookId: BOOK.fyrts,
+          quote:
+            "I read this in one sitting and cried the good kind of tears. It felt like a long letter from a wise older sister.",
+          quoteBy: "Ama, Accra",
+          showEbookGate: true,
         },
-        { background: "cream" },
+        { anchor: "book" },
       ),
-      s("testimonials", "single", { eyebrow: "", title: "" }),
-      s("latest_posts", "list", {
-        eyebrow: "The journal",
-        title: "Letters from the honest middle.",
-        count: 3,
-        showCategories: true,
-        link: { label: "All letters", href: "/blog" },
+      s("quote", "centred", {
+        quote: "No matter what you’re facing, your reason to smile still exists.",
+        source: "Find Your Reason to Smile",
       }),
       s(
         "video",
-        "latest",
-        {
-          eyebrow: "Videos",
-          title: "On stage, on camera, on purpose.",
-        },
-        { background: "cocoa" },
+        "filmstrip",
+        // The channel link comes from the YouTube profile in the studio's social links.
+        { title: "On stage, on camera." },
+        { anchor: "videos", background: "cocoa" },
       ),
       s(
-        "call_to_action",
-        "band",
+        "two_column",
+        "image_left",
         {
-          eyebrow: "Patience Humanitarian Foundation",
           title: "Where no one feels left behind.",
-          body: "Food assistance, compassionate care, community support and care for rescued animals: the work my story led me to.",
-          link: { label: "Visit the foundation", href: "/foundation" },
+          lead: "We support individuals, families, and vulnerable lives facing hardship — through food assistance, compassionate care, community outreach, and care for rescued animals.",
+          body: p("Each case is a person — not a number. Stories shared with care and permission."),
+          imageMediaId: MEDIA.hands.id,
+          caption: "Feeding hope, one heart at a time.",
+          primary: { label: "Donate", href: "/foundation#give" },
+          link: { label: "Volunteer", href: "/contact" },
+          secondary: { label: "Impact stories", href: "/foundation#stories" },
         },
-        { background: "cream" },
+        { anchor: "foundation", background: "cream" },
+      ),
+      s(
+        "latest_posts",
+        "list",
+        {
+          title: "Stories from the honest middle.",
+          count: 3,
+          showCategories: true,
+          link: { label: "All stories", href: "/blog" },
+        },
+        { anchor: "stories" },
       ),
     ],
   },
@@ -156,102 +152,108 @@ const pages: Page[] = [
       "From Ghana to Cyprus, through loss, faith and motherhood: how Anastasia became an author, a storyteller and the founder of Patience Media House.",
     status: "published",
     sections: [
-      s("hero", "portrait_arch", {
-        eyebrow: "Meet Anastasia",
+      s("hero", "portrait_right", {
         title: "A life rewritten in the margins.",
-        accent: "rewritten",
-        body: "I am a daughter of Ghana, a woman of Cyprus, a mother by miracle and a storyteller by calling. This is the long version.",
-        imageMediaId: MEDIA.portraitRust.id,
-      }),
-      s("timeline", "vertical", {
-        eyebrow: "The chapters",
-        title: "Every season taught me something.",
-        items: [
-          [
-            "The beginning",
-            "My parents",
-            "My mother taught me to pray, and to stay quiet and steady in difficult times. My father taught me to work hard with discipline: to be polite, honest and respectful.",
-          ],
-          [
-            "The crossing",
-            "Two suitcases",
-            "At twenty-four I boarded a plane with two suitcases and a promise. I would build a life. I would send money home. I would become someone.",
-          ],
-          [
-            "The work",
-            "Caregiver",
-            "For years I cared for the elderly. Their stories became mine. Their loneliness taught me presence. Their courage taught me endurance.",
-          ],
-          [
-            "The first loss",
-            "My brother",
-            "When my younger brother died, something inside me broke that I didn't know could break. I learned that grief has weather. Some days it rains and does not stop.",
-          ],
-          [
-            "The unmooring",
-            "Without parents",
-            "Losing my mother years later left me unmoored. Without parents in a foreign country, I had to find my own way and become my own compass.",
-          ],
-          [
-            "The choice",
-            "The pregnancy",
-            "The doctors said terminate. There were risks, reasons and papers to sign. I chose faith. I chose him, because I believed his life was worth fighting for, even when the world told me otherwise.",
-          ],
-          [
-            "The miracle",
-            "My son",
-            "He came into this world small, quiet and perfect, already carrying a strength I could see in him. He is the reason I know God still writes stories with impossible endings.",
-          ],
-          [
-            "The dark room",
-            "Depression",
-            "Postpartum depression came like a fog with no exit. I stopped smiling. I stopped writing. Slowly, gently, I found my way back.",
-          ],
-          [
-            "Now",
-            "Author and founder",
-            "I write the books I needed. I teach the classes I wished I had. Find Your Reason to Smile is my letter to every woman who ever felt too broken to begin again.",
-          ],
-        ].map(([label, title, body]) => item({ label, title, body, imageMediaId: null })),
+        body: "My name is Anastasia Patience. I am a daughter of Ghana, a woman of Cyprus, a mother by miracle, and a storyteller by calling. This is the long version.",
+        imageMediaId: MEDIA.portraitBurgundy.id,
+        facts: [
+          ["Based in", "Cyprus"],
+          ["Continents that raised me", "Africa & Europe"],
+          ["Founder of", "Patience Media House"],
+        ].map(([label, value]) => item({ label, value })),
       }),
       s(
-        "quote",
-        "with_portrait",
+        "rich_text",
+        "foreword",
         {
-          quote:
-            "To hand every woman a lantern for the dark seasons, and a map to build a life she loves once the light returns.",
-          accent: "lantern",
-          by: "My mission",
-          imageMediaId: MEDIA.bookDesk.id,
+          title: "Every scar is a syllabus.",
+          body: p(
+            "My story is stitched together from grief, faith, and stubborn hope — and every book, masterclass, and blog post I make is a hand extended back to you.",
+            "Every mother is a mystic. Every ordinary woman carries something the world desperately needs — usually the exact thing she thinks disqualifies her.",
+            "I write for the woman rebuilding after loss, the mother whispering prayers over a sick child, the entrepreneur with a dream she’s afraid to name.",
+          ),
         },
         { background: "cream" },
       ),
-      s("rich_text", "with_pull_quote", {
-        eyebrow: "What I believe",
-        title: "Every scar is a syllabus.",
-        body: p(
-          "I believe every ordinary woman carries something the world needs, usually the very thing she thinks disqualifies her.",
-          "I have lived the long nights: the phone call that changes everything, the hospital corridor, the morning you cannot find a reason to get up. I have also lived the slow return, one small practice at a time, until joy was something I chose again rather than something I waited for.",
-          "That is what I write about, what I teach and why I started the foundation. Not because I have arrived, but because I know the way back, and I would rather walk it with you.",
-        ),
-        pullQuote: "Every mother is a mystic. Every scar is a syllabus.",
-      }),
-      s("list", "plain", {
-        eyebrow: "What I stand on",
-        title: "Five values, one calling.",
+      s("timeline", "vertical", {
+        title: "Every season taught me something.",
+        link: { label: "Read the book", href: "/books/find-your-reason-to-smile" },
         items: [
-          ["Faith", "Faith is the muscle I train first, every morning."],
-          ["Resilience", "Not the loud kind. The quiet, unglamorous, keep-going kind."],
-          ["Purpose", "Every scar is a syllabus. I teach what I have lived."],
-          ["Story", "Stories heal what statistics cannot reach."],
-          ["Service", "If it does not help someone rise, I do not build it."],
-        ].map(([title, body]) => item({ title, body })),
+          {
+            label: "The beginning",
+            title: "My parents",
+            body: "My mother taught me to pray — and to stay quiet and steady in difficult times. My father taught me to work hard with discipline: to be polite, honest, and respectful.",
+          },
+          {
+            label: "The crossing",
+            title: "Two suitcases",
+            body: "At twenty-four, I boarded a plane with two suitcases and a promise. I would build a life. I would send money home. I would become someone.",
+            imageMediaId: MEDIA.sunset.id,
+            caption: "From Ghana to Cyprus — and everywhere in between.",
+          },
+          {
+            label: "The work",
+            title: "Caregiver",
+            body: "For years I cared for the elderly. Their stories became mine. Their loneliness taught me presence. Their courage taught me endurance.",
+          },
+          {
+            label: "The first loss",
+            title: "My brother",
+            body: "When my younger brother died, something inside me broke that I didn’t know could break. I learned that grief has weather. Some days it rains and rains and doesn’t stop.",
+          },
+          {
+            label: "The unmooring",
+            title: "Without parents",
+            body: "Losing my mother years later left me unmoored. Without parents in a foreign country, I had to find my own way — and become my own compass.",
+          },
+          {
+            label: "The choice",
+            title: "The pregnancy",
+            body: "The doctors said terminate. There were risks. There were reasons. There were papers to sign. His name would become my miracle — because I believed his life was worth fighting for, even when the world told me otherwise.",
+            pullQuote: "I chose faith. I chose him.",
+          },
+          {
+            label: "The miracle",
+            title: "My son",
+            body: "He came into this world small, quiet, and perfect — already carrying a strength I could see in him. He is the reason I know God still writes stories with impossible endings.",
+            imageMediaId: MEDIA.hands.id,
+          },
+          {
+            label: "The dark room",
+            title: "Depression",
+            body: "Postpartum depression came like a fog with no exit. I stopped smiling. I stopped writing. I stopped believing I was still in there. Slowly, gently, I found my way back.",
+          },
+          {
+            label: "Now",
+            title: "Author & founder",
+            body: "I write the books I needed. I teach the classes I wished I had. Find Your Reason to Smile is my letter to every woman who ever felt too broken to begin again.",
+          },
+        ].map((chapter) => item({ imageMediaId: null, caption: "", pullQuote: "", ...chapter })),
       }),
-      s("call_to_action", "card", {
-        eyebrow: "The book",
-        title: "Read the whole story.",
-        body: "Find Your Reason to Smile is the memoir behind every chapter above, with the small daily practices that carried me back.",
-        link: { label: "About the book", href: "/books/find-your-reason-to-smile" },
+      s("quote", "statement", {
+        quote:
+          "To hand every woman a lantern for the dark seasons, and a map to build a life she loves once the light returns.",
+        attribution: "My mission",
+      }),
+      s(
+        "list",
+        "plain",
+        {
+          title: "Five values, one calling.",
+          items: [
+            ["Faith", "Faith is the muscle I train first, every morning."],
+            ["Resilience", "Not the loud kind. The quiet, unglamorous, keep-going kind."],
+            ["Purpose", "I teach what I’ve lived."],
+            ["Story", "Stories heal what statistics can’t reach."],
+            ["Service", "If it doesn’t help someone rise, I don’t build it."],
+          ].map(([title, body]) => item({ title, body })),
+        },
+        { background: "cream" },
+      ),
+      s("call_to_action", "band", {
+        title: "Start with chapter one.",
+        link: { label: "Listen to the first chapter", href: "/#listen" },
+        secondary: { label: "Get the free eBook", href: "/#free-ebook" },
       }),
     ],
   },
@@ -266,28 +268,23 @@ const pages: Page[] = [
     status: "published",
     sections: [
       s("book_list", "rows", {
-        eyebrow: "The bookshelf",
         title: "Books to carry you home.",
         intro: "Part memoir, part manual, written in the voice of a friend who has walked it.",
       }),
       s(
         "audiobook_player",
         "shelf",
-        {
-          eyebrow: "Listen",
-          title: "The audiobooks, read by the author.",
-        },
-        { anchor: "listen", background: "cocoa" },
+        { title: "The audiobooks, read by me." },
+        { anchor: "listen", background: "cream" },
       ),
       s(
         "ebook_gate",
         "card",
         {
           bookId: BOOK.fyrts,
-          eyebrow: "Free ebook",
-          title: "A copy for you, free.",
-          body: "The complete ebook of Find Your Reason to Smile. Tell me your first name so I know who it is for.",
-          buttonLabel: "Send me the ebook",
+          title: "Read it tonight, free.",
+          body: "Leave your first name and email and Find Your Reason to Smile is yours to download straight away.",
+          buttonLabel: "Send me the free eBook",
         },
         { anchor: "free-ebook" },
       ),
@@ -297,29 +294,18 @@ const pages: Page[] = [
     path: "/blog",
     kind: "collection",
     locked: true,
-    title: "Journal",
-    seoTitle: "Journal: letters from Anastasia Patience",
+    title: "Stories",
+    seoTitle: "Stories: Anastasia Patience",
     seoDescription:
-      "Letters on faith, purpose, women in business, digital skills and a life rebuilt after loss.",
+      "Stories on faith, purpose, women in business, digital skills and a life rebuilt after loss.",
     status: "published",
     sections: [
       s("latest_posts", "list", {
-        eyebrow: "The journal",
-        title: "Letters for the brave and the becoming.",
+        title: "Stories for the brave and the becoming.",
         count: 12,
         showCategories: true,
         paginate: true,
       }),
-      s(
-        "newsletter",
-        "band",
-        {
-          eyebrow: "Letters",
-          title: "One letter a week, from my desk in Cyprus.",
-          body: "Faith, purpose and the honest middle, straight to your inbox.",
-        },
-        { background: "cream" },
-      ),
     ],
   },
   {
@@ -332,9 +318,8 @@ const pages: Page[] = [
     status: "published",
     sections: [
       s("contact_form", "default", {
-        eyebrow: "Say hello",
         title: "I read every letter.",
-        body: "Whether you are inviting me to a stage, a story or a partnership, I would love to hear from you. I reply within a few days.",
+        body: "Whether you’re inviting me to a stage, a story or a partnership, I would love to hear from you. I reply within a few days.",
       }),
     ],
   },
@@ -348,17 +333,14 @@ const pages: Page[] = [
       "Where no one feels left behind: food assistance, compassionate care, community support and care for rescued animals.",
     status: "published",
     sections: [
-      s("hero", "portrait_arch", {
-        eyebrow: "Patience Humanitarian Foundation",
+      s("hero", "photo", {
         title: "Where no one feels left behind.",
-        accent: "left behind",
-        body: "We support individuals, families and vulnerable lives facing hardship, through food assistance, compassionate care, community outreach and care for rescued animals.",
+        body: "We support individuals, families, and vulnerable lives facing hardship — through food assistance, compassionate care, community outreach, and care for rescued animals.",
         imageMediaId: MEDIA.hands.id,
-        primary: { label: "Give", href: "#give" },
-        secondary: { label: "Read their stories", href: "#stories" },
+        primary: { label: "Donate", href: "#give" },
+        secondary: { label: "Impact stories", href: "#stories" },
       }),
-      s("list", "numbered", {
-        eyebrow: "What we do",
+      s("list", "plain", {
         title: "Four ways we care.",
         items: [
           ["Food assistance", "Groceries and warm meals for families who are going without."],
@@ -380,7 +362,6 @@ const pages: Page[] = [
         "donation",
         "card",
         {
-          eyebrow: "Give",
           title: "Together, we can make a difference.",
           body: "Every gift becomes a meal, a visit or a rescue. Give once, or walk with us every month.",
           amounts: [10, 25, 50, 100],
@@ -391,24 +372,24 @@ const pages: Page[] = [
       s(
         "foundation_stories",
         "grid",
-        {
-          eyebrow: "Impact stories",
-          title: "Faces we hold close.",
-          count: 6,
-        },
+        { title: "Faces we hold close.", count: 6 },
         { anchor: "stories" },
       ),
-      s("list", "plain", {
-        eyebrow: "Our values",
-        title: "What guides every act of care.",
-        items: [
-          ["Compassion", "We meet people where they are."],
-          ["Dignity", "Help is given with respect, and stories are shared only with permission."],
-          ["Service", "We show up, quietly and consistently."],
-          ["Hope", "Every meal and every visit says: you are not forgotten."],
-          ["Community", "None of this happens alone."],
-        ].map(([title, body]) => item({ title, body })),
-      }),
+      s(
+        "list",
+        "plain",
+        {
+          title: "What guides every act of care.",
+          items: [
+            ["Compassion", "We meet people where they are."],
+            ["Dignity", "Help is given with respect, and stories are shared only with permission."],
+            ["Service", "We show up, quietly and consistently."],
+            ["Hope", "Every meal and every visit says: you are not forgotten."],
+            ["Community", "None of this happens alone."],
+          ].map(([title, body]) => item({ title, body })),
+        },
+        { background: "cream" },
+      ),
     ],
   },
   {
@@ -417,14 +398,12 @@ const pages: Page[] = [
     locked: false,
     title: "Gallery",
     seoTitle: "Gallery: Anastasia Patience",
-    seoDescription: "Photographs from Anastasia's life and work.",
+    seoDescription: "Photographs from Anastasia’s life and work.",
     status: "published",
     sections: [
       s("gallery", "masonry", {
-        eyebrow: "In pictures",
         title: "A life in chapters.",
         imageMediaIds: [
-          MEDIA.heroPortrait.id,
           MEDIA.bookDesk.id,
           MEDIA.cyprus.id,
           MEDIA.portraitBurgundy.id,
@@ -444,7 +423,7 @@ const pages: Page[] = [
     seoDescription:
       "Digital products, templates, courses and masterclasses from Patience Media House.",
     status: "published",
-    sections: [s("products", "grid", { eyebrow: "The shop", title: "Tools for your becoming." })],
+    sections: [s("products", "grid", { title: "Tools for your becoming." })],
   },
   {
     path: "/masterclasses",
@@ -456,7 +435,6 @@ const pages: Page[] = [
     status: "published",
     sections: [
       s("masterclasses", "cards", {
-        eyebrow: "Learn with me",
         title: "Masterclasses for the becoming.",
         intro:
           "Digital skills, digital products and the entrepreneurship playbook I wish I had sooner.",
@@ -465,7 +443,6 @@ const pages: Page[] = [
         "newsletter",
         "inline",
         {
-          eyebrow: "Be first to know",
           title: "Hear when the next class opens.",
           body: "Join the letters and you will hear about new masterclasses before anyone else.",
         },
@@ -479,11 +456,10 @@ const pages: Page[] = [
     locked: true,
     title: "Videos",
     seoTitle: "Videos: Anastasia Patience",
-    seoDescription: "Talks, readings and conversations from Anastasia's YouTube channel.",
-    status: "draft",
-    sections: [
-      s("video", "grid", { eyebrow: "Videos", title: "On stage, on camera, on purpose." }),
-    ],
+    seoDescription: "Talks, readings and conversations from Anastasia’s YouTube channel.",
+    // Published: with no videos yet, its own empty state points to the channel.
+    status: "published",
+    sections: [s("video", "grid", { title: "On stage, on camera." })],
   },
   {
     path: "/events",
@@ -493,7 +469,7 @@ const pages: Page[] = [
     seoTitle: "Events: Anastasia Patience",
     seoDescription: "Talks, readings and gatherings with Anastasia.",
     status: "draft",
-    sections: [s("events", "upcoming_list", { eyebrow: "Events", title: "Come and say hello." })],
+    sections: [s("events", "upcoming_list", { title: "Come and say hello." })],
   },
   {
     path: "/press",
@@ -504,13 +480,12 @@ const pages: Page[] = [
     seoDescription: "Press coverage and a media kit for journalists and hosts.",
     status: "draft",
     sections: [
-      s("press", "list", { eyebrow: "In the press", title: "Conversations and coverage." }),
+      s("press", "list", { title: "Conversations and coverage." }),
       s("media_kit", "default", {
-        eyebrow: "Media kit",
         title: "For hosts and journalists.",
         shortBio:
           "Anastasia Patience is an author, storyteller and the founder of Patience Media House. Born in Ghana and living in Cyprus, she writes about faith, loss and resilience, most recently in her memoir Find Your Reason to Smile.",
-        downloadMediaIds: [MEDIA.heroPortrait.id, MEDIA.portraitBurgundy.id, MEDIA.coverFyrts.id],
+        downloadMediaIds: [MEDIA.portraitBurgundy.id, MEDIA.coverFyrts.id],
       }),
     ],
   },
@@ -521,7 +496,7 @@ const pages: Page[] = [
     title: "Anastasia Patience",
     seoTitle: "Start here: Anastasia Patience",
     seoDescription:
-      "Everything in one place: the free ebook, the audiobook, the journal, masterclasses and the foundation.",
+      "Everything in one place: the free ebook, the audiobook, my stories, masterclasses and the foundation.",
     status: "published",
     // The link list is filled from the old start page's links in SQL below.
     sections: [],
@@ -543,7 +518,7 @@ const pages: Page[] = [
           body: [
             '<p>This website is run by Anastasia Patience and Patience Media House, based in Cyprus. This notice explains what we collect when you use it, why, and what you can ask us to do. To reach us about your data, use the <a href="/contact">contact page</a>.</p>',
             "<h2>What we collect</h2>",
-            "<ul><li><strong>Letters (newsletter):</strong> your email address and language. You confirm by email before we send anything (double opt-in).</li><li><strong>Free ebook:</strong> your first name, email and language, so we can send the download link. Ticking the letters box is separate and optional.</li><li><strong>Contact form:</strong> your name, email and message.</li><li><strong>Purchases and gifts:</strong> your name, email and, for printed books, your delivery address. Card details go straight to Stripe; we never see them.</li><li><strong>In your browser only:</strong> where you stopped in an audiobook chapter, your language choice and whether you dismissed a notice. These stay on your device and are never sent to us.</li></ul>",
+            '<ul><li><strong>Letters (newsletter):</strong> your email address and language. You confirm by email before we send anything (double opt-in).</li><li><strong>Free ebook:</strong> your first name, email and language, so we can send the download link. Ticking the letters box is separate and optional.</li><li><strong>Contact form:</strong> your name, email and message.</li><li><strong>Purchases and gifts:</strong> your name, email and, for printed books, your delivery address. Card details go straight to Stripe; we never see them.</li><li><strong>In your browser only:</strong> for the audiobook player, the edition you chose, where you stopped in each chapter, the chapters you have finished and your playback speed; your language choice; and whether you closed the language suggestion. These stay on your device, and we never collect them. More in <a href="/cookies">cookies and storage</a>.</li></ul>',
             "<h2>Why</h2>",
             "<p>We use your details only to do what you asked: send the letters you confirmed, the ebook you requested, a reply to your message, or the order you paid for. We rely on your consent for the letters and on taking the steps you asked for everything else. Records of payments are kept because the law requires it.</p>",
             "<h2>Who helps us run the site</h2>",
@@ -579,13 +554,45 @@ const pages: Page[] = [
             "<h2>Digital purchases</h2>",
             "<p>Ebooks, audio and other digital products are delivered as soon as payment is confirmed, through a download link that works for 7 days. When you buy, you agree that delivery starts straight away, which means the usual 14-day right to cancel ends once the download begins. If a file does not work, tell us and we will fix it or refund you.</p>",
             "<h2>Printed books</h2>",
-            "<p>Printed books bought through other shops are covered by that shop's terms.</p>",
+            "<p>Printed books bought through other shops are covered by that shop’s terms.</p>",
             "<h2>Gifts to the foundation</h2>",
-            "<p>Gifts are used for the foundation's work. If you gave by mistake, contact us within 30 days and we will refund you. Monthly gifts can be changed or cancelled at any time from the link in your receipt.</p>",
+            "<p>Gifts are used for the foundation’s work. If you gave by mistake, contact us within 30 days and we will refund you. Monthly gifts can be changed or cancelled at any time from the link in your receipt.</p>",
             "<h2>Masterclasses</h2>",
             "<p>Each masterclass page sets out what is included, the dates and how to cancel.</p>",
             "<h2>The law</h2>",
             "<p>These terms are governed by the laws of the Republic of Cyprus. Nothing here limits your rights as a consumer.</p>",
+          ].join(""),
+        },
+        { width: "narrow" },
+      ),
+    ],
+  },
+  {
+    path: "/cookies",
+    kind: "legal",
+    locked: true,
+    title: "Cookies",
+    seoTitle: "Cookies and storage",
+    seoDescription:
+      "What this website keeps in your browser, and why. No advertising or tracking cookies.",
+    status: "published",
+    sections: [
+      s(
+        "rich_text",
+        "one_column",
+        {
+          // What the code stores: the locale cookie (src/lib/i18n/locale.ts), the
+          // player's records (src/components/audio/store.ts), the dismissed language
+          // suggestion and the studio's Supabase session. Keep it in step with them.
+          body: [
+            "<p>This website uses no advertising or tracking cookies and no analytics. What it keeps in your browser is there to remember your choices. It stays on your device, and we never collect it.</p>",
+            "<h2>What your browser keeps</h2>",
+            "<ul><li><strong>Your language:</strong> when you switch between English and Greek, one cookie (aph_locale) remembers your choice for a year.</li><li><strong>The audiobook player:</strong> for each audiobook edition, the chapter you are on, where you stopped, the chapters you have finished and your playback speed, and the edition you chose in each language. This is kept in your browser’s local storage, so you can pick up where you left off.</li><li><strong>The language suggestion:</strong> if you close the note that offers a page in your browser’s language, local storage remembers it for a year, so the note does not come back.</li><li><strong>The studio:</strong> only Anastasia and her team sign in. Their sign-in is kept in local storage until they sign out.</li></ul>",
+            "<h2>Services that help run the site</h2>",
+            "<ul><li><strong>Cloudflare Turnstile</strong> checks that a form is sent by a person, not a program. Cloudflare says Turnstile uses no cookies.</li><li><strong>YouTube</strong> videos use YouTube’s privacy-enhanced mode and load only when you press play. From then on, YouTube’s own cookies and terms apply to that video.</li><li><strong>Stripe</strong> takes payments on its own checkout pages, which set their own cookies to prevent fraud.</li></ul>",
+            "<h2>Clearing it</h2>",
+            "<p>You can delete all of this at any time in your browser’s settings for this site. Nothing breaks: the player starts again from the first chapter, and the language note may come back.</p>",
+            '<p>For the details you give us in forms and orders, see the <a href="/privacy">privacy notice</a>.</p>',
           ].join(""),
         },
         { width: "narrow" },
@@ -618,13 +625,13 @@ const startDefaults = [
   },
   {
     label: "Listen to the audiobook",
-    description: "The first chapters, read by Anastasia",
+    description: "The first chapters, in my own voice",
     href: "/#listen",
     featured: false,
   },
   {
-    label: "Read the journal",
-    description: "Letters on faith, purpose and the honest middle",
+    label: "Read my stories",
+    description: "Stories from the honest middle.",
     href: "/blog",
     featured: false,
   },
@@ -661,7 +668,7 @@ update public.site_settings set
   default_seo_description = coalesce(nullif(default_seo_description, ''), ${q(
     "Author, storyteller and founder of Patience Media House. Books, an audiobook in her own voice, and letters on faith, loss and building a life you love.",
   )}),
-  footer_text = coalesce(nullif(footer_text, ''), ${q("Written and read in Cyprus, with love.")}),
+  footer_text = coalesce(nullif(footer_text, ''), ${q("Author, storyteller, entrepreneur. Founder of Patience Media House.")}),
   social_image_id = coalesce(social_image_id, (select id from public.media_assets where id = ${q(MEDIA.socialCard.id)}::uuid))
 where id = 'site';
 `);
@@ -696,44 +703,40 @@ on conflict (path) do nothing;
 
 type Nav = { menu: string; label: string; path?: string; url?: string; children?: Nav[] };
 const nav: Nav[] = [
-  { menu: "header", label: "Books", path: "/books" },
   { menu: "header", label: "About", path: "/about" },
-  { menu: "header", label: "Journal", path: "/blog" },
+  { menu: "header", label: "Books", path: "/books" },
+  { menu: "header", label: "Stories", path: "/blog" },
+  { menu: "header", label: "Videos", path: "/videos" },
+  { menu: "header", label: "Gallery", path: "/gallery" },
   { menu: "header", label: "Foundation", path: "/foundation" },
   { menu: "header", label: "Contact", path: "/contact" },
-  { menu: "header_action", label: "Free ebook", url: "/books#free-ebook" },
+  { menu: "header_action", label: "Free eBook", url: "/#free-ebook" },
   {
     menu: "footer",
-    label: "Read",
-    url: "/books",
+    label: "Explore",
+    url: "/",
     children: [
+      { menu: "footer", label: "About", path: "/about" },
       { menu: "footer", label: "Books", path: "/books" },
-      { menu: "footer", label: "Journal", path: "/blog" },
+      { menu: "footer", label: "Stories", path: "/blog" },
+      { menu: "footer", label: "Videos", path: "/videos" },
       { menu: "footer", label: "Gallery", path: "/gallery" },
     ],
   },
   {
     menu: "footer",
-    label: "Learn",
-    url: "/masterclasses",
-    children: [
-      { menu: "footer", label: "Masterclasses", path: "/masterclasses" },
-      { menu: "footer", label: "Shop", path: "/shop" },
-      { menu: "footer", label: "Start here", path: "/start" },
-    ],
-  },
-  {
-    menu: "footer",
-    label: "Foundation",
+    label: "Company",
     url: "/foundation",
     children: [
-      { menu: "footer", label: "Our work", path: "/foundation" },
-      { menu: "footer", label: "Give", url: "/foundation#give" },
+      { menu: "footer", label: "Foundation", path: "/foundation" },
+      { menu: "footer", label: "Patience Media House", path: "/shop" },
+      { menu: "footer", label: "Masterclasses", path: "/masterclasses" },
       { menu: "footer", label: "Contact", path: "/contact" },
     ],
   },
   { menu: "legal", label: "Privacy", path: "/privacy" },
   { menu: "legal", label: "Terms", path: "/terms" },
+  { menu: "legal", label: "Cookies", path: "/cookies" },
 ];
 
 const navValue = (n: Nav, position: number, parent: string) =>
@@ -781,6 +784,29 @@ where s.enabled
   and not exists (select 1 from public.social_links);
 `);
 
+out.push(`-- The memoir's subtitle, as printed on its cover, when none is set yet.
+update public.books
+set subtitle = 'A Journey of Faith, Loss, Resilience, and Hope'
+where slug = 'find-your-reason-to-smile' and coalesce(subtitle, '') = '';
+`);
+
+out.push(`-- The home lead story, when nothing is featured yet.
+update public.blog_posts set featured = true
+where slug = 'faith-when-the-doctors-say-no'
+  and not exists (select 1 from public.blog_posts where featured);
+`);
+
+out.push(`-- The three starter stories in sentence case, while their titles are still the starter ones.
+update public.blog_posts as p
+set title = v.title
+from (values
+  ('the-morning-i-decided-to-keep-going', 'The Morning I Decided To Keep Going', 'The morning I decided to keep going'),
+  ('your-first-digital-product-in-30-days', 'Your First Digital Product In 30 Days', 'Your first digital product in 30 days'),
+  ('faith-when-the-doctors-say-no', 'Faith, When The Doctors Say No', 'Faith, when the doctors say no')
+) as v(slug, seeded, title)
+where p.slug = v.slug and p.title = v.seeded;
+`);
+
 out.push(`-- Praise: the reader reviews already on the live site, when there is none yet.
 insert into public.testimonials (quote, name, role, book_id, published, position)
 select r.quote,
@@ -794,7 +820,7 @@ where r.published and not exists (select 1 from public.testimonials);
 const consent: [string, string][] = [
   [
     "newsletter",
-    "Send me Anastasia's letters by email. I can unsubscribe at any time with the link in every letter.",
+    "Send me Anastasia’s letters by email. I can unsubscribe at any time with the link in every letter.",
   ],
   [
     "ebook_gate",

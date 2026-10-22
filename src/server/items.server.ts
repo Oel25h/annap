@@ -320,7 +320,8 @@ async function postPage(ctx: LoaderContext, slug: string): Promise<PageData | nu
       post.excerpt ||
       summary(bodyHtml),
     imageId: post.coverMediaId,
-    mediaIds: [post.coverMediaId, ...related.map((r) => r.coverMediaId)],
+    // Related stories are text rows: their covers aren't shown.
+    mediaIds: [post.coverMediaId],
     intro: { kind: "post", post, bodyHtml, related },
     jsonLd: (url, image) => ({
       "@context": "https://schema.org",
@@ -559,7 +560,11 @@ async function eventPage(ctx: LoaderContext, slug: string): Promise<PageData | n
     seoDescription: text.seoDescription || summary(text.summary),
     imageId: row.cover_media_id,
     mediaIds: [row.cover_media_id],
-    intro: { kind: "event", event },
+    intro: {
+      kind: "event",
+      event,
+      ended: new Date(event.endsAt ?? event.startsAt).getTime() < Date.now(),
+    },
     jsonLd: (url, image) => ({
       "@context": "https://schema.org",
       "@type": "Event",

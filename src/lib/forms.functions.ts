@@ -107,9 +107,12 @@ export const joinWaitlist = createServerFn({ method: "POST" })
 
 /** For the /download/$token page: what the link is for, without using it up. */
 export const inspectDownload = createServerFn({ method: "POST" })
-  .validator(asToken)
-  .handler(async ({ data: token }): Promise<DownloadState> => {
-    if (!token) return { status: "invalid" };
+  .validator((input: unknown) => {
+    const { token, locale } = asObject<{ token?: unknown; locale?: unknown }>(input);
+    return { token: asToken(token), locale: locale === "el" ? ("el" as const) : ("en" as const) };
+  })
+  .handler(async ({ data }): Promise<DownloadState> => {
+    if (!data.token) return { status: "invalid" };
     const downloads = await import("@/server/downloads.server");
-    return downloads.inspectDownload(token);
+    return downloads.inspectDownload(data.token, data.locale);
   });

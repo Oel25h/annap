@@ -1,6 +1,7 @@
 /**
  * Loaders for the sections that list collection items. Each runs one query
- * for its items (plus one for approved Greek on Greek pages).
+ * for its items (plus one for approved Greek on Greek pages, and the stories'
+ * theme counts or the shop's payment setting where a list needs them).
  */
 import type { SectionOf } from "@/sections/schemas";
 import type {
@@ -63,14 +64,16 @@ export const bookExcerpts: Loader<"book_excerpts"> = async (ctx, sections) => {
 };
 
 /**
- * Audiobooks recorded in the page's language. A Greek page with no Greek
- * recordings plays the English ones, labelled as English.
+ * The editions a page offers: every book once, in the page's language when it
+ * is recorded in it, otherwise in the other language (labelled as such). The
+ * page's own language comes first, so /el lists the Greek edition first and
+ * the English-only books after it.
  */
 export const audiobookPlayer: Loader<"audiobook_player"> = async (ctx, sections) => {
   const { data, error } = await ctx.db
     .from("audiobooks")
     .select(
-      "id, locale, title, subtitle, narrator, cover_media_id, position, book:books(slug), audiobook_tracks(id, title, opening_line, audio_media_id, duration_seconds, free_to_stream, position)",
+      "id, locale, title, subtitle, narrator, cover_media_id, position, book_id, book:books(slug), audiobook_tracks(id, title, opening_line, audio_media_id, duration_seconds, free_to_stream, position)",
     )
     .order("position");
   if (error) throw new Error(`Audiobooks: ${error.message}`);
@@ -81,6 +84,7 @@ export const audiobookPlayer: Loader<"audiobook_player"> = async (ctx, sections)
     narrator: row.narrator ?? "",
     coverMediaId: row.cover_media_id,
     locale: row.locale === "el" ? "el" : "en",
+    bookId: row.book_id,
     bookSlug: (row.book as { slug: string } | null)?.slug ?? null,
     tracks: [...row.audiobook_tracks]
       .sort((a, b) => a.position - b.position)
@@ -93,9 +97,15 @@ export const audiobookPlayer: Loader<"audiobook_player"> = async (ctx, sections)
       })),
   }));
   const playable = all.filter((a) => a.tracks.some((t) => t.audioMediaId));
-  const inLocale = playable.filter((a) => a.locale === ctx.locale);
-  const fallbackToEnglish = inLocale.length === 0 && ctx.locale === "el";
-  const pool = fallbackToEnglish ? playable.filter((a) => a.locale === "en") : inLocale;
+  const own = playable.filter((a) => a.locale === ctx.locale);
+  const ownBooks = new Set(own.map((a) => a.bookId).filter(Boolean));
+  const others = playable.filter(
+    (a) => a.locale !== ctx.locale && !(a.bookId && ownBooks.has(a.bookId)),
+  );
+  const pool = [...own, ...others];
+  const onlyOtherLanguage = own.length === 0;
+  // The studio's order, with the page's own language first.
+  const ownFirst = (a: AudiobookItem) => (a.locale === ctx.locale ? 0 : 1);
 
   return new Map(
     sections.map((section) => {
@@ -103,8 +113,9 @@ export const audiobookPlayer: Loader<"audiobook_player"> = async (ctx, sections)
         ? section.props.audiobookIds
             .map((id) => pool.find((a) => a.id === id))
             .filter((a): a is AudiobookItem => !!a)
+            .sort((a, b) => ownFirst(a) - ownFirst(b))
         : pool;
-      return [section.id, { audiobooks: chosen, fallbackToEnglish }];
+      return [section.id, { audiobooks: chosen, onlyOtherLanguage }];
     }),
   );
 };
@@ -197,17 +208,40 @@ export async function greekIds(ctx: LoaderContext, entityType: string): Promise<
 
 const strip = ({ categoryId: _drop, ...card }: PostCard & { categoryId: string | null }) => card;
 
-/** The journal index: one page of posts, optionally in one category. */
+type Themes = SectionDataMap["latest_posts"]["categories"];
+
+/**
+ * The themes in shelf order, each with how many stories the index lists in
+ * it, so an empty theme can point to one that has some. `greek` is the
+ * index's Greek-only filter (empty on English pages, and until a post is
+ * translated).
+ */
+async function themeCounts(
+  ctx: LoaderContext,
+  categories: Category[],
+  greek: string[],
+): Promise<Themes> {
+  let query = ctx.db.from("blog_posts").select("category_id");
+  if (greek.length > 0) query = query.in("id", greek);
+  const { data, error } = await query;
+  if (error) throw new Error(`Theme counts: ${error.message}`);
+  const counts = new Map<string, number>();
+  for (const { category_id: id } of data ?? []) {
+    if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return categories.map(({ id, slug, name }) => ({ slug, name, count: counts.get(id) ?? 0 }));
+}
+
+/** The journal index: one page of posts, newest first, optionally in one theme. */
 async function postPage(
   ctx: LoaderContext,
   size: number,
   categories: Category[],
-): Promise<SectionDataMap["latest_posts"]> {
+  greek: string[],
+): Promise<Pick<SectionDataMap["latest_posts"], "posts" | "pagination">> {
   const requested = ctx.query?.page ?? 1;
   const page = Number.isInteger(requested) && requested > 0 ? requested : 1;
   const category = categories.find((c) => c.slug === ctx.query?.category) ?? null;
-  // On a Greek page, list Greek posts; fall back to English ones only if none are translated.
-  const greek = await greekIds(ctx, "blog_post");
   let query = ctx.db
     .from("blog_posts")
     .select(POST_CARD_COLUMNS, { count: "exact" })
@@ -216,20 +250,14 @@ async function postPage(
   if (category) query = query.eq("category_id", category.id);
   if (greek.length > 0) query = query.in("id", greek);
   const { data, error, count } = await query;
-  const categoryList = categories.map(({ slug, name }) => ({ slug, name }));
   // A page past the last one: the database refuses the range, and the page is a 404.
   if (error?.code === "PGRST103") {
-    return {
-      posts: [],
-      categories: categoryList,
-      pagination: { page, pages: 0, category: category?.slug ?? null },
-    };
+    return { posts: [], pagination: { page, pages: 0, category: category?.slug ?? null } };
   }
   if (error) throw new Error(`Posts: ${error.message}`);
   const cards = await postCards(ctx, (data ?? []) as PostRow[], categories);
   return {
     posts: cards.map(strip),
-    categories: categoryList,
     pagination: {
       page,
       pages: Math.max(1, Math.ceil((count ?? 0) / size)),
@@ -238,8 +266,20 @@ async function postPage(
   };
 }
 
+/**
+ * Stories: the latest (the owner's featured stories first, then the newest)
+ * or, with `paginate`, the journal index.
+ */
 export const latestPosts: Loader<"latest_posts"> = async (ctx, sections) => {
-  const categories = await postCategories(ctx);
+  const indexed = sections.some((s) => s.props.paginate || s.props.showCategories);
+  // On a Greek page the index lists Greek posts; English ones only if none are translated.
+  const [categories, greek] = await Promise.all([
+    postCategories(ctx),
+    indexed ? greekIds(ctx, "blog_post") : [],
+  ]);
+  const themes = sections.some((s) => s.props.showCategories)
+    ? await themeCounts(ctx, categories, greek)
+    : [];
   const listed = sections.filter((s) => !s.props.paginate);
   let pool: (PostCard & { categoryId: string | null })[] = [];
   if (listed.length) {
@@ -247,48 +287,62 @@ export const latestPosts: Loader<"latest_posts"> = async (ctx, sections) => {
     const { data, error } = await ctx.db
       .from("blog_posts")
       .select(POST_CARD_COLUMNS)
+      .order("featured", { ascending: false })
       .order("published_at", { ascending: false, nullsFirst: false })
       .limit(Math.min(max * 3, 36));
     if (error) throw new Error(`Posts: ${error.message}`);
     const cards = await postCards(ctx, (data ?? []) as PostRow[], categories);
-    const greek = cards.filter((c) => c.textLang === "el");
-    pool = ctx.locale === "el" && greek.length > 0 ? greek : cards;
+    const greekCards = cards.filter((c) => c.textLang === "el");
+    pool = ctx.locale === "el" && greekCards.length > 0 ? greekCards : cards;
   }
-  const categoryList = categories.map(({ slug, name }) => ({ slug, name }));
 
   const out = new Map<string, SectionDataMap["latest_posts"]>();
   for (const section of sections) {
+    const shown = section.props.showCategories ? themes : [];
     if (section.props.paginate) {
-      const data = await postPage(ctx, section.props.count, categories);
-      out.set(section.id, {
-        ...data,
-        categories: section.props.showCategories ? data.categories : [],
-      });
+      const data = await postPage(ctx, section.props.count, categories, greek);
+      out.set(section.id, { ...data, categories: shown });
       continue;
     }
     const posts = pool
       .filter((c) => !section.props.categoryId || c.categoryId === section.props.categoryId)
       .slice(0, section.props.count)
       .map(strip);
-    out.set(section.id, {
-      posts,
-      categories: section.props.showCategories ? categoryList : [],
-      pagination: null,
-    });
+    out.set(section.id, { posts, categories: shown, pagination: null });
   }
   return out;
 };
 
+/** How many videos each layout shows: the feature and three up next; one; a grid of cards. */
+const VIDEO_COUNT: Record<string, number> = { filmstrip: 4, single: 1, grid: 12 };
+
+/**
+ * The newest videos (an owner's featured pick first), with approved Greek
+ * titles on Greek pages. A section without its own channel link points at
+ * the site's YouTube social link.
+ */
 export const video: Loader<"video"> = async (ctx, sections) => {
-  const { data, error } = await ctx.db
-    .from("videos")
-    .select(
-      "id, youtube_id, title, description, duration_seconds, published_at, thumbnail_media_id, featured, position",
-    )
-    .order("featured", { ascending: false })
-    .order("published_at", { ascending: false, nullsFirst: false })
-    .limit(48);
+  const needsChannel = sections.some((s) => !s.props.channelLink.href);
+  const [{ data, error }, socials] = await Promise.all([
+    ctx.db
+      .from("videos")
+      .select(
+        "id, youtube_id, title, description, duration_seconds, published_at, thumbnail_media_id, featured, position",
+      )
+      .order("featured", { ascending: false })
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .limit(48),
+    needsChannel
+      ? ctx.db
+          .from("social_links")
+          .select("url")
+          .eq("platform", "youtube")
+          .eq("enabled", true)
+          .order("position")
+      : null,
+  ]);
   if (error) throw new Error(`Videos: ${error.message}`);
+  const channelUrl = socials?.data?.find((s) => /^https:\/\//i.test(s.url))?.url ?? null;
   const rows = data ?? [];
   const greek = await itemOverlays(
     ctx,
@@ -316,12 +370,18 @@ export const video: Loader<"video"> = async (ctx, sections) => {
   return new Map(
     sections.map((section) => {
       const picked =
-        section.variant !== "latest" && section.props.videoIds.length
+        section.variant !== "filmstrip" && section.props.videoIds.length
           ? section.props.videoIds
               .map((id) => cards.find((c) => c.id === id))
               .filter((c): c is VideoCard => !!c)
-          : cards.slice(0, 5);
-      return [section.id, { videos: picked }];
+          : cards;
+      return [
+        section.id,
+        {
+          videos: picked.slice(0, VIDEO_COUNT[section.variant] ?? VIDEO_COUNT.filmstrip),
+          channelUrl: section.props.channelLink.href ? null : channelUrl,
+        },
+      ];
     }),
   );
 };
@@ -406,14 +466,21 @@ export const donation: Loader<"donation"> = async (ctx, sections) => {
   return new Map(sections.map((s) => [s.id, { payments }]));
 };
 
+/** A path on this site (not `//host`), or null. */
+const sitePath = (value: string | null) =>
+  value && /^\/(?!\/)\S*$/.test(value.trim()) ? value.trim() : null;
+
 export const products: Loader<"products"> = async (ctx, sections) => {
-  const { data, error } = await ctx.db
-    .from("products")
-    .select(
-      "id, slug, name, description, who_for, product_type, price_cents, price, currency, cover_media_id, category_id, featured, sort_order",
-    )
-    .order("featured", { ascending: false })
-    .order("sort_order");
+  const [{ data, error }, { payments }] = await Promise.all([
+    ctx.db
+      .from("products")
+      .select(
+        "id, slug, name, description, who_for, product_type, price_cents, price, currency, checkout_url, cover_media_id, category_id, featured, sort_order",
+      )
+      .order("featured", { ascending: false })
+      .order("sort_order"),
+    publicIntegrations(ctx),
+  ]);
   if (error) throw new Error(`Products: ${error.message}`);
   const rows = data ?? [];
   const greek = await itemOverlays(
@@ -441,6 +508,11 @@ export const products: Loader<"products"> = async (ctx, sections) => {
         priceLabel: row.price ?? "",
         coverMediaId: row.cover_media_id,
         textLang: lang,
+        // As on the product's own page: sold here when payments are on and it has a price.
+        checkoutUrl:
+          payments && row.price_cents !== null && row.price_cents > 0
+            ? null
+            : sitePath(row.checkout_url),
       } satisfies ProductCard,
     };
   });

@@ -1,0 +1,863 @@
+/* Stories (latest posts and the index), videos, embeds, gallery, reviews, tiles and rows (shop, masterclasses, foundation stories, events, press), the media kit. */
+@layer components {
+  /* ---------- Stories: one lead, then text rows, then the themes ---------- */
+  .lead-story {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .lead-text .display-l {
+    margin-top: var(--space-3);
+  }
+  .lead-text .display-l:first-child {
+    margin-top: 0;
+  }
+  .lead-text .body {
+    margin-top: var(--space-4);
+    max-width: 30em;
+    color: var(--color-text-secondary);
+  }
+  .lead-meta {
+    margin-top: var(--space-4);
+  }
+  .lead-text .link {
+    margin-top: var(--space-3);
+  }
+  .lead-img {
+    display: block;
+  }
+  .lead-img img {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    object-position: var(--focal, 50% 50%);
+    border-radius: var(--radius);
+    background: var(--color-bg-alt);
+  }
+  /* "(in English)" after a title on /el */
+  :is(.title, .display-l) > .meta {
+    white-space: nowrap;
+  }
+  @media (min-width: 1024px) {
+    .lead-story {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--grid-gap);
+      align-items: center;
+    }
+    .lead-text {
+      grid-column: 1 / 6;
+    }
+    .lead-img {
+      grid-column: 7 / 13;
+    }
+    .lead-story--text .lead-text {
+      grid-column: 1 / 9;
+    }
+  }
+
+  .story-list {
+    margin-top: var(--space-7);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .story-list--first {
+    margin-top: 0;
+  }
+  .story-row {
+    display: grid;
+    gap: var(--space-2);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .story-meta {
+    display: grid;
+    gap: var(--space-1);
+    align-content: start;
+  }
+  .story-row .excerpt {
+    display: none;
+  }
+  @media (min-width: 720px) {
+    .story-row {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      column-gap: var(--space-6);
+    }
+    .story-row .excerpt {
+      display: block;
+      margin-top: var(--space-2);
+      max-width: 34em;
+      color: var(--color-text-secondary);
+    }
+  }
+  @media (min-width: 1024px) {
+    .story-row {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--grid-gap);
+      padding-block: var(--space-6);
+    }
+    .story-meta {
+      grid-column: 1 / 4;
+    }
+    .story-text {
+      grid-column: 4 / 11;
+    }
+  }
+  .story-tiles {
+    margin-top: var(--space-7);
+  }
+
+  /* Browse by theme: 44px links in secondary text */
+  .themes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--space-5);
+    padding-top: var(--space-5);
+  }
+  .themes .meta {
+    margin-right: var(--space-2);
+  }
+  .themes a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-control-sm);
+    font: 500 var(--text-ui) / 1.3 var(--font-sans);
+    color: var(--color-text-secondary);
+    text-decoration: underline;
+    text-decoration-color: var(--color-hairline);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.45em;
+    transition:
+      color var(--duration-hover),
+      text-decoration-color var(--duration-hover);
+  }
+  .themes a:hover {
+    color: var(--color-accent-text);
+    text-decoration-color: var(--color-accent-text);
+  }
+
+  /* The index's themes: chips that are links (base.css), the current one selected */
+  .index-themes {
+    margin-bottom: var(--space-6);
+  }
+
+  /* Newer · Page n of m · Older; a missing side leaves its cell empty */
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-6);
+  }
+  .pager [rel="prev"] {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .pager-count {
+    grid-column: 2;
+    font-variant-numeric: tabular-nums;
+  }
+  .pager [rel="next"] {
+    grid-column: 3;
+    justify-self: end;
+  }
+  @media (max-width: 719px) {
+    .pager {
+      grid-template-columns: 1fr 1fr;
+    }
+    .pager-count {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      text-align: center;
+    }
+    .pager [rel="next"] {
+      grid-column: 2;
+    }
+  }
+
+  /* What is missing and one next step: left-aligned, roman, between hairlines */
+  .empty {
+    max-width: var(--text-max);
+    padding-block: var(--space-5);
+    border-block: 1px solid var(--color-hairline);
+  }
+  .empty .body {
+    color: var(--color-text-secondary);
+  }
+  .empty .link {
+    margin-top: var(--space-2);
+  }
+
+  /* ---------- Tiles: open, a photo then the words; three across from 1024 ---------- */
+  .tiles {
+    display: grid;
+    gap: var(--space-6) var(--grid-gap);
+  }
+  @media (min-width: 720px) {
+    .tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .tiles {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .tiles > li {
+      grid-column: span 4;
+    }
+  }
+  .tile {
+    position: relative;
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+  .tile > img {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    object-position: var(--focal, 50% 50%);
+    border-radius: var(--radius);
+    background: var(--color-bg-alt);
+    margin-bottom: var(--space-2);
+  }
+  .tile--cover > img {
+    aspect-ratio: 3 / 4;
+  }
+  .tile .body {
+    max-width: 30em;
+    color: var(--color-text-secondary);
+  }
+  .tile-status {
+    margin-top: var(--space-1);
+  }
+  /* The title's link covers the tile: one target, one tab stop, the ring round the tile */
+  .tile-link {
+    text-decoration: none;
+    transition: color var(--duration-hover);
+  }
+  .tile-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+  .tile:hover .tile-link {
+    color: var(--color-accent-text);
+  }
+  .tile:has(.tile-link:focus-visible) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+    border-radius: var(--radius);
+  }
+  .tile-link:focus-visible {
+    outline: none;
+  }
+
+  /* ---------- Rows: meta on 1–3, the words on 4–10, an aside on 11–12 ---------- */
+  .rows {
+    border-top: 1px solid var(--color-hairline);
+  }
+  .rows > li {
+    display: grid;
+    gap: var(--space-2);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .row-meta {
+    display: grid;
+    gap: var(--space-1);
+    align-content: start;
+    justify-items: start;
+  }
+  .row-text .body {
+    margin-top: var(--space-2);
+    max-width: 34em;
+    color: var(--color-text-secondary);
+  }
+  .row-aside {
+    margin-top: var(--space-2);
+  }
+  @media (min-width: 720px) {
+    .rows > li {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      column-gap: var(--space-6);
+    }
+    .row-text,
+    .row-aside {
+      grid-column: 2;
+    }
+  }
+  @media (min-width: 1024px) {
+    .rows > li {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--grid-gap);
+      padding-block: var(--space-6);
+    }
+    .row-meta {
+      grid-column: 1 / 4;
+    }
+    .row-text {
+      grid-column: 4 / 11;
+    }
+    .row-aside {
+      grid-column: 11 / 13;
+      justify-self: end;
+      align-self: start;
+      margin-top: 0;
+    }
+  }
+
+  /* Past events: a 44px summary with a chevron that turns, like the FAQ */
+  .past {
+    margin-top: var(--space-7);
+  }
+  .past summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: fit-content;
+    min-height: var(--size-control-sm);
+    list-style: none;
+    cursor: pointer;
+    transition: color var(--duration-hover);
+  }
+  .past summary::-webkit-details-marker {
+    display: none;
+  }
+  .past summary:hover {
+    color: var(--color-accent-text);
+  }
+  .past summary svg.i {
+    color: var(--color-accent-text);
+  }
+  .past[open] summary svg.i {
+    rotate: 180deg;
+  }
+  .past summary + * {
+    margin-top: var(--space-4);
+  }
+
+  /* ---------- Press: outlets by name; headlines that leave the site ---------- */
+  .press-names.dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-5);
+  }
+  .press-names a,
+  .press-names span {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-control-sm);
+  }
+  .press-link svg.i {
+    display: inline;
+    width: 16px;
+    height: 16px;
+    margin-left: var(--space-1);
+    vertical-align: -0.1em;
+    color: var(--color-text-tertiary);
+  }
+
+  /* ---------- Reviews: a hairline above, lead-size roman, the credit in meta ---------- */
+  .review {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .review blockquote p {
+    font: 400 var(--text-lead) / 1.5 var(--font-serif);
+    color: var(--color-text);
+    text-wrap: pretty;
+  }
+  .review figcaption {
+    margin-top: var(--space-4);
+  }
+  @media (min-width: 1024px) {
+    .reviews--single > li {
+      grid-column: 1 / 9;
+    }
+  }
+  /* Several: a row of reviews that scrolls sideways under the reader's hand */
+  .reviews--track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 86%;
+    gap: var(--grid-gap);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .reviews--track::-webkit-scrollbar {
+    display: none;
+  }
+  .reviews--track > li {
+    scroll-snap-align: start;
+  }
+  @media (min-width: 720px) {
+    .reviews--track {
+      grid-auto-columns: calc((100% - var(--grid-gap)) / 2);
+    }
+  }
+  @media (min-width: 1024px) {
+    .reviews--track {
+      grid-auto-columns: calc((100% - 2 * var(--grid-gap)) / 3);
+    }
+  }
+  .track-ctl {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+  }
+  /* A square 44px button round one icon */
+  .icon-btn {
+    width: var(--size-control-sm);
+    padding: 0;
+    justify-content: center;
+  }
+
+  /* ---------- Media kit: hairline sections; short bio 1–5, long bio 7–12, files below ---------- */
+  .kit {
+    display: grid;
+    gap: var(--space-7);
+  }
+  .kit-bio,
+  .kit-files {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .kit-bio > .body {
+    max-width: 34em;
+  }
+  @media (min-width: 1024px) {
+    .kit {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--grid-gap);
+    }
+    .kit-bio {
+      grid-column: 1 / 6;
+    }
+    .kit-bio--long {
+      grid-column: 7 / 13;
+    }
+    .kit-files {
+      grid-column: 1 / 13;
+    }
+  }
+  .kit-downloads {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5) var(--grid-gap);
+    margin-top: var(--space-2);
+  }
+  .kit-downloads li {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    justify-items: start;
+  }
+  @media (min-width: 1024px) {
+    .kit-downloads {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .kit-downloads li {
+      grid-column: span 3;
+    }
+  }
+  .kit-thumb {
+    width: 100%;
+  }
+  .kit-thumb img {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: var(--focal, 50% 50%);
+    border-radius: var(--radius);
+    background: var(--color-bg-alt);
+  }
+  .kit-thumb--cover img {
+    aspect-ratio: 3 / 4;
+  }
+  .kit-thumb--wide img {
+    aspect-ratio: 3 / 2;
+  }
+
+  /* ---------- Videos: a click-to-play frame, its caption and Up next beside it ---------- */
+  .film {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--color-cocoa-night);
+  }
+  .frame img,
+  .frame iframe,
+  .facade-btn {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--focal, 50% 50%);
+    border: 0;
+  }
+  .facade-btn {
+    display: block;
+    padding: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  /* The ring goes round the frame, which clips its own contents */
+  .frame:has(.facade-btn:focus-visible) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+  }
+  .facade-btn:focus-visible {
+    outline: none;
+  }
+  /* Faces stay clear: the play badge bottom-left, the duration bottom-right */
+  .play-badge {
+    position: absolute;
+    left: var(--space-4);
+    bottom: var(--space-4);
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--color-tangerine);
+    color: var(--color-cocoa-ink);
+    transition: background-color var(--duration-hover);
+  }
+  .play-badge svg.i {
+    width: 24px;
+    height: 24px;
+    margin-left: 2px;
+  }
+  .facade-btn:hover .play-badge {
+    background: var(--color-apricot);
+  }
+  /* The same in light and dark: cocoa ink and peach cream */
+  .dur {
+    position: absolute;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius);
+    background: var(--color-cocoa-ink);
+    color: var(--color-peach-cream);
+    font: 600 var(--text-label) / 1.3 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  /* The map's facade: one quiet label in place of the badge */
+  .frame-cta {
+    position: absolute;
+    left: var(--space-4);
+    bottom: var(--space-4);
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-control-sm);
+    padding-inline: var(--space-4);
+    border: 1px solid var(--color-field-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: 600 var(--text-ui) / 1.25 var(--font-sans);
+  }
+  .facade-note {
+    margin-top: var(--space-3);
+  }
+  .frame--spotify {
+    aspect-ratio: 16 / 7;
+  }
+  .frame--google-maps {
+    aspect-ratio: 4 / 3;
+  }
+
+  .film-side {
+    display: grid;
+    gap: var(--space-6);
+    align-content: start;
+  }
+  .film-cap {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .film-cap .body {
+    color: var(--color-text-secondary);
+  }
+  .upnext-label {
+    margin-bottom: var(--space-2);
+  }
+  .upnext {
+    border-top: 1px solid var(--color-hairline);
+  }
+  .upnext a {
+    display: grid;
+    grid-template-columns: var(--size-upnext-thumb) minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: center;
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--color-hairline);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .upnext img {
+    width: var(--size-upnext-thumb);
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: var(--focal, 50% 50%);
+    border-radius: var(--radius);
+    background: var(--color-bg-alt);
+  }
+  .upnext-title {
+    display: block;
+    font: 600 var(--text-small) / 1.35 var(--font-serif);
+    text-wrap: pretty;
+    transition: color var(--duration-hover);
+  }
+  .upnext .meta {
+    display: block;
+    margin-top: var(--space-1);
+  }
+  .upnext a:hover .upnext-title {
+    color: var(--color-accent-text);
+  }
+  @media (min-width: 1024px) {
+    .film {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--grid-gap);
+    }
+    .film > .frame {
+      grid-column: 1 / 9;
+      align-self: start;
+    }
+    /* The side column ends with the frame */
+    .film-side {
+      grid-column: 9 / 13;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .upnext a {
+      padding-block: var(--space-2);
+    }
+  }
+  /* /videos: the rest as 16:9 tiles that open YouTube, without a badge */
+  .video-grid {
+    margin-top: var(--space-7);
+  }
+  .video-grid .frame {
+    margin-bottom: var(--space-2);
+  }
+
+  .embed-player {
+    min-width: 0;
+  }
+  @media (min-width: 1024px) {
+    .embed-player {
+      grid-column: 1 / 9;
+    }
+  }
+
+  /* ---------- Gallery: plates on the grid, and the lightbox ---------- */
+  .plates {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--grid-gap);
+  }
+  @media (min-width: 1024px) {
+    .plates--grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+    .plates--grid > li {
+      grid-column: span 3;
+    }
+  }
+  .plate {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--color-bg-alt);
+    cursor: zoom-in;
+  }
+  .plate img {
+    display: block;
+    width: 100%;
+    aspect-ratio: var(--ratio, 4 / 5);
+    object-fit: cover;
+    object-position: var(--focal, 50% 50%);
+  }
+  .plate:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+  }
+  .plates li .caption {
+    margin-top: var(--space-3);
+  }
+  /* Masonry: two columns, four from 1024; each plate keeps 4:5 or 3:2 */
+  .plates--masonry {
+    display: block;
+    columns: 2;
+    column-gap: var(--grid-gap);
+  }
+  .plates--masonry > li {
+    break-inside: avoid;
+    margin-bottom: var(--grid-gap);
+  }
+  @media (min-width: 1024px) {
+    .plates--masonry {
+      columns: 4;
+    }
+    /* A short set balances into three columns, so none is left empty */
+    .plates--masonry:not(:has(> li:nth-child(8))) {
+      columns: 3;
+    }
+  }
+  /* Carousel and film strip scroll sideways under the reader's hand, inside the page */
+  .plates--carousel,
+  .plates--filmstrip {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-hairline) transparent;
+    padding-bottom: var(--space-3);
+  }
+  .plates--carousel > li,
+  .plates--filmstrip > li {
+    scroll-snap-align: start;
+  }
+  .plates--carousel {
+    --ratio: 3 / 2;
+    grid-auto-columns: 85%;
+  }
+  .plates--filmstrip {
+    grid-auto-columns: 60%;
+  }
+  @media (min-width: 720px) {
+    .plates--carousel {
+      grid-auto-columns: calc((100% - var(--grid-gap)) / 2);
+    }
+    .plates--filmstrip {
+      grid-auto-columns: calc((100% - 2 * var(--grid-gap)) / 3);
+    }
+  }
+  @media (min-width: 1024px) {
+    .plates--filmstrip {
+      grid-auto-columns: calc((100% - 3 * var(--grid-gap)) / 4);
+    }
+  }
+
+  .lightbox {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: var(--space-4);
+    border: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+  .lightbox[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  .lightbox::backdrop {
+    background: var(--color-cocoa-night);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .lightbox[open],
+    .lightbox[open]::backdrop {
+      transition: opacity var(--duration-panel) var(--ease-out);
+    }
+    @starting-style {
+      .lightbox[open],
+      .lightbox[open]::backdrop {
+        opacity: 0;
+      }
+    }
+  }
+  /* Close comes first for focus; it sits on the right, the count on the left */
+  .lightbox-bar {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+  /* Phones: the photo, then previous and next under it. From 1024 they flank it. */
+  .lightbox-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: var(--space-4);
+    min-height: 0;
+  }
+  .lightbox-fig {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    justify-items: center;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 0;
+  }
+  .lightbox-fig img {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    min-height: 0;
+    object-fit: contain;
+    border-radius: var(--radius);
+  }
+  .lightbox-fig figcaption {
+    display: grid;
+    gap: var(--space-1);
+    justify-items: center;
+    max-width: var(--text-max);
+    text-align: center;
+  }
+  .lightbox-prev {
+    justify-self: start;
+  }
+  .lightbox-next {
+    justify-self: end;
+  }
+  @media (min-width: 1024px) {
+    .lightbox {
+      padding: var(--space-6) var(--space-8);
+    }
+    .lightbox-stage {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      grid-template-rows: minmax(0, 1fr);
+      align-items: center;
+    }
+    .lightbox-prev {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .lightbox-fig {
+      grid-column: 2;
+      grid-row: 1;
+      height: 100%;
+    }
+    .lightbox-next {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+}

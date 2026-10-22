@@ -1,98 +1,152 @@
-import { caps } from "@/lib/i18n/caps";
 import type { ReactNode } from "react";
 import type { Locale } from "@/lib/i18n/locale";
 import type { RenderedSection } from "@/sections/types";
+import type { SectionSettings } from "@/sections/schemas";
 import { SiteLink } from "@/components/site/SiteLink";
 import { Icon } from "@/components/site/Icon";
+import { nb } from "@/lib/i18n/rag";
+
+export type Band = SectionSettings["background"];
 
 export type SectionContext = {
   locale: Locale;
-  /** Chapter numeral for the running head ("I", "II", or "§" for the player). */
-  numeral: string | null;
-  /** True for the first section: only it may load images eagerly. */
+  /** True for the first section on the page: only it may load images eagerly. */
   isFirst: boolean;
   /** id for the section heading, for aria-labelledby. */
   headingId: string;
+  /** The first section's heading is the page's h1 when nothing comes before it. */
+  headingLevel: "h1" | "h2";
+  /** The section's band once the page's band rules are applied. */
+  band: Band;
+  /** Only the home page hero sets its hope word in italic. */
+  isHome: boolean;
 };
 
-const BANDS = { ivory: "band-ivory", cream: "band-peach", cocoa: "band-cocoa" } as const;
+const BANDS: Record<Band, string> = {
+  ivory: "band-ivory",
+  cream: "band-peach",
+  cocoa: "band-cocoa",
+};
 
-export type RunheadLink = { label: string; href: string; external?: boolean } | null;
+export const bandClass = (band: Band) => BANDS[band];
 
-/** The running head: chapter numeral, the section's label, and an optional link. */
-export function Runhead({
-  numeral,
-  title,
-  link,
-  meta,
-}: {
-  numeral: string | null;
+/** A standalone link: in-site with a right arrow, or out of the site with an up-right one. */
+export type HeadLink = {
+  label: string;
+  href: string;
+  /** Informational only: SiteLink decides from the host whether a link opens a new tab. */
+  external?: "tab" | "youtube";
+  lang?: "en";
+};
+
+/** The heading row: one h2 (or the page h1) and at most one link. */
+export type SectionHead = {
   title: string;
-  link?: RunheadLink;
-  meta?: string;
+  titleLang?: "en";
+  intro?: string;
+  introLang?: "en";
+  link?: HeadLink | null;
+};
+
+/** A link from a section's props as a HeadLink, or null when it is empty. */
+export function headLink(
+  link: { label: string; href: string } | null | undefined,
+  fallbackLabel = "",
+  lang?: "en",
+): HeadLink | null {
+  if (!link?.href) return null;
+  const label = link.label || fallbackLabel;
+  if (!label) return null;
+  return { label, href: link.href, lang };
+}
+
+/**
+ * `.link`: 44px tall, 15px/600 sans, with its arrow. A link to another
+ * website opens in a new tab and says so (SiteLink).
+ */
+export function TextLink({
+  link,
+  className = "link",
+  icon,
+}: {
+  link: HeadLink;
+  className?: string;
+  /** Overrides the arrow, for links such as "Listen above". */
+  icon?: "arrow-up" | "arrow-down" | "arrow-right" | "arrow-ext";
 }) {
   return (
-    <div className="runhead">
-      <p className="runhead-title">
-        {numeral && (
-          <span className="runhead-n" aria-hidden="true">
-            {numeral}
-          </span>
-        )}
-        <span>{caps(title)}</span>
-      </p>
-      {link ? (
-        <SiteLink className="link" href={link.href}>
-          {link.label}
-          <Icon name={link.external ? "arrow-ext" : "arrow-right"} />
-        </SiteLink>
-      ) : meta ? (
-        <p className="meta">{meta}</p>
-      ) : null}
-    </div>
+    <SiteLink className={className} href={link.href} lang={link.lang} arrow={!icon}>
+      {link.label}
+      {icon && <Icon name={icon} />}
+    </SiteLink>
   );
 }
 
-/** The phone-only copy of the running-head link, at the end of the section. */
-export function FootLink({ link }: { link: RunheadLink }) {
-  if (!link) return null;
+/**
+ * The section's own heading, for sections that place it inside their layout
+ * (hero, book, two column, foreword, forms). It is the page's h1 when the
+ * section opens the page, set in Display XL.
+ */
+export function SectionHeading({
+  ctx,
+  children,
+  className = "display-l",
+  lang,
+  tabIndex,
+}: {
+  ctx: SectionContext;
+  children: ReactNode;
+  className?: string;
+  lang?: string;
+  tabIndex?: number;
+}) {
+  const H = ctx.headingLevel;
   return (
-    <p className="foot-link">
-      <SiteLink className="link" href={link.href}>
-        {link.label}
-        <Icon name={link.external ? "arrow-ext" : "arrow-right"} />
-      </SiteLink>
-    </p>
+    <H
+      id={ctx.headingId}
+      className={H === "h1" ? "display-xl" : className}
+      lang={lang}
+      tabIndex={tabIndex}
+    >
+      {typeof children === "string" ? nb(children) : children}
+    </H>
   );
 }
 
-/** Band, width, spacing, anchor and language for any section. */
+/**
+ * Band, width, spacing, anchor and language for any section, and its heading
+ * row. A section with a heading is labelled by it; one without is a plain
+ * section, never an unnamed landmark.
+ *
+ * - `head` renders `.shead` (the heading and its one link). Below 720 the link
+ *   moves to the end of the section as `.foot-link`.
+ * - `labelled` says the component renders its own heading with `ctx.headingId`.
+ */
 export function SectionShell({
   section,
   ctx,
   className = "",
-  labelled = true,
-  label,
+  wrapClassName = "",
+  head,
+  labelled = false,
   children,
-  runhead,
   defaultAnchor,
 }: {
   section: RenderedSection;
   ctx: SectionContext;
   className?: string;
-  /** False when the section has no heading of its own (it then needs `label`). */
+  wrapClassName?: string;
+  head?: SectionHead | null;
   labelled?: boolean;
-  label?: string;
   children: ReactNode;
-  runhead?: { link?: RunheadLink; meta?: string; title?: string };
   defaultAnchor?: string;
 }) {
   const { settings } = section;
-  const eyebrow = (section.props as { eyebrow?: string }).eyebrow ?? "";
-  const runheadTitle = runhead?.title ?? eyebrow;
+  const title = head?.title.trim() ?? "";
+  const link = head?.link ?? null;
   const classes = [
-    "chapter",
-    BANDS[settings.background],
+    "section",
+    BANDS[ctx.band],
     `section-${section.type.replace(/_/g, "-")}`,
     `width-${settings.width}`,
     `space-${settings.spacing}`,
@@ -105,19 +159,30 @@ export function SectionShell({
       className={classes}
       id={settings.anchor || defaultAnchor || undefined}
       lang={section.lang !== ctx.locale ? section.lang : undefined}
-      aria-labelledby={labelled ? ctx.headingId : undefined}
-      aria-label={!labelled ? label : undefined}
+      aria-labelledby={labelled || title ? ctx.headingId : undefined}
     >
-      <div className="wrap">
-        {runheadTitle && (
-          <Runhead
-            numeral={ctx.numeral}
-            title={runheadTitle}
-            link={runhead?.link}
-            meta={runhead?.meta}
-          />
+      <div className={["wrap", wrapClassName].filter(Boolean).join(" ")}>
+        {title && (
+          <div className="shead">
+            <div className="shead-text">
+              <SectionHeading ctx={ctx} lang={head?.titleLang}>
+                {title}
+              </SectionHeading>
+              {head?.intro && (
+                <p className="lead" lang={head.introLang}>
+                  {nb(head.intro)}
+                </p>
+              )}
+            </div>
+            {link && <TextLink link={link} />}
+          </div>
         )}
         {children}
+        {link && (
+          <p className={title ? "foot-link" : "foot-link foot-link--always"}>
+            <TextLink link={link} />
+          </p>
+        )}
       </div>
     </section>
   );

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useLocale } from "@/lib/i18n/context";
 import { writeLocaleCookie, type Locale } from "@/lib/i18n/locale";
 import { getMessages } from "@/lib/i18n/messages";
-import { useAudio } from "@/components/audio/AudioProvider";
+import { useMiniPlayerShown } from "@/components/audio/AudioProvider";
 
 const DISMISSED = "ap:lang-suggestion";
 const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
@@ -33,13 +33,15 @@ function dismissedRecently(): boolean {
  * A quiet bar suggesting the page in the reader's own language, written in
  * that language. It appears only after hydration (the HTML is the same for
  * everyone), only when the other language really exists for this page, never
- * takes focus, and steps aside while the docked audio player is showing.
+ * takes focus, and steps aside while the docked audio player or a buy bar is
+ * showing (the buy bar by CSS). Docked at the bottom like them, it never
+ * fades in and never covers the legal row.
  */
 export function LanguageSuggestion() {
   const locale = useLocale();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const matches = useMatches();
-  const audio = useAudio();
+  const playerDocked = useMiniPlayerShown();
   const [target, setTarget] = useState<Locale | null>(null);
 
   // Whether this page has an approved twin in the other language.
@@ -58,7 +60,7 @@ export function LanguageSuggestion() {
     else setTarget(null);
   }, [locale, pathname, twin]);
 
-  if (!target || audio.book) return null;
+  if (!target || playerDocked) return null;
   const copy = getMessages(target).site.suggestion;
   const dismiss = () => {
     try {
@@ -70,31 +72,34 @@ export function LanguageSuggestion() {
   };
 
   return (
-    <aside className="lang-suggest" lang={target} aria-label={copy.text}>
-      <p>{copy.text}</p>
-      <div className="lang-suggest-actions">
-        <Link
-          className="btn btn-primary btn-sm"
-          to="."
-          search={
-            ((prev: Record<string, unknown>) => ({
-              ...prev,
-              lang: target === "el" ? "el" : undefined,
-            })) as never
-          }
-          hash={(prev) => prev ?? ""}
-          hrefLang={target}
-          onClick={() => {
-            writeLocaleCookie(target);
-            setTarget(null);
-          }}
-        >
-          {copy.switch}
-        </Link>
-        <button type="button" className="btn btn-quiet btn-sm" onClick={dismiss}>
-          {copy.notNow}
-        </button>
+    <div className="lang-suggest" lang={target}>
+      <div className="wrap">
+        <p>{copy.text}</p>
+        <div className="lang-suggest-actions">
+          <Link
+            className="btn btn-quiet btn-sm"
+            to="."
+            search={
+              ((prev: Record<string, unknown>) => ({
+                ...prev,
+                lang: target === "el" ? "el" : undefined,
+              })) as never
+            }
+            hash={(prev) => prev ?? ""}
+            activeOptions={{ explicitUndefined: true }}
+            hrefLang={target}
+            onClick={() => {
+              writeLocaleCookie(target);
+              setTarget(null);
+            }}
+          >
+            {copy.switch}
+          </Link>
+          <button type="button" className="btn btn-text" onClick={dismiss}>
+            {copy.notNow}
+          </button>
+        </div>
       </div>
-    </aside>
+    </div>
   );
 }

@@ -387,7 +387,13 @@ export async function handleStripeWebhook(request: Request): Promise<Response> {
 // The success page
 // ---------------------------------------------------------------------------
 
-export type CheckoutLine = { title: string; quantity: number; totalCents: number };
+/** `textLang` is the language `title` is in, so a Greek page can mark an English one. */
+export type CheckoutLine = {
+  title: string;
+  textLang: Locale;
+  quantity: number;
+  totalCents: number;
+};
 
 export type CheckoutStatus =
   | { status: "invalid" | "pending" | "closed" | "refunded" }
@@ -400,7 +406,7 @@ export type CheckoutStatus =
       totalCents: number;
       currency: string;
       ships: boolean;
-      downloads: { title: string; links: { label: string; action: string }[] }[];
+      downloads: { title: string; textLang: Locale; links: { label: string; action: string }[] }[];
       /** True when there are digital items but no new links this time (asked too often). */
       downloadsByEmail: boolean;
     }
@@ -487,8 +493,10 @@ export async function checkoutStatus(query: StatusQuery): Promise<CheckoutStatus
     .select("title, quantity, total_cents, item_type, item_id")
     .eq("order_id", order.id)
     .order("created_at");
+  // Titles are copied in English at checkout (see loadItem in payments.server.ts).
   const lines = (items ?? []).map((i) => ({
     title: i.title,
+    textLang: "en" as const,
     quantity: i.quantity,
     totalCents: i.total_cents,
   }));
@@ -520,6 +528,7 @@ export async function checkoutStatus(query: StatusQuery): Promise<CheckoutStatus
     ships: order.fulfilment_status !== "not_required",
     downloads: downloads.map((d) => ({
       title: d.title,
+      textLang: "en" as const,
       links: d.links.map(({ label, action }) => ({ label, action })),
     })),
     downloadsByEmail,

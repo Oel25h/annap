@@ -6,10 +6,11 @@ export function fmt(template: string, values: Record<string, string | number>): 
 }
 
 const ZONE = "Europe/Nicosia";
-const tags = { en: "en-GB", el: "el-GR" } as const;
+/** English dates read month first (DESIGN.md §13); times stay 24-hour everywhere. */
+const tags = { en: "en-US", el: "el-GR" } as const;
 
 /**
- * "12 March 2026" / "12 Μαρτίου 2026". Always in Cyprus time, so the server
+ * "March 12, 2026" / "12 Μαρτίου 2026". Always in Cyprus time, so the server
  * and the browser print the same day.
  */
 export function formatDate(
@@ -60,7 +61,7 @@ export function utcOffset(value: string, timeZone: string): string {
 }
 
 /**
- * "Saturday 12 December 2026, 19:00" / "Σάββατο 12 Δεκεμβρίου 2026, 19:00".
+ * "Saturday, December 12, 2026, 19:00" / "Σάββατο 12 Δεκεμβρίου 2026, 19:00".
  * Built from simple parts, because browsers and the server disagree on the
  * punctuation of the combined long formats, which would break hydration.
  */
@@ -71,7 +72,8 @@ export function formatWhen(
 ): string {
   const day = formatDate(value, locale, undefined, timeZone);
   if (!value || !day) return "";
-  const date = weekday ? `${formatDate(value, locale, { weekday: "long" }, timeZone)} ${day}` : day;
+  const name = weekday ? formatDate(value, locale, { weekday: "long" }, timeZone) : "";
+  const date = name ? `${name}${locale === "en" ? "," : ""} ${day}` : day;
   if (!time) return date;
   const wall = wallClock(new Date(value), timeZone);
   return `${date}, ${wall.hour}:${String(wall.minute).padStart(2, "0")}`;

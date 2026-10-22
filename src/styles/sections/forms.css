@@ -1,0 +1,251 @@
+/* Contact, donation, newsletter sign-up and the status pages (download, confirm, unsubscribe, receipt, 404). */
+@layer components {
+  /* ---------- One rhythm for every form: hint, fields, alert, button, small print ---------- */
+  .form-stack > * + * {
+    margin-top: var(--space-5);
+  }
+  .form-stack > .form-hint + * {
+    margin-top: var(--space-4);
+  }
+  .form-stack > .form-alert + .btn {
+    margin-top: var(--space-4);
+  }
+  .form-stack > .fine {
+    margin-top: var(--space-2);
+  }
+  /* Success replaces the form in place; its heading takes focus */
+  .form-done {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+  }
+  .form-done .body {
+    color: var(--color-text-secondary);
+  }
+
+  /* ---------- Contact: words on 1–5, the form on 7–12 ---------- */
+  .contact-grid {
+    row-gap: var(--space-7);
+  }
+  .contact-copy {
+    display: grid;
+    gap: var(--space-5);
+    align-content: start;
+  }
+  .contact-copy .lead {
+    max-width: 30em;
+  }
+  @media (min-width: 1024px) {
+    .contact-copy {
+      grid-column: 1 / 6;
+    }
+    .contact-form {
+      grid-column: 7 / 13;
+    }
+    .contact-form:only-child {
+      grid-column: 1 / 9;
+    }
+  }
+
+  /* ---------- Giving: words on 1–5, the card on 7–12 ---------- */
+  .give-grid {
+    row-gap: var(--space-7);
+  }
+  .give-copy {
+    display: grid;
+    gap: var(--space-5);
+    align-content: start;
+  }
+  .give-copy .lead {
+    max-width: 30em;
+  }
+  .give-card {
+    align-self: start;
+    padding: var(--space-6) var(--space-4) var(--space-5);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius);
+  }
+  /* On the peach band the card is ivory, so it never disappears into its ground */
+  .band-peach .give-card {
+    background: var(--color-surface);
+  }
+  .give--band .give-card {
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+  .give-card--off {
+    display: grid;
+    gap: var(--space-5);
+    justify-items: start;
+  }
+  /* Amounts: equal cells, three to a row on phones, one row from 720 */
+  .give-amounts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .give-amounts .chip > span {
+    width: 100%;
+    min-height: var(--size-control);
+    padding-inline: var(--space-2);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .give-card .btn-block {
+    margin-top: var(--space-6);
+  }
+  .give-card .form-alert + .btn-block {
+    margin-top: var(--space-4);
+  }
+  @media (min-width: 720px) {
+    .give-card {
+      padding: var(--space-6);
+    }
+    .give--band .give-card {
+      padding: 0;
+    }
+    .give-amounts {
+      grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .give-copy {
+      grid-column: 1 / 6;
+    }
+    .give-card {
+      grid-column: 7 / 13;
+    }
+  }
+
+  /* ---------- Letters as a section: words on 1–6, the form on 7–12, bottom-aligned ---------- */
+  .newsletter-grid {
+    row-gap: var(--space-6);
+  }
+  .newsletter-copy {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .newsletter-copy .body {
+    max-width: 30em;
+    color: var(--color-text-secondary);
+  }
+  @media (min-width: 1024px) {
+    .newsletter-grid {
+      align-items: end;
+    }
+    .newsletter-copy {
+      grid-column: 1 / 7;
+    }
+    .newsletter-form {
+      grid-column: 7 / 13;
+    }
+  }
+
+  /* ---------- Status pages: one h1, then the text column from column 1 ---------- */
+  .status-page .wrap > * {
+    max-width: var(--text-max);
+  }
+  .status-page .wrap > * + * {
+    margin-top: var(--space-5);
+  }
+  .status-page .wrap > :is(.status-links, .status-actions, .receipt) {
+    margin-top: var(--space-6);
+  }
+  .status-links {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--space-6);
+  }
+  .status-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+  }
+  .status-form {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+  }
+  .status-actions > .signup-form {
+    flex: 1 1 100%;
+  }
+  .status-note {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+    color: var(--color-text-secondary);
+  }
+  .status-note svg.i {
+    margin-top: 0.3em;
+    color: var(--color-accent-text);
+  }
+
+  /* ---------- The receipt on /checkout/success ---------- */
+  .receipt {
+    padding: var(--space-5) var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius);
+  }
+  @media (min-width: 720px) {
+    .receipt {
+      padding: var(--space-5) var(--space-6);
+    }
+  }
+  .receipt-number {
+    font: 600 var(--text-meta) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-secondary);
+  }
+  .receipt-lines {
+    margin-top: var(--space-3);
+  }
+  .receipt-lines li,
+  .receipt-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-5);
+    padding-block: var(--space-3);
+  }
+  .receipt-lines li + li,
+  .receipt-total {
+    border-top: 1px solid var(--color-hairline);
+  }
+  .receipt-item {
+    font: 400 var(--text-body) / 1.4 var(--font-serif);
+  }
+  .receipt-qty {
+    display: block;
+    font: 400 var(--text-meta) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-tertiary);
+  }
+  .receipt-amount {
+    font: 400 var(--text-ui) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    white-space: nowrap;
+  }
+  .receipt-total {
+    font: 600 var(--text-ui) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .receipt-total > span:last-child {
+    white-space: nowrap;
+  }
+  .receipt-downloads {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .receipt-download {
+    display: grid;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .receipt-download .actions {
+    margin-top: 0;
+    gap: var(--space-3);
+  }
+}

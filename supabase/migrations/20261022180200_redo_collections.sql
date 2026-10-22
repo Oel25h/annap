@@ -208,8 +208,9 @@ insert into public.masterclasses (slug, title, description, included, schedule_n
 select
   'masterclass',
   coalesce(nullif(m.title, ''), 'Masterclass'),
-  m.description,
-  m.included,
+  -- The old row stored line breaks as a literal backslash-n.
+  replace(m.description, '\n', E'\n'),
+  replace(m.included, '\n', E'\n'),
   m.dates,
   m.price,
   case when m.enroll_url ~ '^https://' then m.enroll_url end,

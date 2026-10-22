@@ -1,16 +1,34 @@
-import { caps } from "@/lib/i18n/caps";
-import { useId } from "react";
-import { field, Honeypot, useFormAction } from "@/components/forms/useFormAction";
+/**
+ * The book sections (DESIGN.md §9 Book and Free eBook form): the featured
+ * book with its formats, review and free eBook card; the card on its own;
+ * the books index; and excerpts. A book's own page reuses the same pieces.
+ */
+import { useId, useState } from "react";
+import { EMAIL, field, Honeypot, useFormAction } from "@/components/forms/useFormAction";
 import { CheckoutButton } from "@/components/site/CheckoutButton";
 import { DownloadButton } from "@/components/site/DownloadButton";
 import { Icon } from "@/components/site/Icon";
 import { SiteLink } from "@/components/site/SiteLink";
 import { useLocale, useT } from "@/lib/i18n/context";
-import { fmt } from "@/lib/i18n/format";
+import { fmt, formatMoney } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/locale";
+import { nb } from "@/lib/i18n/rag";
 import { requestFreeEbook } from "@/lib/forms.functions";
-import type { BookOffer, BookSummary, MediaMap, RenderedSection } from "@/sections/types";
+import type {
+  BookOffer,
+  BookSummary,
+  MediaMap,
+  RenderedSection,
+  ResolvedMedia,
+} from "@/sections/types";
 import { Picture } from "../render/Picture";
-import { FootLink, keyLang, SectionShell, type SectionContext } from "../render/SectionShell";
+import {
+  keyLang,
+  SectionHeading,
+  SectionShell,
+  TextLink,
+  type SectionContext,
+} from "../render/SectionShell";
 import { Lines } from "../render/text";
 
 type Props<T extends RenderedSection["type"]> = {
@@ -19,51 +37,153 @@ type Props<T extends RenderedSection["type"]> = {
   ctx: SectionContext;
 };
 
-function price(cents: number, currency: string, locale: string) {
-  return new Intl.NumberFormat(locale === "el" ? "el-GR" : "en-IE", {
-    style: "currency",
-    currency,
-  }).format(cents / 100);
+/** `lang` for a book's own text when it differs from the text around it. */
+const langIf = (lang: Locale, around: Locale) => (lang !== around ? lang : undefined);
+
+// ---------------------------------------------------------------------------
+// The cover in the arch niche
+// ---------------------------------------------------------------------------
+
+/** The arch's width at each breakpoint, widest first; the last one applies below them all. */
+const ARCH = {
+  /** Columns 1–5: the home book and a book's own page. */
+  feature: [
+    ["(min-width: 1440px)", "515px"],
+    ["(min-width: 1024px)", "37vw"],
+    ["", "min(80vw, 320px)"],
+  ],
+  /** The books index as rows: columns 1–4, a third of the row from 720. */
+  rows: [
+    ["(min-width: 1440px)", "405px"],
+    ["(min-width: 720px)", "29vw"],
+    ["", "min(80vw, 320px)"],
+  ],
+  /** The books index as a grid: three across from 1024, two from 720. */
+  grid: [
+    ["(min-width: 1440px)", "405px"],
+    ["(min-width: 1024px)", "29vw"],
+    ["(min-width: 720px)", "45vw"],
+    ["", "min(80vw, 320px)"],
+  ],
+} as const;
+
+/** The cover is 76% of the arch; with `crop-cover` the photo is 118.56% of the cover. */
+function coverSizes(arch: keyof typeof ARCH, crop: boolean): string {
+  const scale = crop ? 0.76 * 1.1856 : 0.76;
+  return ARCH[arch]
+    .map(([media, width]) => `${media ? `${media} ` : ""}calc(${width} * ${scale.toFixed(3)})`)
+    .join(", ");
 }
 
-/** A book cover set in the arch niche: the arch frames the cover and never crops its type. */
+/** fyrts-cover.jpg is a photo of the printed book: `crop-cover` trims it to the face, without the spine. */
+const isPrintedCover = (image: ResolvedMedia) =>
+  /\/(fyrts-cover|cover-find-your-reason-to-smile)[/.]/.test(image.src);
+
+/** A book cover set in the arch niche: bottom-aligned at 76%, so the curve never crops its type. */
 export function BookCover({
   book,
   media,
-  sizes,
+  arch,
   priority = false,
 }: {
   book: BookSummary;
   media: MediaMap;
-  sizes: string;
+  arch: keyof typeof ARCH;
   priority?: boolean;
 }) {
   const cover = book.coverMediaId ? media[book.coverMediaId] : undefined;
+  const crop = !!cover && isPrintedCover(cover);
   return (
     <div className="arch-wrap">
-      <div className="arch-frame">
-        <div className="arch arch--3x4 arch--niche">
-          <div className="niche-cover">
-            <Picture media={cover} sizes={sizes} priority={priority} />
-          </div>
+      <div className="arch arch--3x4 arch--niche">
+        <div className="niche-cover">
+          <Picture
+            media={cover}
+            sizes={coverSizes(arch, crop)}
+            priority={priority}
+            className={crop ? "crop crop-cover" : undefined}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-/** One row per format: where to get it, and the button that does it. */
-export function Offers({ book, listenAnchor }: { book: BookSummary; listenAnchor: string | null }) {
+// ---------------------------------------------------------------------------
+// Rating and formats
+// ---------------------------------------------------------------------------
+
+/** What the rating line reads, once the book carries it (the loader adds these fields). */
+type Rated = BookSummary &
+  Partial<{ genre: string; rating: number | null; ratingCount: number | null }>;
+
+/** "Memoir · 4.9 · 480+ reviews": each part only when it exists, the dots drawn by CSS. */
+export function BookRating({ book, lang }: { book: Rated; lang?: Locale }) {
+  const t = useT();
+  const locale = useLocale();
+  const parts = [
+    book.genre ? (
+      <span key="genre" lang={lang}>
+        {book.genre}
+      </span>
+    ) : null,
+    book.rating != null ? (
+      <span key="rating">
+        {new Intl.NumberFormat(locale === "el" ? "el-GR" : "en-GB", {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }).format(book.rating)}
+      </span>
+    ) : null,
+    book.ratingCount ? (
+      <span key="count">{fmt(t.sections.books.reviews, { n: book.ratingCount })}</span>
+    ) : null,
+  ].filter(Boolean);
+  if (parts.length === 0) return null;
+  return (
+    <p className="book-rating">
+      <span className="dots meta">{parts}</span>
+    </p>
+  );
+}
+
+/** The words on a buy button: the same in a format row and in the phone buy bar. */
+export function OfferLabel({ offer }: { offer: BookOffer }) {
+  const t = useT();
+  if (offer.format === "ebook") return t.sections.books.getEbook;
+  if (offer.retailer && !offer.buyHere) {
+    return fmt(t.sections.books.buyOn, { retailer: offer.retailer });
+  }
+  return t.sections.books.buy;
+}
+
+/** Where the page's audiobook player is, as seen from the formats. */
+export type ListenLink = { anchor: string; above: boolean };
+
+/**
+ * One hairline row per format: the name over where to get it, and one quiet
+ * button. The rows are subgrids, so every button takes the widest one's width
+ * and their left edges line up in either language.
+ */
+export function Offers({
+  book,
+  listen,
+  id,
+}: {
+  book: BookSummary;
+  listen: ListenLink | null;
+  id?: string;
+}) {
   const t = useT();
   const locale = useLocale();
   const offers = book.offers.filter(
-    (offer) => offer.buyHere || offer.externalUrl || (offer.format === "audiobook" && listenAnchor),
+    (offer) => offer.buyHere || offer.externalUrl || (offer.format === "audiobook" && listen),
   );
   if (offers.length === 0) return null;
   return (
-    <ul className="formats" aria-label={t.sections.books.formats}>
-      {offers.map((offer: BookOffer) => {
-        const listenHere = offer.format === "audiobook" && listenAnchor;
+    <ul className="formats" id={id} aria-label={t.sections.books.formats}>
+      {offers.map((offer) => {
+        const listenHere = offer.format === "audiobook" && listen;
         return (
           <li key={offer.id}>
             <span className="f-name">{t.sections.books.format[offer.format]}</span>
@@ -71,21 +191,36 @@ export function Offers({ book, listenAnchor }: { book: BookSummary; listenAnchor
               {listenHere
                 ? t.sections.books.readByAuthor
                 : offer.buyHere && offer.priceCents !== null
-                  ? price(offer.priceCents, offer.currency, locale)
+                  ? formatMoney(offer.priceCents, offer.currency, locale)
                   : offer.retailer}
             </span>
             {listenHere ? (
-              <a className="btn btn-quiet btn-sm" href={`#${listenAnchor}`}>
-                {t.sections.books.listenAbove}
-                <Icon name="arrow-up" />
+              <a className="btn btn-quiet btn-sm" href={`#${listen.anchor}`}>
+                <span>
+                  {listen.above ? t.sections.books.listenAbove : t.sections.books.listenBelow}
+                </span>
+                <Icon name={listen.above ? "arrow-up" : "arrow-down"} />
               </a>
             ) : offer.buyHere ? (
-              <CheckoutButton kind="book_format" id={offer.id} label={t.sections.books.buy} small />
+              <CheckoutButton
+                kind="book_format"
+                id={offer.id}
+                label={<OfferLabel offer={offer} />}
+                variant="quiet"
+                small
+                icon="arrow-right"
+              />
             ) : offer.externalUrl ? (
-              <a className="btn btn-quiet btn-sm" href={offer.externalUrl} rel="noopener">
-                {offer.retailer
-                  ? fmt(t.sections.books.buyAt, { retailer: offer.retailer })
-                  : t.sections.books.buy}
+              <a
+                className="btn btn-quiet btn-sm"
+                href={offer.externalUrl}
+                target="_blank"
+                rel="noopener"
+              >
+                <span>
+                  <OfferLabel offer={offer} />
+                </span>
+                <span className="sr-only">{t.site.opensNewTab}</span>
                 <Icon name="arrow-ext" />
               </a>
             ) : null}
@@ -96,70 +231,99 @@ export function Offers({ book, listenAnchor }: { book: BookSummary; listenAnchor
   );
 }
 
+// ---------------------------------------------------------------------------
+// The featured book
+// ---------------------------------------------------------------------------
+
+/**
+ * The book: cover on columns 1–5 over two rows; title, subtitle, rating,
+ * description, formats and "All books" on 7–12, then the reader's review,
+ * bottom-aligned with the cover. Phones read it in that order, so the review
+ * never comes before the book. The free eBook card follows, 64px below.
+ */
 export function FeaturedBook({
   section,
   media,
   ctx,
   listenAnchor,
-}: Props<"featured_book"> & { listenAnchor: string | null }) {
+  listenAbove = true,
+}: Props<"featured_book"> & { listenAnchor: string | null; listenAbove?: boolean }) {
   const t = useT();
   const book = section.data?.book;
   if (!book) return null;
   const p = section.props;
-  const link = { label: t.sections.books.seeAll, href: "/books" };
+  const lang = langIf(book.textLang, section.lang);
+  const listen = listenAnchor ? { anchor: listenAnchor, above: listenAbove } : null;
   return (
-    <SectionShell section={section} ctx={ctx} runhead={{ link }}>
-      <div className={`book-grid${section.variant === "cover_right" ? " book-grid--right" : ""}`}>
+    <SectionShell section={section} ctx={ctx} labelled defaultAnchor="book">
+      <div
+        className={`book-grid grid-12${section.variant === "cover_right" ? " book-grid--right" : ""}`}
+      >
         <div className="book-cover">
-          <BookCover book={book} media={media} sizes="(min-width: 1024px) 300px, 55vw" />
+          <BookCover book={book} media={media} arch="feature" priority={ctx.isFirst} />
         </div>
-        {p.quote && (
-          <blockquote className="review">
-            <p lang={keyLang(section, "quote")}>
-              <q>{p.quote}</q>
+        <div className="book-body">
+          <SectionHeading ctx={ctx} lang={lang}>
+            <SiteLink href={`/books/${book.slug}`}>{nb(book.title)}</SiteLink>
+          </SectionHeading>
+          {book.subtitle && (
+            <p className="book-sub" lang={lang}>
+              {nb(book.subtitle)}
             </p>
-            {p.quoteBy && (
-              <footer className="label" lang={keyLang(section, "quoteBy")}>
-                {caps(p.quoteBy)}
-              </footer>
-            )}
-          </blockquote>
-        )}
-        <div className="book-body" lang={book.textLang !== ctx.locale ? book.textLang : undefined}>
-          <h2 id={ctx.headingId} className="display-l">
-            <SiteLink href={`/books/${book.slug}`}>{book.title}</SiteLink>
-          </h2>
-          {book.subtitle && <p className="book-sub">{book.subtitle}</p>}
+          )}
+          <BookRating book={book} lang={lang} />
           {book.description && (
-            <p className="body">
+            <p className="body" lang={lang}>
               <Lines text={book.description} />
             </p>
           )}
-          <Offers book={book} listenAnchor={listenAnchor} />
-          <FootLink link={link} />
+          <Offers book={book} listen={listen} />
+          <p className="book-links">
+            <TextLink link={{ label: t.sections.books.seeAll, href: "/books" }} />
+          </p>
         </div>
+        {p.quote && (
+          <figure className="review">
+            <blockquote>
+              <p lang={keyLang(section, "quote")}>
+                <q>{nb(p.quote)}</q>
+              </p>
+            </blockquote>
+            {p.quoteBy && (
+              <figcaption className="meta" lang={keyLang(section, "quoteBy")}>
+                {p.quoteBy}
+              </figcaption>
+            )}
+          </figure>
+        )}
       </div>
-      {p.showEbookGate && book.freeDownload && <EbookForm book={book} headingLevel="h3" />}
+      {p.showEbookGate && book.freeDownload && (
+        <EbookForm
+          book={book}
+          anchor="free-ebook"
+          level={ctx.headingLevel === "h1" ? "h2" : "h3"}
+        />
+      )}
     </SectionShell>
   );
 }
 
+// ---------------------------------------------------------------------------
+// The free eBook card
+// ---------------------------------------------------------------------------
+
+/** The free eBook card as a section of its own; the section carries the anchor. */
 export function EbookGate({ section, ctx }: Props<"ebook_gate">) {
   const book = section.data?.book;
   if (!book?.freeDownload) return null;
   const p = section.props;
   return (
-    <SectionShell
-      section={section}
-      ctx={ctx}
-      labelled={false}
-      label={p.title}
-      runhead={{ title: "" }}
-    >
+    <SectionShell section={section} ctx={ctx} labelled defaultAnchor="free-ebook">
       <EbookForm
         book={book}
-        headingLevel="h2"
-        copy={{ eyebrow: p.eyebrow, title: p.title, body: p.body, button: p.buttonLabel }}
+        heading={ctx}
+        inline={section.variant === "inline"}
+        copy={{ title: p.title, body: p.body, button: p.buttonLabel }}
         lang={(key) => keyLang(section, key)}
       />
     </SectionShell>
@@ -167,186 +331,252 @@ export function EbookGate({ section, ctx }: Props<"ebook_gate">) {
 }
 
 /**
- * The bookplate: first name and email for the free ebook. The download never
- * depends on the letters opt-in; success shows the download at once.
+ * First name and email, and the book is theirs at once; the download never
+ * depends on the letters opt-in. The shared form pattern (useFormAction):
+ * - Errors show on submit, then on blur. Focus goes to the first invalid
+ *   field, and typed values stay through every state.
+ * - Offline, the details stay and the form sends itself once the connection
+ *   is back; the button stays enabled.
+ * - Success replaces the form in place: its heading takes focus, and the
+ *   card's status region says the same.
  */
 export function EbookForm({
   book,
-  headingLevel,
+  anchor,
+  heading,
+  level = "h3",
+  inline = false,
   copy,
   lang,
 }: {
   book: BookSummary;
-  headingLevel: "h2" | "h3";
-  copy?: { eyebrow: string; title: string; body: string; button: string };
+  /** The card's id, when the section around it does not carry the anchor. */
+  anchor?: string;
+  /** The gate's section context: its title becomes the section's own heading. */
+  heading?: SectionContext;
+  /** Otherwise the card's title level: one under the section heading above it. */
+  level?: "h2" | "h3";
+  /** No card: copy and form sit straight on the page grid. */
+  inline?: boolean;
+  copy?: { title: string; body: string; button: string };
   lang?: (key: string) => "en" | undefined;
 }) {
   const t = useT();
   const locale = useLocale();
   const id = useId();
-  const Heading = headingLevel;
-  const english = book.freeDownload === "en" && locale === "el";
-  const { state, sending, formProps, turnstileSlot } = useFormAction((data, turnstile) =>
-    requestFreeEbook({
-      data: {
-        bookId: book.id,
-        firstName: field(data, "first_name"),
-        email: field(data, "email"),
-        letters: data.get("letters") === "on",
-        locale,
-        website: field(data, "website"),
-        turnstile,
+  const e = t.sections.ebook;
+  const titleId = heading?.headingId ?? `${id}-title`;
+  const hintId = `${id}-hint`;
+  const [name, setName] = useState("");
+  const form = useFormAction(
+    (data, turnstile) => {
+      const firstName = field(data, "first_name").trim();
+      setName(firstName);
+      return requestFreeEbook({
+        data: {
+          bookId: book.id,
+          firstName,
+          email: field(data, "email").trim(),
+          letters: data.get("letters") === "on",
+          locale,
+          website: field(data, "website"),
+          turnstile,
+        },
+      });
+    },
+    { invalid: e.invalid },
+    {
+      checks: {
+        first_name: (value) => !value.trim() && e.nameError,
+        email: (value) => !EMAIL.test(value.trim()) && e.emailError,
       },
-    }),
+    },
   );
 
+  const done = form.state.step === "done" ? form.state.result : null;
+  const doneTitle = name ? fmt(e.doneTitle, { name }) : e.doneTitleNoName;
+  // Beside the card's title, or under the gate's heading when that is the card's title.
+  const Title = level;
+  const Done = heading ? (heading.headingLevel === "h1" ? "h2" : "h3") : level;
+
+  const title = copy?.title || e.title;
+  const titleLang = copy?.title ? lang?.("title") : undefined;
+  const bookLang = langIf(book.textLang, locale);
+  const [before, after] = e.body.split("{title}");
+
   return (
-    <form className="bookplate" id="free-ebook" aria-labelledby={`${id}-title`} {...formProps}>
-      <div className="bookplate-top">
-        <p className="label label--accent" lang={lang?.("eyebrow")}>
-          {caps(copy?.eyebrow || t.sections.ebook.eyebrow)}
-        </p>
-        <span className="ex-libris" aria-hidden="true">
-          Ex libris
-        </span>
-      </div>
-      <div className="bp-grid">
-        <div className="bp-copy">
-          <Heading id={`${id}-title`} className="display-m" lang={lang?.("title")}>
-            {copy?.title || t.sections.ebook.title}
-          </Heading>
+    <div
+      className={inline ? "bookplate bookplate--inline grid-12" : "bookplate grid-12"}
+      id={anchor}
+    >
+      <div className="bp-copy">
+        {heading ? (
+          <SectionHeading ctx={heading} className="display-m" lang={titleLang}>
+            {title}
+          </SectionHeading>
+        ) : (
+          <Title id={titleId} className="display-m" lang={titleLang}>
+            {nb(title)}
+          </Title>
+        )}
+        {copy?.body ? (
           <p className="body" lang={lang?.("body")}>
-            {copy?.body || fmt(t.sections.ebook.body, { title: book.title })}
+            {copy.body}
           </p>
-          {english && <p className="meta">{t.sections.ebook.englishOnly}</p>}
-        </div>
-        <div>
-          {state.step === "done" ? (
-            <div className="bp-done" role="status">
-              <p className="title">{t.sections.ebook.doneTitle}</p>
-              <p className="body">{t.sections.ebook.doneBody}</p>
-              <div className="actions">
-                {state.result.downloads.map((download) => (
-                  <DownloadButton key={download.action} action={download.action}>
-                    {fmt(t.sections.ebook.download, { label: download.label })}
-                  </DownloadButton>
-                ))}
-              </div>
+        ) : (
+          <p className="body">
+            {before}
+            {after !== undefined && (
+              <>
+                <span lang={bookLang}>{book.title}</span>
+                {after}
+              </>
+            )}
+          </p>
+        )}
+        {book.freeDownload === "en" && locale === "el" && <p className="meta">{e.englishOnly}</p>}
+      </div>
+
+      {done ? (
+        <div className="bp-done">
+          <Done ref={form.doneRef} tabIndex={-1} className="display-m">
+            {doneTitle}
+          </Done>
+          <p className="body">{e.doneBody}</p>
+          {done.downloads.length > 0 && (
+            <div className="actions">
+              {done.downloads.map((download) => (
+                <DownloadButton key={download.action} action={download.action} variant="quiet">
+                  {fmt(e.download, { label: download.label })}
+                </DownloadButton>
+              ))}
             </div>
-          ) : (
-            <>
-              <div className="fields">
-                <div className="field">
-                  <label htmlFor={`${id}-name`}>{t.sections.ebook.firstName}</label>
-                  <input
-                    id={`${id}-name`}
-                    name="first_name"
-                    autoComplete="given-name"
-                    required
-                    maxLength={80}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor={`${id}-email`}>{t.sections.ebook.email}</label>
-                  <input
-                    id={`${id}-email`}
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder={t.site.footer.emailPlaceholder}
-                    required
-                    maxLength={320}
-                  />
-                </div>
-                <Honeypot />
-              </div>
-              <label className="check">
-                <input type="checkbox" name="letters" />
-                <span>{t.sections.ebook.letters}</span>
-              </label>
-              {turnstileSlot}
-              <button
-                className="btn btn-primary btn-block"
-                type="submit"
-                aria-disabled={sending || undefined}
-              >
-                {sending ? t.sections.forms.sending : copy?.button || t.sections.ebook.button}
-              </button>
-              <p className="fine">
-                <Icon name="lock" />
-                <span>{t.sections.ebook.privacy}</span>
-                <SiteLink href="/privacy">{t.site.footer.privacy}</SiteLink>
-              </p>
-              <p className="form-status" role="status" aria-live="polite">
-                {state.step === "error" && (
-                  <span className="field-error">
-                    <Icon name="alert" />
-                    {state.message}
-                  </span>
-                )}
-              </p>
-            </>
           )}
         </div>
-      </div>
-    </form>
+      ) : (
+        <form className="bp-form" aria-labelledby={titleId} noValidate {...form.formProps}>
+          <p className="form-hint bp-hint" id={hintId}>
+            {e.hint}
+          </p>
+          <div className="fields fields--name-email">
+            <div className="field">
+              <label htmlFor={`${id}-name`}>{e.firstName}</label>
+              <input
+                id={`${id}-name`}
+                autoComplete="given-name"
+                required
+                maxLength={80}
+                {...form.fieldProps("first_name", hintId)}
+              />
+              {form.fieldError("first_name")}
+            </div>
+            <div className="field">
+              <label htmlFor={`${id}-email`}>{e.email}</label>
+              <input
+                id={`${id}-email`}
+                type="email"
+                autoComplete="email"
+                required
+                maxLength={320}
+                {...form.fieldProps("email", hintId)}
+              />
+              {form.fieldError("email")}
+            </div>
+            <Honeypot />
+          </div>
+          <label className="check">
+            <input type="checkbox" name="letters" />
+            <span>{e.letters}</span>
+          </label>
+          {form.turnstileSlot}
+          {form.alertSlot}
+          <button className="btn btn-primary btn-block" {...form.submitProps}>
+            {form.sending ? e.sending : copy?.button || e.button}
+          </button>
+          <p className="fine">
+            <span className="fine-note">
+              <Icon name="lock" />
+              <span>{e.privacy}</span>
+            </span>
+            <SiteLink href="/privacy">{t.site.footer.privacy}</SiteLink>
+          </p>
+        </form>
+      )}
+      {form.statusSlot(`${doneTitle} ${e.doneBody}`)}
+    </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// The books index and excerpts
+// ---------------------------------------------------------------------------
+
+/**
+ * Every book. Rows mirror the featured book (cover on 1–4, words on 5–12),
+ * with the formats beside the cover; the grid sets three across.
+ */
 export function BookList({ section, media, ctx }: Props<"book_list">) {
   const t = useT();
   const books = section.data?.books ?? [];
   if (books.length === 0) return null;
   const p = section.props;
+  const rows = section.variant === "rows";
+  // A title of the list's own is the h2 (or the page's h1), so each book sits one level under it.
+  const Item = p.title && ctx.headingLevel === "h2" ? "h3" : "h2";
   return (
-    <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow}>
-      {(p.title || p.intro) && (
-        <div className="head head--row">
-          {p.title && (
-            <h2 id={ctx.headingId} className="display-l" lang={keyLang(section, "title")}>
-              {p.title}
-            </h2>
-          )}
-          {p.intro && (
-            <p className="lead" lang={keyLang(section, "intro")}>
-              {p.intro}
-            </p>
-          )}
-        </div>
-      )}
-      <ul className={section.variant === "rows" ? "shelf shelf--rows" : "shelf"}>
-        {books.map((book, i) => (
-          <li key={book.id} lang={book.textLang !== ctx.locale ? book.textLang : undefined}>
-            <BookCover
-              book={book}
-              media={media}
-              sizes="(min-width: 1024px) 280px, 70vw"
-              priority={ctx.isFirst && i === 0}
-            />
-            <div className="shelf-text">
-              <h3 className="display-m">
-                <SiteLink href={`/books/${book.slug}`}>{book.title}</SiteLink>
-              </h3>
-              {book.subtitle && <p className="book-sub">{book.subtitle}</p>}
-              {section.variant === "rows" && book.description && (
-                <p className="body">
-                  <Lines text={book.description} />
+    <SectionShell
+      section={section}
+      ctx={ctx}
+      head={{
+        title: p.title,
+        titleLang: keyLang(section, "title"),
+        intro: p.intro,
+        introLang: keyLang(section, "intro"),
+      }}
+    >
+      <ul className={rows ? "shelf shelf--rows" : "shelf shelf--grid grid-12"}>
+        {books.map((book, index) => {
+          const lang = langIf(book.textLang, section.lang);
+          const href = `/books/${book.slug}`;
+          return (
+            <li key={book.id} className={rows ? "grid-12" : undefined}>
+              <div className="book-cover">
+                <BookCover
+                  book={book}
+                  media={media}
+                  arch={rows ? "rows" : "grid"}
+                  priority={ctx.isFirst && index === 0}
+                />
+              </div>
+              <div className="shelf-text">
+                <Item className={rows ? "display-l" : "display-m"} lang={lang}>
+                  <SiteLink href={href}>{nb(book.title)}</SiteLink>
+                </Item>
+                {book.subtitle && (
+                  <p className="book-sub" lang={lang}>
+                    {nb(book.subtitle)}
+                  </p>
+                )}
+                <BookRating book={book} lang={lang} />
+                {rows && book.description && (
+                  <p className="body" lang={lang}>
+                    <Lines text={book.description} />
+                  </p>
+                )}
+                {rows && <Offers book={book} listen={null} />}
+                <p className="book-links">
+                  <TextLink link={{ label: t.sections.books.more, href }} />
                 </p>
-              )}
-              <p>
-                <SiteLink className="link" href={`/books/${book.slug}`}>
-                  {t.sections.books.more}
-                  <Icon name="arrow-right" />
-                </SiteLink>
-              </p>
-            </div>
-          </li>
-        ))}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </SectionShell>
   );
 }
 
+/** A few pages from a book: cards three across, or stacked rows with the title on 1–4. */
 export function BookExcerpts({ section, ctx }: Props<"book_excerpts">) {
   const t = useT();
   const p = section.props;
@@ -354,39 +584,36 @@ export function BookExcerpts({ section, ctx }: Props<"book_excerpts">) {
   const link = book
     ? { label: fmt(t.sections.books.read, { title: book.title }), href: `/books/${book.slug}` }
     : null;
+  const stacked = section.variant === "stacked";
+  const Item = p.title && ctx.headingLevel === "h2" ? "h3" : "h2";
   return (
     <SectionShell
       section={section}
       ctx={ctx}
-      labelled={!!p.title}
-      label={p.eyebrow}
-      runhead={{ link }}
+      head={{ title: p.title, titleLang: keyLang(section, "title"), link }}
     >
-      {p.title && (
-        <div className="head">
-          <h2 id={ctx.headingId} className="display-l" lang={keyLang(section, "title")}>
-            {p.title}
-          </h2>
-        </div>
-      )}
-      <ol className={section.variant === "stacked" ? "excerpts excerpts--stacked" : "excerpts"}>
+      <ol className={stacked ? "excerpts excerpts--stacked" : "excerpts grid-12"}>
         {p.items.map((item) => (
-          <li key={item.id}>
-            {item.label && (
-              <p className="label label--accent" lang={keyLang(section, `items.${item.id}.label`)}>
-                {caps(item.label)}
-              </p>
-            )}
-            <h3 className="title" lang={keyLang(section, `items.${item.id}.title`)}>
-              {item.title}
-            </h3>
+          <li key={item.id} className={stacked ? "grid-12" : undefined}>
+            <div className="ex-head">
+              {item.label && (
+                <p
+                  className="label label--accent"
+                  lang={keyLang(section, `items.${item.id}.label`)}
+                >
+                  {item.label}
+                </p>
+              )}
+              <Item className="title" lang={keyLang(section, `items.${item.id}.title`)}>
+                {nb(item.title)}
+              </Item>
+            </div>
             <p className="body" lang={keyLang(section, `items.${item.id}.excerpt`)}>
               <Lines text={item.excerpt} />
             </p>
           </li>
         ))}
       </ol>
-      <FootLink link={link} />
     </SectionShell>
   );
 }

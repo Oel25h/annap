@@ -1498,8 +1498,15 @@ Ship nothing that fails one of these.
   - `styles/base.css`: element defaults, type roles, bands, buttons, links and the
     utilities below;
   - `styles/site.css`: the header, footer, hero, player, book and the other signature
-    components;
-  - `styles/sections.css`: every other page-builder section and the item pages.
+    components, one partial per area in `styles/site/` (`chrome`, `hero`, `player`,
+    `book`);
+  - `styles/sections.css`: every other page-builder section, the forms and the item
+    pages, one partial per area in `styles/sections/` (`text`, `collections`, `forms`,
+    `items`).
+- **Guards.** `src/styles/style-rules.test.ts` fails the build on hex colours outside the
+  palette, capitals or tracked labels, shadows, gradients, blur outside the header,
+  italic outside the type layer, reveals, and eyebrows, numerals or `caps()` in public
+  components.
 - **Theme.** `<html class="dark">` forces dark and `<html class="light">` forces light;
   with neither, the page follows `prefers-color-scheme`.
 - **Utilities:** `band-ivory`, `band-peach`, `band-cocoa`, `grid-12`, `section-pad`,

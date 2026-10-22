@@ -1,15 +1,20 @@
-import { Fragment, type ReactNode } from "react";
+import { Fragment } from "react";
+import { nb } from "@/lib/i18n/rag";
 
-/** The title with its accent words in italic, as set in the studio. */
+/**
+ * The home h1 with its hope word in the one italic accent on the site. The
+ * short words are bound first, so "σε σκοπό" never breaks after "σε".
+ */
 export function AccentTitle({ text, accent }: { text: string; accent: string }) {
-  const at = accent.trim() ? text.indexOf(accent.trim()) : -1;
-  if (at < 0) return <>{text}</>;
-  const word = accent.trim();
+  const bound = nb(text);
+  const word = nb(accent.trim());
+  const at = word ? bound.indexOf(word) : -1;
+  if (at < 0) return <>{bound}</>;
   return (
     <>
-      {text.slice(0, at)}
-      <em>{word}</em>
-      {text.slice(at + word.length)}
+      {bound.slice(0, at)}
+      <em className="accent">{word}</em>
+      {bound.slice(at + word.length)}
     </>
   );
 }
@@ -30,29 +35,15 @@ export function Lines({ text }: { text: string }) {
 }
 
 /** Rich text that the server has already sanitised. */
-export function RichHtml({ html, className = "prose" }: { html: string; className?: string }) {
+export function RichHtml({
+  html,
+  className = "prose",
+  lang,
+}: {
+  html: string;
+  className?: string;
+  lang?: string;
+}) {
   if (!html.trim()) return null;
-  return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
-}
-
-export function toRoman(n: number): string {
-  const table: [number, string][] = [
-    [10, "X"],
-    [9, "IX"],
-    [5, "V"],
-    [4, "IV"],
-    [1, "I"],
-  ];
-  let out = "";
-  for (const [value, numeral] of table) {
-    while (n >= value) {
-      out += numeral;
-      n -= value;
-    }
-  }
-  return out;
-}
-
-export function Maybe({ when, children }: { when: unknown; children: ReactNode }) {
-  return when ? <>{children}</> : null;
+  return <div className={className} lang={lang} dangerouslySetInnerHTML={{ __html: html }} />;
 }

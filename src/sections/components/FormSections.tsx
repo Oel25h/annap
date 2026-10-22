@@ -1,16 +1,16 @@
-import { caps } from "@/lib/i18n/caps";
 import { useId, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { field, Honeypot, useFormAction } from "@/components/forms/useFormAction";
+import { EMAIL, field, Honeypot, useFormAction } from "@/components/forms/useFormAction";
 import { Icon } from "@/components/site/Icon";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
 import { SiteLink } from "@/components/site/SiteLink";
 import { useLocale, useT } from "@/lib/i18n/context";
 import { fmt, formatMoney } from "@/lib/i18n/format";
+import { nb } from "@/lib/i18n/rag";
 import { sendContactMessage, type ContactTopic } from "@/lib/forms.functions";
 import { startDonation } from "@/lib/payments.functions";
 import type { MediaMap, RenderedSection } from "@/sections/types";
-import { keyLang, SectionShell, type SectionContext } from "../render/SectionShell";
+import { keyLang, SectionHeading, SectionShell, type SectionContext } from "../render/SectionShell";
 
 type Props<T extends RenderedSection["type"]> = {
   section: RenderedSection<T>;
@@ -18,41 +18,41 @@ type Props<T extends RenderedSection["type"]> = {
   ctx: SectionContext;
 };
 
-function FormError({ message }: { message: string | null }) {
-  return (
-    <p className="form-status" role="status" aria-live="polite">
-      {message && (
-        <span className="field-error">
-          <Icon name="alert" />
-          {message}
-        </span>
-      )}
-    </p>
-  );
-}
+/** A heading inside the section's own layout: one level under the section heading. */
+const subHeading = (ctx: SectionContext, titled: boolean) =>
+  ctx.headingLevel === "h1" || !titled ? "h2" : "h3";
 
+/**
+ * Letters sign-up as its own section, laid out like the footer's: the heading
+ * and line on 1–6, the form on 7–12, aligned to the bottom.
+ */
 export function Newsletter({ section, ctx }: Props<"newsletter">) {
   const p = section.props;
   return (
     <SectionShell
       section={section}
       ctx={ctx}
-      className={`signup-section signup-section--${section.variant}`}
-      runhead={{ title: "" }}
+      labelled
+      className={`newsletter newsletter--${section.variant}`}
     >
-      <div className="signup">
-        <div>
-          {p.eyebrow && <p className="label label--accent">{caps(p.eyebrow)}</p>}
-          <h2 id={ctx.headingId} className="display-m" lang={keyLang(section, "title")}>
+      <div className="grid-12 newsletter-grid">
+        <div className="newsletter-copy">
+          <SectionHeading ctx={ctx} lang={keyLang(section, "title")}>
             {p.title}
-          </h2>
+          </SectionHeading>
           {p.body && (
             <p className="body" lang={keyLang(section, "body")}>
-              {p.body}
+              {nb(p.body)}
             </p>
           )}
         </div>
-        <NewsletterForm source="section" />
+        <div className="newsletter-form">
+          <NewsletterForm
+            source="section"
+            labelledBy={ctx.headingId}
+            headingLevel={subHeading(ctx, true)}
+          />
+        </div>
       </div>
     </SectionShell>
   );
@@ -60,110 +60,160 @@ export function Newsletter({ section, ctx }: Props<"newsletter">) {
 
 const TOPICS: ContactTopic[] = ["general", "speaking", "media", "partnerships"];
 
+/**
+ * Write to Anastasia: the heading and line on 1–5, the form on 7–12. The
+ * same pattern as the free eBook form: a hint naming what's needed, labels
+ * above, errors on submit and then on blur, and success in place.
+ */
 export function ContactForm({ section, ctx }: Props<"contact_form">) {
   const t = useT();
   const locale = useLocale();
   const id = useId();
   const p = section.props;
-  const { state, sending, formProps, turnstileSlot } = useFormAction((data, turnstile) =>
-    sendContactMessage({
-      data: {
-        name: field(data, "name"),
-        email: field(data, "email"),
-        topic: (TOPICS.find((topic) => topic === field(data, "topic")) ??
-          "general") as ContactTopic,
-        message: field(data, "message"),
-        locale,
-        website: field(data, "website"),
-        turnstile,
-      },
-    }),
-  );
   const c = t.sections.contact;
+  const [sender, setSender] = useState("");
+  const form = useFormAction(
+    (data, turnstile) => {
+      setSender(field(data, "name").trim().split(/\s+/)[0] ?? "");
+      return sendContactMessage({
+        data: {
+          name: field(data, "name"),
+          email: field(data, "email"),
+          topic: TOPICS.find((topic) => topic === field(data, "topic")) ?? "general",
+          message: field(data, "message"),
+          locale,
+          website: field(data, "website"),
+          turnstile,
+        },
+      });
+    },
+    {},
+    {
+      checks: {
+        name: (value) => !value.trim() && c.nameMissing,
+        email: (value) => !EMAIL.test(value.trim()) && t.sections.forms.emailInvalid,
+        message: (value) => !value.trim() && c.messageMissing,
+      },
+    },
+  );
+  const titled = !!p.title;
+  const Sub = subHeading(ctx, titled);
+  const hintId = `${id}-hint`;
+  const doneTitle = sender ? fmt(c.doneTitleName, { name: sender }) : c.doneTitle;
 
   return (
-    <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow || c.send}>
-      <div className="contact">
+    <SectionShell section={section} ctx={ctx} labelled={titled} className="contact">
+      <div className="grid-12 contact-grid">
         {(p.title || p.body) && (
           <div className="contact-copy">
             {p.title && (
-              <h2 id={ctx.headingId} className="display-l" lang={keyLang(section, "title")}>
+              <SectionHeading ctx={ctx} lang={keyLang(section, "title")}>
                 {p.title}
-              </h2>
+              </SectionHeading>
             )}
             {p.body && (
               <p className="lead" lang={keyLang(section, "body")}>
-                {p.body}
+                {nb(p.body)}
               </p>
             )}
           </div>
         )}
-        {state.step === "done" ? (
-          <div className="form-done" role="status">
-            <Icon name="check" />
-            <p className="title">{c.doneTitle}</p>
-            <p className="body">{c.doneBody}</p>
-          </div>
-        ) : (
-          <form className="form" {...formProps}>
-            <div className="fields fields--two">
-              <div className="field">
-                <label htmlFor={`${id}-name`}>{c.name}</label>
-                <input id={`${id}-name`} name="name" autoComplete="name" required maxLength={120} />
+        <div className="contact-form">
+          {form.state.step === "done" ? (
+            <div className="form-done">
+              <Sub ref={form.doneRef} className="display-m" tabIndex={-1}>
+                {doneTitle}
+              </Sub>
+              <p className="body">{c.doneBody}</p>
+            </div>
+          ) : (
+            <form
+              className="form-stack"
+              noValidate
+              aria-labelledby={titled ? ctx.headingId : undefined}
+              {...form.formProps}
+            >
+              <p id={hintId} className="form-hint">
+                {c.hint}
+              </p>
+              <div className="fields fields--name-email">
+                <div className="field">
+                  <label htmlFor={`${id}-name`}>{c.name}</label>
+                  <input
+                    id={`${id}-name`}
+                    autoComplete="name"
+                    required
+                    maxLength={120}
+                    {...form.fieldProps("name", hintId)}
+                  />
+                  {form.fieldError("name")}
+                </div>
+                <div className="field">
+                  <label htmlFor={`${id}-email`}>{c.email}</label>
+                  <input
+                    id={`${id}-email`}
+                    type="email"
+                    autoComplete="email"
+                    required
+                    maxLength={320}
+                    {...form.fieldProps("email", hintId)}
+                  />
+                  {form.fieldError("email")}
+                </div>
               </div>
+              <fieldset className="field-set">
+                <legend className="field-label">{c.topic}</legend>
+                <div className="chips">
+                  {TOPICS.map((topic, index) => (
+                    <label key={topic} className="chip">
+                      <input type="radio" name="topic" value={topic} defaultChecked={index === 0} />
+                      <span>{c.topics[topic]}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
               <div className="field">
-                <label htmlFor={`${id}-email`}>{c.email}</label>
-                <input
-                  id={`${id}-email`}
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  placeholder={t.site.footer.emailPlaceholder}
+                <label htmlFor={`${id}-message`}>{c.message}</label>
+                <textarea
+                  id={`${id}-message`}
+                  rows={6}
                   required
-                  maxLength={320}
+                  maxLength={5000}
+                  {...form.fieldProps("message", hintId)}
                 />
+                {form.fieldError("message")}
               </div>
-            </div>
-            <fieldset className="field choice">
-              <legend>{c.topic}</legend>
-              <div className="chips">
-                {TOPICS.map((topic, index) => (
-                  <label key={topic} className="chip">
-                    <input type="radio" name="topic" value={topic} defaultChecked={index === 0} />
-                    <span>{c.topics[topic]}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            <div className="field">
-              <label htmlFor={`${id}-message`}>{c.message}</label>
-              <textarea id={`${id}-message`} name="message" rows={6} required maxLength={5000} />
-            </div>
-            <Honeypot />
-            {turnstileSlot}
-            <div className="form-foot">
-              <button
-                className="btn btn-primary"
-                type="submit"
-                aria-disabled={sending || undefined}
-              >
-                {sending ? t.sections.forms.sending : c.send}
+              <Honeypot />
+              {form.turnstileSlot}
+              {form.alertSlot}
+              <button className="btn btn-primary btn-block" {...form.submitProps}>
+                {form.sending ? c.sending : c.send}
               </button>
               <p className="fine">
-                <Icon name="lock" />
-                <span>{c.privacy}</span>
+                <span className="fine-note">
+                  <Icon name="lock" />
+                  <span>{c.privacy}</span>
+                </span>
                 <SiteLink href="/privacy">{t.site.footer.privacy}</SiteLink>
               </p>
-            </div>
-            <FormError message={state.step === "error" ? state.message : null} />
-          </form>
-        )}
+            </form>
+          )}
+          {form.statusSlot(`${doneTitle} ${c.doneBody}`)}
+        </div>
       </div>
     </SectionShell>
   );
 }
 
-/** Giving: once or monthly, preset amounts or another, then Stripe Checkout. */
+/** Euros typed by hand: a comma or a point for the decimals. */
+const euros = (value: string) => Number(value.trim().replace(",", "."));
+const inRange = (amount: number) => Number.isFinite(amount) && amount >= 1 && amount <= 10_000;
+
+/**
+ * Giving: the heading and line on 1–5, the card on 7–12. Once or monthly,
+ * a preset amount or another, then Stripe Checkout. Without payments set up,
+ * the card says so and offers a way to get in touch.
+ */
 export function Donation({ section, ctx }: Props<"donation">) {
   const t = useT();
   const locale = useLocale();
@@ -177,20 +227,26 @@ export function Donation({ section, ctx }: Props<"donation">) {
       (s.location.search as Record<string, unknown>).cancelled === 1 ||
       (s.location.search as Record<string, unknown>).cancelled === "1",
   });
-  const [interval, setInterval] = useState<"one_off" | "month">("one_off");
+  const [frequency, setFrequency] = useState<"one_off" | "month">("one_off");
   const [preset, setPreset] = useState<number | "other">(p.amounts[1] ?? p.amounts[0]);
   const [other, setOther] = useState("");
-  const euros = preset === "other" ? Number(other.replace(",", ".")) : preset;
-  const valid = Number.isFinite(euros) && euros >= 1 && euros <= 10_000;
-  const amountText = valid ? formatMoney(Math.round(euros * 100), "EUR", locale) : "";
+  const amount = preset === "other" ? euros(other) : preset;
+  const amountText = inRange(amount) ? formatMoney(Math.round(amount * 100), "EUR", locale) : "";
+  const limits = {
+    min: formatMoney(100, "EUR", locale),
+    max: formatMoney(1_000_000, "EUR", locale),
+  };
+  const range = fmt(d.range, limits);
 
-  const { state, sending, formProps, turnstileSlot } = useFormAction(
-    async (_data, turnstile) => {
-      if (!valid) return { ok: false as const, error: "range" };
+  const form = useFormAction(
+    async (data, turnstile) => {
+      const chosen = field(data, "amount");
       const result = await startDonation({
         data: {
-          amountCents: Math.round(euros * 100),
-          interval,
+          amountCents: Math.round(
+            (chosen === "other" ? euros(field(data, "other")) : Number(chosen)) * 100,
+          ),
+          interval: field(data, "interval") === "month" ? "month" : "one_off",
           locale,
           returnPath: pathname.replace(/^\/el(?=\/|$)/, "") || "/",
           turnstile,
@@ -199,47 +255,51 @@ export function Donation({ section, ctx }: Props<"donation">) {
       if (result.ok) window.location.assign(result.url);
       return result;
     },
+    { invalid: range, unavailable: d.unavailable },
     {
-      range: fmt(d.range, {
-        min: formatMoney(100, "EUR", locale),
-        max: formatMoney(1_000_000, "EUR", locale),
-      }),
-      unavailable: d.unavailable,
+      checks: {
+        other: (value, data) =>
+          field(data, "amount") === "other" && !inRange(euros(value)) && range,
+      },
+      // Never on to Stripe unasked.
+      retryOnReconnect: false,
     },
   );
+  // On its way to Stripe: the button keeps waiting until the page changes.
+  const busy = form.sending || form.state.step === "done";
+  const label = amountText
+    ? fmt(frequency === "month" ? d.donateMonthly : d.donateAmount, { amount: amountText })
+    : d.donate;
 
   return (
-    <SectionShell
-      section={section}
-      ctx={ctx}
-      className={`give give--${section.variant}`}
-      runhead={{ title: "" }}
-    >
-      <div className="give-grid">
+    <SectionShell section={section} ctx={ctx} labelled className={`give give--${section.variant}`}>
+      <div className="grid-12 give-grid">
         <div className="give-copy">
-          {p.eyebrow && <p className="label label--accent">{caps(p.eyebrow)}</p>}
-          <h2 id={ctx.headingId} className="display-l" lang={keyLang(section, "title")}>
+          <SectionHeading ctx={ctx} lang={keyLang(section, "title")}>
             {p.title}
-          </h2>
+          </SectionHeading>
           {p.body && (
             <p className="lead" lang={keyLang(section, "body")}>
-              {p.body}
+              {nb(p.body)}
             </p>
           )}
         </div>
         {!payments ? (
-          <div className="give-card">
+          <div className="give-card give-card--off">
             <p className="body">{d.unavailable}</p>
-            <p>
-              <SiteLink className="btn btn-quiet" href="/contact">
-                {d.contact}
-                <Icon name="arrow-right" />
-              </SiteLink>
-            </p>
+            <SiteLink className="btn btn-quiet" href="/contact">
+              {d.contact}
+              <Icon name="arrow-right" />
+            </SiteLink>
           </div>
         ) : (
-          <form className="give-card" {...formProps}>
-            {cancelled && <p className="note meta">{d.cancelled}</p>}
+          <form
+            className="give-card form-stack"
+            noValidate
+            aria-labelledby={ctx.headingId}
+            {...form.formProps}
+          >
+            {cancelled && <p className="form-hint">{d.cancelled}</p>}
             {p.allowMonthly && (
               <fieldset className="segmented">
                 <legend className="sr-only">{d.frequency}</legend>
@@ -249,41 +309,43 @@ export function Donation({ section, ctx }: Props<"donation">) {
                       type="radio"
                       name="interval"
                       value={value}
-                      checked={interval === value}
-                      onChange={() => setInterval(value)}
+                      checked={frequency === value}
+                      onChange={() => setFrequency(value)}
                     />
                     <span>{value === "one_off" ? d.once : d.monthly}</span>
                   </label>
                 ))}
               </fieldset>
             )}
-            <fieldset className="amounts">
-              <legend className="label">{caps(d.amount)}</legend>
-              {p.amounts.map((amount) => (
-                <label key={amount} className="chip chip--amount">
+            <fieldset className="field-set">
+              <legend className="field-label">{d.amount}</legend>
+              <div className="chips give-amounts">
+                {p.amounts.map((value) => (
+                  <label key={value} className="chip">
+                    <input
+                      type="radio"
+                      name="amount"
+                      value={value}
+                      checked={preset === value}
+                      onChange={() => setPreset(value)}
+                    />
+                    <span>{formatMoney(value * 100, "EUR", locale)}</span>
+                  </label>
+                ))}
+                <label className="chip">
                   <input
                     type="radio"
                     name="amount"
-                    value={amount}
-                    checked={preset === amount}
-                    onChange={() => setPreset(amount)}
+                    value="other"
+                    checked={preset === "other"}
+                    onChange={() => setPreset("other")}
                   />
-                  <span>{formatMoney(amount * 100, "EUR", locale)}</span>
+                  <span>{d.other}</span>
                 </label>
-              ))}
-              <label className="chip chip--amount">
-                <input
-                  type="radio"
-                  name="amount"
-                  value="other"
-                  checked={preset === "other"}
-                  onChange={() => setPreset("other")}
-                />
-                <span>{d.other}</span>
-              </label>
+              </div>
             </fieldset>
             {preset === "other" && (
-              <div className="field">
+              <div className="field give-other">
                 <label htmlFor={`${id}-other`}>{d.otherLabel}</label>
                 <input
                   id={`${id}-other`}
@@ -291,30 +353,32 @@ export function Donation({ section, ctx }: Props<"donation">) {
                   autoComplete="off"
                   value={other}
                   onChange={(event) => setOther(event.target.value)}
-                  aria-invalid={other !== "" && !valid ? true : undefined}
+                  {...form.fieldProps("other", `${id}-other-hint`)}
                 />
+                <p id={`${id}-other-hint`} className="field-hint">
+                  {fmt(d.otherHint, limits)}
+                </p>
+                {form.fieldError("other")}
               </div>
             )}
-            {turnstileSlot}
+            {form.turnstileSlot}
+            {form.alertSlot}
             <button
               className="btn btn-primary btn-block"
-              type="submit"
-              aria-disabled={sending || !valid || undefined}
+              {...form.submitProps}
+              disabled={busy}
+              aria-busy={busy || undefined}
             >
-              <Icon name="heart" />
-              <span>
-                {sending
-                  ? t.sections.forms.sending
-                  : fmt(interval === "month" ? d.giveMonthly : d.give, {
-                      amount: amountText || "…",
-                    })}
-              </span>
+              {!busy && <Icon name="heart" />}
+              <span>{busy ? d.redirecting : label}</span>
             </button>
             <p className="fine">
-              <Icon name="lock" />
-              <span>{d.secure}</span>
+              <span className="fine-note">
+                <Icon name="lock" />
+                <span>{d.secure}</span>
+              </span>
             </p>
-            <FormError message={state.step === "error" ? state.message : null} />
+            {form.statusSlot(d.redirecting)}
           </form>
         )}
       </div>

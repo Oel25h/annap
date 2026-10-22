@@ -1,0 +1,404 @@
+/* The featured book, formats, review, free eBook card, book list, excerpts, book page intro and buy bar. */
+@layer components {
+  /* ---------- The book: the cover in the arch niche on 1–5, the words on 7–12, the review under them ---------- */
+  .book-grid {
+    gap: var(--space-6);
+  }
+  .book-cover .arch-wrap {
+    width: min(80vw, 320px);
+  }
+  .niche-cover img:not(.crop) {
+    object-position: var(--focal, 50% 50%);
+  }
+  .book-sub {
+    margin-top: var(--space-3);
+    font: 400 var(--text-lead) / 1.4 var(--font-serif);
+    color: var(--color-text-secondary);
+    text-wrap: pretty;
+  }
+  .book-rating {
+    margin-top: var(--space-4);
+  }
+  .book-body > .body {
+    margin-top: var(--space-5);
+    max-width: 34em;
+  }
+  .book-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--space-6);
+    margin-top: var(--space-3);
+  }
+  /* A reader's words, verbatim: lead-size roman under a hairline, the credit in meta */
+  .review,
+  .book-aside {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .review p {
+    max-width: 30em;
+    font: 400 var(--text-lead) / 1.5 var(--font-serif);
+    color: var(--color-text);
+    text-wrap: pretty;
+  }
+  .review q:lang(en) {
+    quotes: "\201C" "\201D" "\2018" "\2019";
+  }
+  .review q:lang(el) {
+    quotes: "\00AB" "\00BB" "\201C" "\201D";
+  }
+  .review figcaption {
+    margin-top: var(--space-3);
+  }
+  .book-aside .body {
+    margin-top: var(--space-2);
+    max-width: 34em;
+    color: var(--color-text-secondary);
+  }
+  @media (min-width: 1024px) {
+    .book-grid {
+      row-gap: var(--space-7);
+    }
+    .book-cover {
+      grid-column: 1 / 6;
+      grid-row: 1 / 3;
+    }
+    .book-grid:not(:has(> .review, > .book-aside)) > .book-cover {
+      grid-row: 1;
+    }
+    .book-cover .arch-wrap {
+      width: 100%;
+    }
+    .book-body {
+      grid-column: 7 / 13;
+      grid-row: 1;
+      align-self: start;
+    }
+    .book-grid > .review,
+    .book-aside {
+      grid-column: 7 / 13;
+      grid-row: 2;
+      align-self: end;
+    }
+    .book-grid--right > .book-cover {
+      grid-column: 8 / 13;
+    }
+    .book-grid--right > .book-body,
+    .book-grid--right > .review {
+      grid-column: 1 / 7;
+    }
+  }
+
+  /* ---------- Formats: subgrid rows, so every button takes the widest one's width ---------- */
+  .formats {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-top: var(--space-6);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .formats > li {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    column-gap: var(--space-4);
+    align-items: center;
+    min-height: var(--size-row);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .f-name {
+    grid-column: 1;
+    font: 600 var(--text-body) / 1.3 var(--font-serif);
+  }
+  .f-where {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .formats .btn {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    min-width: 184px;
+    justify-content: space-between;
+  }
+  .formats .field-error {
+    grid-column: 1 / -1;
+  }
+  @supports not (grid-template-columns: subgrid) {
+    .formats > li {
+      grid-template-columns: minmax(0, 1fr) 184px;
+    }
+  }
+  /* Below 360 the button goes under the name, full width */
+  @media (max-width: 359px) {
+    .formats {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .formats .btn {
+      grid-column: 1;
+      grid-row: 3;
+      margin-top: var(--space-2);
+    }
+  }
+
+  /* ---------- The free eBook card: copy on 2–5, the form on 7–11 ---------- */
+  .bookplate {
+    padding: var(--space-6) var(--space-4) var(--space-5);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius);
+  }
+  .book-grid + .bookplate {
+    margin-top: var(--space-8);
+  }
+  /* A peach card on a peach band would vanish into it */
+  .band-peach .bookplate {
+    background: var(--color-surface);
+  }
+  .bookplate--inline {
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+  }
+  @media (min-width: 720px) {
+    .bookplate:not(.bookplate--inline) {
+      padding: var(--space-6);
+    }
+  }
+  /* Both headings sit a little low, level with the hint row beside them */
+  :is(.bp-copy, .bp-done) .display-m {
+    margin-top: var(--space-3);
+  }
+  .bp-copy .body {
+    margin-top: var(--space-3);
+    max-width: 30em;
+    color: var(--color-text-secondary);
+  }
+  .bp-copy .meta {
+    margin-top: var(--space-3);
+  }
+  .bp-hint {
+    margin-bottom: var(--space-4);
+  }
+  .bp-form .check {
+    margin-top: var(--space-3);
+  }
+  .bp-form .form-alert {
+    margin-top: var(--space-4);
+  }
+  .bp-form .btn-block {
+    margin-top: var(--space-4);
+  }
+  .bp-form .fine {
+    margin-top: var(--space-2);
+  }
+  .bp-done [tabindex="-1"]:focus {
+    outline: none;
+  }
+  .bp-done [tabindex="-1"]:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+  }
+  .bp-done .body {
+    margin-top: var(--space-3);
+    color: var(--color-text-secondary);
+  }
+  .bp-done .actions {
+    margin-top: var(--space-5);
+  }
+  .download-form {
+    display: contents;
+  }
+  @media (min-width: 1024px) {
+    .bookplate:not(.bookplate--inline) {
+      padding: var(--space-7) 0;
+    }
+    .bp-copy {
+      grid-column: 2 / 6;
+    }
+    .bp-form,
+    .bp-done {
+      grid-column: 7 / 12;
+    }
+    .bookplate--inline .bp-copy {
+      grid-column: 1 / 7;
+    }
+    .bookplate--inline :is(.bp-form, .bp-done) {
+      grid-column: 7 / 13;
+    }
+  }
+
+  /* ---------- The books index: rows like the book (cover 1–4, words 5–12), or three across ---------- */
+  .shelf--rows > li {
+    padding-block: var(--space-7);
+  }
+  .shelf--rows > li:first-child {
+    padding-top: 0;
+  }
+  .shelf--rows > li:last-child {
+    padding-bottom: 0;
+  }
+  .shelf--rows > li + li {
+    border-top: 1px solid var(--color-hairline);
+  }
+  .shelf > li {
+    align-content: start;
+  }
+  .shelf--grid {
+    row-gap: var(--space-8);
+  }
+  .shelf-text .book-sub {
+    margin-top: var(--space-2);
+  }
+  .shelf-text > .body {
+    margin-top: var(--space-4);
+    max-width: 34em;
+  }
+  @media (min-width: 720px) and (max-width: 1023px) {
+    .shelf--rows > li {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      column-gap: var(--grid-gap);
+    }
+    .shelf--rows .arch-wrap {
+      width: 100%;
+    }
+    .shelf--grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--grid-gap);
+    }
+    .shelf--grid .arch-wrap {
+      width: 100%;
+    }
+  }
+  @media (min-width: 1024px) {
+    .shelf--rows > li {
+      padding-block: var(--space-8);
+    }
+    .shelf--rows .book-cover {
+      grid-column: 1 / 5;
+    }
+    .shelf--rows .shelf-text {
+      grid-column: 5 / 13;
+    }
+    .shelf--grid > li {
+      grid-column: span 4;
+    }
+  }
+
+  /* ---------- Excerpts: hairline cards three across, or stacked rows (title 1–4, text 5–11) ---------- */
+  .excerpts > li {
+    align-content: start;
+  }
+  .excerpts:not(.excerpts--stacked) > li {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-6) var(--space-5);
+    background: var(--color-surface);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius);
+  }
+  .ex-head {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .excerpts .body {
+    max-width: 34em;
+    color: var(--color-text-secondary);
+  }
+  .excerpts--stacked {
+    border-top: 1px solid var(--color-hairline);
+  }
+  .excerpts--stacked > li {
+    gap: var(--space-3);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  @media (min-width: 720px) and (max-width: 1023px) {
+    .excerpts:not(.excerpts--stacked) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--grid-gap);
+    }
+  }
+  @media (min-width: 1024px) {
+    .excerpts:not(.excerpts--stacked) > li {
+      grid-column: span 4;
+    }
+    .excerpts--stacked > li {
+      padding-block: var(--space-6);
+    }
+    .excerpts--stacked .ex-head {
+      grid-column: 1 / 5;
+    }
+    .excerpts--stacked .body {
+      grid-column: 5 / 12;
+    }
+  }
+
+  /* ---------- The phone buy bar: one 56px row docked at the bottom of a book's page ---------- */
+  .buy-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .buy-bar-inner {
+    display: grid;
+    grid-template-columns: var(--size-mini-cover) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--size-row);
+    padding-block: var(--space-2);
+  }
+  /* A small mark: square corners */
+  .buy-bar-cover {
+    display: block;
+    width: var(--size-mini-cover);
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: var(--color-surface-alt);
+  }
+  .buy-bar-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .buy-bar-text {
+    display: grid;
+    min-width: 0;
+  }
+  .buy-bar-title {
+    overflow: hidden;
+    font: 600 var(--text-small) / 1.3 var(--font-serif);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .buy-bar .field-error {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+  html:has(.mini-player) .buy-bar {
+    display: none;
+  }
+  @media (max-width: 359px) {
+    .buy-bar-inner {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .buy-bar-cover,
+    .buy-bar-text .meta {
+      display: none;
+    }
+  }
+  @media (min-width: 1024px) {
+    .buy-bar {
+      display: none;
+    }
+  }
+  @media print {
+    .buy-bar {
+      display: none;
+    }
+  }
+}

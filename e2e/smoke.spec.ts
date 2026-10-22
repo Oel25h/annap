@@ -53,19 +53,48 @@ for (const path of PAGES) {
 }
 
 test("switching language keeps the page and does not reload", async ({ page, isMobile }) => {
-  test.skip(isMobile, "the switcher sits in the mobile menu; covered on desktop");
+  // Below 640 the switch is a row in the menu; above, EN / ΕΛ in the header. Both are named in full.
+  const switchTo = async (name: string) => {
+    if (isMobile) await page.getByRole("button", { name: /^(Menu|Μενού)$/ }).click();
+    await page.getByRole("link", { name, exact: true }).click();
+  };
   await page.goto("/about", { waitUntil: "networkidle" });
   await page.evaluate(() => ((window as unknown as { __marker: number }).__marker = 1));
 
-  await page.getByRole("link", { name: "ΕΛ", exact: true }).first().click();
+  await switchTo("Ελληνικά");
   await expect(page).toHaveURL(/\/el\/about$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "el");
   expect(await page.evaluate(() => (window as unknown as { __marker?: number }).__marker)).toBe(1);
 
-  await page.getByRole("link", { name: "EN", exact: true }).first().click();
+  await switchTo("English");
   await expect(page).toHaveURL(/\/about$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   expect(await page.evaluate(() => (window as unknown as { __marker?: number }).__marker)).toBe(1);
+});
+
+test("the menu opens, closes on Escape and returns focus", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "the menu is replaced by the inline nav from 1180px");
+  await page.goto("/", { waitUntil: "networkidle" });
+  const button = page.getByRole("button", { name: "Menu", exact: true });
+  await expect(button).toHaveAttribute("aria-expanded", "false");
+  await button.click();
+  await expect(button).toHaveAttribute("aria-expanded", "true");
+  const panel = page.locator(`[id="${await button.getAttribute("aria-controls")}"]`);
+  await expect(panel.getByRole("navigation", { name: "Primary" })).toBeVisible();
+  await expect(panel.getByRole("group", { name: "Language" })).toBeVisible();
+  await panel.getByRole("link").first().focus();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(button).toBeFocused();
+});
+
+test("the footer has one nav and the legal row", async ({ page }) => {
+  await page.goto("/", { waitUntil: "networkidle" });
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.getByRole("navigation")).toHaveCount(1);
+  await expect(footer.getByRole("navigation", { name: "Footer" })).toBeVisible();
+  await expect(footer.getByRole("list", { name: "Legal" })).toBeVisible();
+  await expect(footer.getByText("Based in Cyprus")).toBeVisible();
 });
 
 test("links inside the Greek site stay in Greek", async ({ page }) => {

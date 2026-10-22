@@ -6,7 +6,10 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { localizePath, type Locale } from "@/lib/i18n/locale";
 import { hashToken, randomToken } from "./crypto.server";
+import { overlayFields } from "./loaders/common.server";
 import { absoluteUrl, DAY } from "./outbox.server";
+import { fetchOverlays } from "./overlays.server";
+import { publicDb } from "./supabase-public.server";
 
 const DOWNLOAD_DAYS = 7;
 
@@ -84,32 +87,47 @@ export async function bookFiles(
   return files.length > 0 ? files : pick("en");
 }
 
+/** `textLang` is the language `title` is in, so a Greek page can mark an English one. */
 export type DownloadState =
-  | { status: "ready"; title: string | null; format: string }
-  | { status: "expired"; title: string | null; renewable: boolean }
+  | { status: "ready"; title: string | null; textLang: Locale; format: string }
+  | { status: "expired"; title: string | null; textLang: Locale; renewable: boolean }
   | { status: "invalid" };
 
+/** A free ebook's title in the page's language when its Greek is approved; otherwise English. */
+async function bookTitle(book: { id: string; title: string }, locale: Locale) {
+  const overlays =
+    locale === "el" ? await fetchOverlays(publicDb(), { book: [book.id] }) : new Map();
+  const { item, lang } = overlayFields({ title: book.title }, overlays, "book", book.id, ["title"]);
+  return { title: item.title, textLang: lang };
+}
+
 /** What a link is for, without using it: the page shows this before the button. */
-export async function inspectDownload(token: string): Promise<DownloadState> {
+export async function inspectDownload(
+  token: string,
+  locale: Locale = "en",
+): Promise<DownloadState> {
   if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return { status: "invalid" };
   const { data: row } = await supabaseAdmin
     .from("download_tokens")
     .select(
-      "expires_at, uses, max_uses, media:media_assets(mime), lead:leads(book:books(title)), item:order_items(title)",
+      "expires_at, uses, max_uses, media:media_assets(mime), lead:leads(book:books(id, title)), item:order_items(title)",
     )
     .eq("token_hash", await hashToken(token))
     .maybeSingle();
   if (!row) return { status: "invalid" };
   const media = row.media as unknown as { mime: string } | null;
   if (!media) return { status: "invalid" };
-  const lead = row.lead as unknown as { book: { title: string } | null } | null;
+  const lead = row.lead as unknown as { book: { id: string; title: string } | null } | null;
   const item = row.item as unknown as { title: string } | null;
-  const title = lead?.book?.title ?? item?.title ?? null;
+  // A bought line keeps the English title it was sold under.
+  const { title, textLang } = lead?.book
+    ? await bookTitle(lead.book, locale)
+    : { title: item?.title ?? null, textLang: "en" as const };
   if (new Date(row.expires_at).getTime() < Date.now() || row.uses >= row.max_uses) {
     // Free ebook links can be emailed again; bought ones come from the receipt.
-    return { status: "expired", title, renewable: !!lead };
+    return { status: "expired", title, textLang, renewable: !!lead };
   }
-  return { status: "ready", title, format: FORMAT_LABELS[media.mime] ?? "File" };
+  return { status: "ready", title, textLang, format: FORMAT_LABELS[media.mime] ?? "File" };
 }
 
 export type RedeemResult = { status: "ok"; url: string } | { status: "expired" | "invalid" };

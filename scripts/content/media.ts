@@ -86,7 +86,7 @@ export const MEDIA = {
     id: id(9),
     key: "sunset-silhouette",
     file: "src/assets/gallery-ghana.jpg",
-    alt: "A woman's silhouette against an orange sunset",
+    alt: "A woman’s silhouette against an orange sunset",
     focal: [0.55, 0.5],
   },
   hands: {
@@ -96,12 +96,7 @@ export const MEDIA = {
     alt: "Cupped hands holding the light of the setting sun",
     focal: [0.5, 0.45],
   },
-  foundationMark: {
-    id: id(11),
-    key: "foundation-emblem",
-    file: "public/foundation-hero-mark.jpg",
-    alt: "The Patience Humanitarian Foundation emblem: two hands holding a golden heart",
-  },
+  // id(11) was the foundation emblem, retired: never reuse it.
   journalDesk: {
     id: id(12),
     key: "journal-desk",

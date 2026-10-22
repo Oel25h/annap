@@ -1,11 +1,16 @@
 /*
- * Design tokens. DESIGN.md is the source of truth; names say what they are.
- * The palette holds the only hex values in the system. Components use the
- * semantic tokens (--color-text, --color-accent-text, …), which dark mode and
- * the cocoa band remap.
+ * Design tokens (DESIGN.md 3.0, "The Open Book"). The palette holds the only
+ * hex values in the system; components use the semantic tokens, which dark
+ * mode and the cocoa band re-point. Tailwind's stock colours, radii, shadows,
+ * blurs and animations are reset, so only what the system defines generates.
  */
+
+/* ---------- 1. Palette and named tints ---------- */
 @theme static {
-  /* Palette */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
   --color-tangerine: #f27329;
   --color-burnt-orange: #c2410c;
   --color-apricot: #ffb27a;
@@ -16,39 +21,159 @@
   --color-blush: #f7c9c0;
   --color-cocoa-night: #1f120c;
 
-  /* Fixed tints (contrast noted against ivory and peach, or night and cocoa) */
-  --color-cocoa-ink-76: rgb(59 31 20 / 0.76); /* 6.79:1 · 6.59:1 */
-  --color-cocoa-ink-68: rgb(59 31 20 / 0.68); /* 5.27:1 · 5.11:1 */
-  --color-cocoa-ink-52: rgb(59 31 20 / 0.52); /* 3.27:1 · 3.20:1, borders only */
-  --color-peach-cream-76: rgb(255 241 230 / 0.76); /* 9.77:1 · 8.47:1 */
-  --color-peach-cream-68: rgb(255 241 230 / 0.68); /* 8.06:1 · 7.06:1 */
-  --color-peach-cream-52: rgb(255 241 230 / 0.52); /* 5.17:1 · 4.73:1, borders only */
+  /* Contrast noted on ivory and peach, or on night and cocoa */
+  --color-cocoa-ink-76: rgb(59 31 20 / 0.76); /* 6.79 · 6.59 */
+  --color-cocoa-ink-68: rgb(59 31 20 / 0.68); /* 5.27 · 5.11 */
+  --color-cocoa-ink-52: rgb(59 31 20 / 0.52); /* 3.27 · 3.20: borders, tracks, scrims; never text */
+  --color-peach-cream-76: rgb(255 241 230 / 0.76); /* 9.77 · 8.47 */
+  --color-peach-cream-68: rgb(255 241 230 / 0.68); /* 8.06 · 7.06 */
+  --color-peach-cream-52: rgb(255 241 230 / 0.52); /* 5.17 · 4.73: borders, tracks; never text */
   --color-apricot-32: rgb(255 178 122 / 0.32);
   --color-apricot-48: rgb(255 178 122 / 0.48);
   --color-warm-ivory-88: rgb(255 250 245 / 0.88);
   --color-cocoa-night-88: rgb(31 18 12 / 0.88);
+}
 
-  /* Semantic, light */
+/* ---------- 2. Type, shape, breakpoints ---------- */
+@theme {
+  --font-*: initial;
+  --font-display: "Noto Serif Display Variable", "Noto Serif Display", Georgia, serif;
+  --font-serif: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
+  --font-sans: "Noto Sans Variable", "Noto Sans", system-ui, sans-serif;
+
+  /* One type scale in rem + vw, so zoom and the reader's font size always scale it.
+     Tailwind's size names survive only as aliases onto it. */
+  --text-*: initial;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.3;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.25;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5;
+  --text-lg: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --text-lg--line-height: 1.65;
+  --text-xl: clamp(1.25rem, 1.125rem + 0.25vw, 1.375rem);
+  --text-xl--line-height: 1.3;
+  --text-2xl: clamp(1.75rem, 1.25rem + 1vw, 2.25rem);
+  --text-2xl--line-height: 1.15;
+  --text-3xl: clamp(2.125rem, 1.5rem + 2vw, 3.5rem);
+  --text-3xl--line-height: 1.08;
+  --text-4xl: clamp(2.75rem, 1.5rem + 4vw, 5.5rem);
+  --text-4xl--line-height: 1.02;
+
+  --text-display-xl: clamp(2.75rem, 1.5rem + 4vw, 5.5rem); /* 44-88 · the h1 */
+  --text-display-xl-el: clamp(2.5rem, 1.375rem + 3.5vw, 4.75rem); /* 40-76 */
+  --text-display-l: clamp(2.125rem, 1.5rem + 2vw, 3.5rem); /* 34-56 · h2, quotes */
+  --text-display-l-el: clamp(1.75rem, 1.125rem + 2.4vw, 3.25rem); /* 28-52 */
+  --text-display-m: clamp(1.75rem, 1.25rem + 1vw, 2.25rem); /* 28-36, never smaller */
+  --text-title: clamp(1.25rem, 1.125rem + 0.25vw, 1.375rem); /* 20-22 */
+  --text-lead: clamp(1.1875rem, 1.0625rem + 0.4vw, 1.375rem); /* 19-22 */
+  --text-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem); /* 17-19 */
+  --text-small: 1rem;
+  --text-ui: 0.9375rem;
+  --text-meta: 0.8125rem;
+  --text-label: 0.75rem;
+
+  /* Base 4px: only steps 1 2 3 4 6 8 12 16 24 32 are used */
+  --spacing: 4px;
+
+  /* One radius; rounded-full only for round controls and dots */
+  --radius-*: initial;
+  --radius-xs: 12px;
+  --radius-sm: 12px;
+  --radius-md: 12px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
+
+  /* Flat: no shadows; one blur, for the header; nothing loops */
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --blur-*: initial;
+  --blur-header: 14px;
+  --animate-*: initial;
+
+  --breakpoint-*: initial;
+  --breakpoint-xs: 22.5rem; /* 360: the header CTA */
+  --breakpoint-sm: 40rem; /* 640: language switch in the header */
+  --breakpoint-md: 45rem; /* 720: two-column forms, dot leaders */
+  --breakpoint-lg: 64rem; /* 1024: the grid and the open spread */
+  --breakpoint-xl: 73.75rem; /* 1180: inline nav, three-pane studio */
+
+  --container-text: 45rem;
+  --container-content: 80rem;
+}
+
+/* ---------- 3. Semantic colours as utilities (bg-bg, text-text-secondary, …).
+   inline: utilities read the live variable, so dark mode and the bands re-point
+   them; reference: the values live in :root below. ---------- */
+@theme inline reference {
+  --color-bg: var(--color-bg);
+  --color-bg-alt: var(--color-bg-alt);
+  --color-surface: var(--color-surface);
+  --color-surface-alt: var(--color-surface-alt);
+  --color-text: var(--color-text);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-accent-text: var(--color-accent-text);
+  --color-hairline: var(--color-hairline);
+  --color-leader: var(--color-leader);
+  --color-field-border: var(--color-field-border);
+  --color-track: var(--color-track);
+  --color-action: var(--color-action);
+  --color-on-action: var(--color-on-action);
+  --color-action-hover: var(--color-action-hover);
+  --color-on-action-hover: var(--color-on-action-hover);
+  --color-selected: var(--color-selected);
+  --color-on-selected: var(--color-on-selected);
+  --color-ribbon: var(--color-ribbon);
+  --color-focus: var(--color-focus);
+  --color-header-bg: var(--color-header-bg);
+  --color-selection: var(--color-selection);
+  --color-error: var(--color-error);
+  --color-on-error: var(--color-on-error);
+  --color-status-approved-bg: var(--color-status-approved-bg);
+  --color-status-approved-fg: var(--color-status-approved-fg);
+  --color-status-approved-border: var(--color-status-approved-border);
+  --color-status-draft-bg: var(--color-status-draft-bg);
+  --color-status-draft-fg: var(--color-status-draft-fg);
+  --color-status-draft-border: var(--color-status-draft-border);
+  --color-status-stale-bg: var(--color-status-stale-bg);
+  --color-status-stale-fg: var(--color-status-stale-fg);
+  --color-status-missing-bg: var(--color-status-missing-bg);
+  --color-status-missing-fg: var(--color-status-missing-fg);
+}
+
+/* ---------- 4. Light (default) ---------- */
+:root {
+  color-scheme: light;
+
   --color-bg: var(--color-warm-ivory);
   --color-bg-alt: var(--color-peach-cream);
   --color-surface: var(--color-warm-ivory);
   --color-surface-alt: var(--color-peach-cream);
-  --color-text: var(--color-cocoa-ink);
+  --color-text: var(--color-cocoa-ink); /* 14.54 */
   --color-text-secondary: var(--color-cocoa-ink-76);
   --color-text-tertiary: var(--color-cocoa-ink-68);
-  --color-accent-text: var(--color-burnt-orange);
-  --color-hairline: var(--color-apricot);
+  --color-accent-text: var(--color-burnt-orange); /* 4.99 ivory · 4.68 peach */
+  --color-hairline: var(--color-apricot); /* decorative rules and card edges only */
   --color-leader: var(--color-apricot);
-  --color-field-border: var(--color-cocoa-ink-52);
+  --color-field-border: var(--color-cocoa-ink-52); /* 3.27 */
+  --color-track: var(--color-cocoa-ink-52);
   --color-action: var(--color-tangerine);
-  --color-on-action: var(--color-cocoa-ink);
+  --color-on-action: var(--color-cocoa-ink); /* 5.22; never white on Tangerine */
   --color-action-hover: var(--color-burnt-orange);
-  --color-on-action-hover: var(--color-warm-ivory);
+  --color-on-action-hover: var(--color-warm-ivory); /* 4.99 */
+  --color-selected: var(--color-cocoa-ink); /* the one selected style */
+  --color-on-selected: var(--color-warm-ivory);
   --color-ribbon: var(--color-tangerine);
   --color-focus: var(--color-burnt-orange);
   --color-header-bg: var(--color-warm-ivory-88);
   --color-selection: var(--color-blush);
-  --color-error: var(--color-berry);
+  --color-error: var(--color-berry); /* 8.74 */
   --color-on-error: var(--color-warm-ivory);
 
   /* Translation status in the studio. Stale and Missing look the same in both modes. */
@@ -63,30 +188,6 @@
   --color-status-missing-bg: var(--color-blush);
   --color-status-missing-fg: var(--color-berry);
 
-  /* Type */
-  --font-display: "Noto Serif Display Variable", "Noto Serif Display", Georgia, serif;
-  --font-serif: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
-  --font-sans: "Noto Sans Variable", "Noto Sans", system-ui, sans-serif;
-  --text-display-xl: clamp(44px, 6vw, 88px);
-  --text-display-xl-el: clamp(40px, 5.2vw, 76px);
-  --text-display-l: clamp(34px, 3.9vw, 56px);
-  --text-display-m: clamp(28px, 2.5vw, 36px);
-  --text-title: clamp(20px, 1.6vw, 22px);
-  --text-lead: clamp(19px, 1.55vw, 22px);
-  --text-body: clamp(17px, 1.32vw, 19px);
-  --text-small: 16px;
-  --text-ui: 15px;
-  --text-meta: 13px;
-  --text-label: 12px;
-
-  /* Radius (shadcn components read the sm…xl steps) */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-}
-
-:root {
   /* Space: one scale, 4 8 12 16 24 32 48 64 96 128 */
   --space-1: 4px;
   --space-2: 8px;
@@ -99,47 +200,28 @@
   --space-9: 96px;
   --space-10: 128px;
   --gutter: var(--space-4);
-  --chapter-pt: var(--space-8);
-  --chapter-pb: var(--space-8);
-  --runhead-gap: var(--space-6);
+  --grid-gap: var(--space-6);
+  --section-pt: var(--space-8);
+  --section-pb: var(--space-8);
+  --head-gap: var(--space-6);
   --content-max: 1280px;
-  --measure: 34em;
+  --text-max: 720px;
 
-  /* Shape, size, motion */
+  /* Shape, sizes, motion */
   --radius: 12px;
   --size-control: 48px;
   --size-control-sm: 44px;
   --size-row: 56px;
   --size-header: 64px;
   --size-play: 72px;
+  --size-listen-disc: 56px;
+  --size-mini-cover: 32px;
+  --size-edition-cover: 36px;
+  --size-upnext-thumb: 96px;
   --duration-hover: 200ms;
   --duration-panel: 240ms;
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
-
-  /* shadcn names, for the Radix primitives in src/components/ui */
-  --background: var(--color-bg);
-  --foreground: var(--color-text);
-  --card: var(--color-surface);
-  --card-foreground: var(--color-text);
-  --popover: var(--color-surface);
-  --popover-foreground: var(--color-text);
-  --primary: var(--color-action);
-  --primary-foreground: var(--color-on-action);
-  --secondary: var(--color-bg-alt);
-  --secondary-foreground: var(--color-text);
-  --muted: var(--color-bg-alt);
-  --muted-foreground: var(--color-text-secondary);
-  --accent: var(--color-bg-alt);
-  --accent-foreground: var(--color-text);
-  --destructive: var(--color-error);
-  --destructive-foreground: var(--color-on-error);
-  --border: var(--color-hairline);
-  --input: var(--color-field-border);
-  --ring: var(--color-focus);
-
-  color-scheme: light;
 }
-
 @media (min-width: 720px) {
   :root {
     --gutter: var(--space-6);
@@ -147,9 +229,9 @@
 }
 @media (min-width: 1024px) {
   :root {
-    --chapter-pt: var(--space-9);
-    --chapter-pb: var(--space-10);
-    --runhead-gap: var(--space-7);
+    --section-pt: var(--space-9);
+    --section-pb: var(--space-10);
+    --head-gap: var(--space-8);
     --size-header: 72px;
   }
 }
@@ -159,30 +241,9 @@
   }
 }
 
-/* Dark: warm cocoa, never black. Follows the system unless the studio forces a mode. */
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --color-bg: var(--color-cocoa-night);
-    --color-bg-alt: var(--color-cocoa-night);
-    --color-surface: var(--color-cocoa-ink);
-    --color-surface-alt: var(--color-cocoa-ink);
-    --color-text: var(--color-peach-cream);
-    --color-text-secondary: var(--color-peach-cream-76);
-    --color-text-tertiary: var(--color-peach-cream-68);
-    --color-accent-text: var(--color-apricot);
-    --color-hairline: var(--color-apricot-32);
-    --color-leader: var(--color-apricot-48);
-    --color-field-border: var(--color-peach-cream-52);
-    --color-action-hover: var(--color-apricot);
-    --color-on-action-hover: var(--color-cocoa-ink);
-    --color-focus: var(--color-apricot);
-    --color-header-bg: var(--color-cocoa-night-88);
-    --color-error: var(--color-blush);
-    --color-on-error: var(--color-cocoa-ink);
-    color-scheme: dark;
-  }
-}
+/* ---------- 5. Dark: warm cocoa, never black. Follows the system unless forced. ---------- */
 :root.dark {
+  color-scheme: dark;
   --color-bg: var(--color-cocoa-night);
   --color-bg-alt: var(--color-cocoa-night);
   --color-surface: var(--color-cocoa-ink);
@@ -194,33 +255,38 @@
   --color-hairline: var(--color-apricot-32);
   --color-leader: var(--color-apricot-48);
   --color-field-border: var(--color-peach-cream-52);
+  --color-track: var(--color-peach-cream-52);
   --color-action-hover: var(--color-apricot);
   --color-on-action-hover: var(--color-cocoa-ink);
+  --color-selected: var(--color-peach-cream);
+  --color-on-selected: var(--color-cocoa-night);
   --color-focus: var(--color-apricot);
   --color-header-bg: var(--color-cocoa-night-88);
   --color-error: var(--color-blush);
   --color-on-error: var(--color-cocoa-ink);
-  color-scheme: dark;
 }
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+    --color-bg: var(--color-cocoa-night);
+    --color-bg-alt: var(--color-cocoa-night);
+    --color-surface: var(--color-cocoa-ink);
+    --color-surface-alt: var(--color-cocoa-ink);
+    --color-text: var(--color-peach-cream);
+    --color-text-secondary: var(--color-peach-cream-76);
+    --color-text-tertiary: var(--color-peach-cream-68);
+    --color-accent-text: var(--color-apricot);
+    --color-hairline: var(--color-apricot-32);
+    --color-leader: var(--color-apricot-48);
+    --color-field-border: var(--color-peach-cream-52);
+    --color-track: var(--color-peach-cream-52);
+    --color-action-hover: var(--color-apricot);
+    --color-on-action-hover: var(--color-cocoa-ink);
+    --color-selected: var(--color-peach-cream);
+    --color-on-selected: var(--color-cocoa-night);
+    --color-focus: var(--color-apricot);
+    --color-header-bg: var(--color-cocoa-night-88);
+    --color-error: var(--color-blush);
+    --color-on-error: var(--color-cocoa-ink);
+  }
 }

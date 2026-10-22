@@ -1,7 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { NotFoundPage } from "@/components/site/StatusPage";
 import { getPage, readPageQuery } from "@/lib/content.functions";
+import { localeFromSearch } from "@/lib/i18n/context";
+import { getMessages } from "@/lib/i18n/messages";
 import { followRedirect } from "@/lib/item-route";
-import { pageHead } from "@/lib/seo";
+import { pageHead, utilityHead } from "@/lib/seo";
 import type { PageQuery } from "@/sections/types";
 import { PageView } from "@/sections/PageView";
 
@@ -24,8 +27,13 @@ export const Route = createFileRoute("/$")({
     throw notFound();
   },
   staleTime: 30_000,
-  head: ({ loaderData }) => (loaderData ? pageHead(loaderData) : {}),
+  head: ({ loaderData, match }) => {
+    if (loaderData) return pageHead(loaderData);
+    const t = getMessages(localeFromSearch(match.search));
+    return utilityHead(`${t.site.notFound.title} — ${t.seo.siteName}`);
+  },
   component: CmsPage,
+  notFoundComponent: NotFoundPage,
 });
 
 function CmsPage() {

@@ -1,6 +1,7 @@
 /*
- * Base styles, type roles, buttons and links. Ported from the final design
- * mocks; see DESIGN.md for the rules behind each value.
+ * Element defaults, type roles, bands, the grid, section rhythm, buttons,
+ * links, form fields and the small utilities every page shares. DESIGN.md
+ * gives the reason for each value.
  */
 @layer base {
   *,
@@ -11,6 +12,11 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-padding-top: var(--size-header);
+  }
+  /* A docked bar (mini player or buy bar) never hides a focused element or an anchor */
+  html:has(.mini-player),
+  html:has(.buy-bar:not([hidden])) {
+    scroll-padding-bottom: 80px;
   }
   /* Smooth only for in-page jumps the reader starts (not on load, not for find-in-page) */
   @media (prefers-reduced-motion: no-preference) {
@@ -38,6 +44,13 @@
   }
   a {
     color: inherit;
+    text-decoration-color: var(--color-accent-text);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+  }
+  a:hover {
+    color: var(--color-accent-text);
+    text-decoration-thickness: 2px;
   }
   h1,
   h2,
@@ -52,10 +65,26 @@
   dd {
     margin: 0;
   }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
   ol,
   ul {
     padding: 0;
     list-style: none;
+  }
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  legend {
+    padding: 0;
   }
   button,
   input,
@@ -63,6 +92,27 @@
   textarea {
     font: inherit;
     color: inherit;
+  }
+  /* Book titles keep the conventional italic; everything else is roman */
+  cite {
+    font-style: italic;
+  }
+  em,
+  i {
+    font-style: normal;
+  }
+  /* Quotation marks follow the language of the quote, not the page */
+  q:lang(en) {
+    quotes: "\201C" "\201D" "\2018" "\2019";
+  }
+  q:lang(el) {
+    quotes: "\00AB" "\00BB" "\201C" "\201D";
+  }
+  :lang(el) {
+    hyphens: manual;
+  }
+  [hidden] {
+    display: none !important;
   }
   ::selection {
     background: var(--color-selection);
@@ -72,6 +122,11 @@
     outline: 2px solid var(--color-focus);
     outline-offset: 4px;
   }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline-offset: 2px;
+  }
   .sr-only {
     position: absolute;
     width: 1px;
@@ -80,12 +135,13 @@
     margin: -1px;
     overflow: hidden;
     clip: rect(0 0 0 0);
+    clip-path: inset(50%);
     white-space: nowrap;
     border: 0;
   }
   .skip {
     position: absolute;
-    left: var(--space-4);
+    left: max(var(--space-4), env(safe-area-inset-left));
     top: -96px;
     z-index: 60;
     display: inline-flex;
@@ -95,17 +151,22 @@
     border-radius: var(--radius);
     background: var(--color-action);
     color: var(--color-on-action);
-    font: 600 var(--text-ui)/1 var(--font-sans);
+    font: 600 var(--text-ui) / 1 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
     text-decoration: none;
   }
   .skip:focus {
     top: var(--space-3);
   }
+  /* The gutter, or the notch's inset in landscape (the viewport is viewport-fit=cover).
+     --wrap-l / --wrap-r let a photograph run out to the edges. */
   .wrap {
+    --wrap-l: max(var(--gutter), env(safe-area-inset-left));
+    --wrap-r: max(var(--gutter), env(safe-area-inset-right));
     width: 100%;
     max-width: calc(var(--content-max) + 2 * var(--gutter));
     margin-inline: auto;
-    padding-inline: var(--gutter);
+    padding-inline: var(--wrap-l) var(--wrap-r);
   }
   svg.i {
     width: 20px;
@@ -117,21 +178,39 @@
     stroke-linecap: round;
     stroke-linejoin: round;
   }
+  svg.i-16 {
+    width: 16px;
+    height: 16px;
+  }
   svg.i-24 {
     width: 24px;
     height: 24px;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
-  /* Section backgrounds: ivory, peach and the cocoa room */
+  /* ---------- The three section backgrounds ---------- */
   .band-ivory {
     background: var(--color-bg);
+    color: var(--color-text);
   }
   .band-peach {
     background: var(--color-bg-alt);
+    color: var(--color-text);
   }
   .band-cocoa {
+    color-scheme: dark;
     --color-bg: var(--color-cocoa-ink);
     --color-surface: var(--color-cocoa-ink);
     --color-surface-alt: var(--color-cocoa-ink);
@@ -142,6 +221,9 @@
     --color-hairline: var(--color-apricot-32);
     --color-leader: var(--color-apricot-48);
     --color-field-border: var(--color-peach-cream-52);
+    --color-track: var(--color-peach-cream-52);
+    --color-selected: var(--color-peach-cream);
+    --color-on-selected: var(--color-cocoa-ink);
     --color-focus: var(--color-apricot);
     --color-action-hover: var(--color-apricot);
     --color-on-action-hover: var(--color-cocoa-ink);
@@ -149,60 +231,184 @@
     --color-on-error: var(--color-cocoa-ink);
     background: var(--color-bg);
     color: var(--color-text);
-    color-scheme: dark;
+  }
+  /* In dark mode peach bands become night, so hairlines mark their edges */
+  :root.dark .band-peach {
+    border-block: 1px solid var(--color-hairline);
   }
   @media (prefers-color-scheme: dark) {
     :root:not(.light) .band-peach {
       border-block: 1px solid var(--color-hairline);
     }
   }
-  :root.dark .band-peach {
-    border-block: 1px solid var(--color-hairline);
+
+  /* ---------- The one grid: 12 columns from 1024, one column below ---------- */
+  .grid-12 {
+    display: grid;
+    gap: var(--space-5);
+  }
+  @media (min-width: 1024px) {
+    .grid-12 {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--grid-gap);
+    }
   }
 
-  /* Type roles */
+  /* ---------- Section rhythm: an h2 on the left, at most one link on the right ---------- */
+  .section {
+    padding-block: var(--section-pt) var(--section-pb);
+  }
+  /* Two sections on the same ground share one gap */
+  .section.band-ivory + .section.band-ivory,
+  .section.band-cocoa + .section.band-cocoa,
+  .title-band + .section.band-ivory,
+  .item-intro + .section.band-ivory {
+    padding-top: 0;
+  }
+  /* Spacing: phones are always 64 · 64. From 1024: compact 64 · 64, regular 96 · 128
+     (the tokens), generous 128 · 128. */
+  @media (min-width: 1024px) {
+    .space-compact {
+      --section-pt: var(--space-8);
+      --section-pb: var(--space-8);
+    }
+    .space-generous {
+      --section-pt: var(--space-10);
+      --section-pb: var(--space-10);
+    }
+  }
+  /* Width: Text 720 (narrow), Wide 1280 (default; "wide" is its old name) and Edge to
+     edge (full). Layouts that place themselves on the 12 columns opt out of narrow. */
+  .width-narrow > .wrap > * {
+    max-width: var(--text-max);
+  }
+  .width-full > .wrap {
+    max-width: none;
+  }
+  /* Edge to edge: the photographs meet the screen's edges; text keeps the gutter.
+     A portrait keeps its own width; the full-bleed variant already has no gutter. */
+  .width-full.section-image:not(.image--portrait, .image--bleed) .image-figure img {
+    width: calc(100% + var(--wrap-l) + var(--wrap-r));
+    max-width: none;
+    margin-left: calc(-1 * var(--wrap-l));
+    border-radius: 0;
+  }
+  .width-full.section-gallery .plates {
+    margin-inline: calc(-1 * var(--wrap-l)) calc(-1 * var(--wrap-r));
+  }
+  /* A row that scrolls starts on the text's edge and runs out past both */
+  .width-full.section-gallery :is(.plates--carousel, .plates--filmstrip) {
+    padding-inline: var(--wrap-l) var(--wrap-r);
+    scroll-padding-inline: var(--wrap-l) var(--wrap-r);
+  }
+  .shead {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-4) var(--space-6);
+    margin-bottom: var(--head-gap);
+  }
+  .shead-text {
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  .shead-text .lead {
+    max-width: 30em;
+  }
+  .shead .link {
+    flex: none;
+  }
+  .foot-link {
+    display: flex;
+    margin-top: var(--space-5);
+  }
+  @media (max-width: 719px) {
+    .shead .link {
+      display: none;
+    }
+  }
+  @media (min-width: 720px) {
+    .foot-link:not(.foot-link--always) {
+      display: none;
+    }
+  }
+  .title-band {
+    padding-block: var(--section-pt) var(--head-gap);
+  }
+  @media (min-width: 1024px) {
+    .title-band h1 {
+      max-width: calc((100% - 11 * var(--grid-gap)) / 12 * 7 + 6 * var(--grid-gap));
+    }
+  }
+  /* One quiet bar under the header: the Greek notice and the offline note */
+  .notice-bar {
+    background: var(--color-bg-alt);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .notice-bar p {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    min-height: var(--size-control-sm);
+    padding-block: var(--space-2);
+    font: 400 var(--text-meta) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-secondary);
+  }
+  .notice-bar svg.i {
+    width: 16px;
+    height: 16px;
+    color: var(--color-accent-text);
+  }
+
+  /* ---------- Type roles ---------- */
   .display-xl,
   .display-l,
   .display-m {
     font-family: var(--font-display);
+    font-weight: 400;
     font-variant-numeric: lining-nums;
-    color: var(--color-text);
     font-optical-sizing: auto;
+    color: var(--color-text);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    hyphens: manual;
   }
   .display-xl {
     font-size: var(--text-display-xl);
-    font-weight: 400;
     line-height: 1.02;
     letter-spacing: -0.022em;
-    text-wrap: balance;
   }
   @media (min-width: 1024px) {
     .display-xl {
       font-weight: 360;
     }
   }
-  :lang(el) .display-xl {
+  .display-xl:lang(el) {
     font-size: var(--text-display-xl-el);
+    font-weight: 400;
     line-height: 1.04;
     letter-spacing: -0.016em;
   }
   .display-l {
     font-size: var(--text-display-l);
-    font-weight: 400;
     line-height: 1.08;
     letter-spacing: -0.016em;
-    text-wrap: balance;
+  }
+  .display-l:lang(el) {
+    font-size: var(--text-display-l-el);
+    line-height: 1.1;
+    letter-spacing: -0.012em;
   }
   .display-m {
     font-size: var(--text-display-m);
-    font-weight: 400;
     line-height: 1.15;
     letter-spacing: -0.01em;
-    text-wrap: balance;
   }
-  .display-xl em,
-  .display-l em,
-  .display-m em {
+  /* The one italic accent on the site: the hope word of the home h1 */
+  .display-xl em.accent {
     font-style: italic;
     color: var(--color-accent-text);
   }
@@ -230,17 +436,13 @@
     line-height: 1.5;
   }
   .caption {
-    font: italic 400 var(--text-small)/1.5 var(--font-serif);
+    font: 400 var(--text-small) / 1.5 var(--font-serif);
     color: var(--color-text-secondary);
-    text-wrap: balance;
+    text-wrap: pretty;
   }
+  /* Category and column labels: Meta at 600, in the case they are written */
   .label {
-    font-family: var(--font-sans);
-    font-size: var(--text-label);
-    font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font: 600 var(--text-meta) / 1.4 var(--font-sans);
     color: var(--color-text-tertiary);
     font-variant-numeric: lining-nums;
   }
@@ -262,17 +464,209 @@
   .title a,
   .display-m a,
   .display-l a {
+    color: inherit;
     text-decoration: none;
   }
   .title a:hover,
-  .display-m a:hover {
+  .display-m a:hover,
+  .display-l a:hover {
     text-decoration: underline;
     text-decoration-color: var(--color-accent-text);
     text-decoration-thickness: 1px;
-    text-underline-offset: 0.24em;
+    text-underline-offset: 0.2em;
+  }
+  /* Meta rows: the dot hangs at the END of each item, so it can never start a line */
+  .dots {
+    display: inline-flex;
+    flex-wrap: wrap;
+    column-gap: 0.5em;
+  }
+  .dots > * {
+    white-space: nowrap;
+  }
+  .dots > :not(:last-child)::after {
+    content: "\00a0·";
+    color: var(--color-text-tertiary);
   }
 
-  /* Buttons and links */
+  /* Reading text from the editor: figures and quotes take the 720 column; paragraphs,
+     lists and headings keep the 30–36em measure */
+  .prose {
+    max-width: var(--text-max);
+    font-size: var(--text-body);
+    line-height: 1.65;
+  }
+  .prose > :is(p, ul, ol, h2, h3) {
+    max-width: 36em;
+  }
+  .prose > * + * {
+    margin-top: var(--space-5);
+  }
+  .prose p {
+    text-wrap: pretty;
+  }
+  .prose h2 {
+    margin-top: var(--space-7);
+    font: 400 var(--text-display-m) / 1.15 var(--font-display);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .prose h3 {
+    margin-top: var(--space-6);
+    font: 600 var(--text-title) / 1.3 var(--font-serif);
+    text-wrap: balance;
+  }
+  .prose h2 + *,
+  .prose h3 + * {
+    margin-top: var(--space-3);
+  }
+  .prose a {
+    color: inherit;
+  }
+  .prose a:hover {
+    color: var(--color-accent-text);
+  }
+  .prose strong,
+  .prose b {
+    font-weight: 600;
+  }
+  .prose ul,
+  .prose ol {
+    padding-left: 1.25em;
+  }
+  .prose ul {
+    list-style: disc;
+  }
+  .prose ol {
+    list-style: decimal;
+  }
+  .prose li + li {
+    margin-top: var(--space-2);
+  }
+  .prose li::marker {
+    color: var(--color-text-tertiary);
+  }
+  .prose blockquote {
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-hairline);
+    font: 400 var(--text-lead) / 1.5 var(--font-serif);
+    color: var(--color-text);
+  }
+  .prose hr {
+    border: 0;
+    border-top: 1px solid var(--color-hairline);
+  }
+  .prose figure img,
+  .prose > img {
+    border-radius: var(--radius);
+  }
+  .prose figcaption {
+    margin-top: var(--space-3);
+    font: 400 var(--text-small) / 1.5 var(--font-serif);
+    color: var(--color-text-secondary);
+  }
+  /* A drop cap on the foreword's first paragraph, tight to the word it starts */
+  .dropcap > p:first-child::first-letter {
+    float: left;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 4.75em;
+    line-height: 0.8;
+    margin: 0.08em 0.06em 0 0;
+    color: var(--color-accent-text);
+  }
+  @supports (initial-letter: 3) or (-webkit-initial-letter: 3) {
+    .dropcap > p:first-child::first-letter {
+      float: none;
+      font-size: inherit;
+      line-height: inherit;
+      margin: 0 0.06em 0 0;
+      -webkit-initial-letter: 3;
+      initial-letter: 3;
+    }
+  }
+
+  /* ---------- Arch: her portrait and the book cover only. One arch, no frame. ---------- */
+  .arch-wrap {
+    container-type: inline-size;
+  }
+  .arch {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface-alt);
+    border-radius: 50cqi 50cqi var(--radius) var(--radius);
+  }
+  .arch--4x5 {
+    aspect-ratio: 4 / 5;
+  }
+  .arch--3x4 {
+    aspect-ratio: 3 / 4;
+  }
+  .arch > img,
+  .arch > picture > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* The book cover sits in the arch as a niche: bottom-aligned, never cropped by the curve */
+  .arch--niche {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: var(--space-6);
+  }
+  .niche-cover {
+    position: relative;
+    width: 76%;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+  .niche-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Art-directed crops, set with --crop-w / --crop-x / --crop-y */
+  .crop {
+    position: absolute;
+    max-width: none;
+    height: auto;
+    width: var(--crop-w, 100%);
+    left: var(--crop-x, 0);
+    top: var(--crop-y, 0);
+  }
+  .arch > img.crop,
+  .niche-cover > img.crop {
+    width: var(--crop-w, 100%);
+    height: auto;
+    object-fit: initial;
+  }
+  /* hero-portrait.jpg: clear of the baked-in vertical lettering */
+  .crop-hero {
+    --crop-w: 173.2%;
+    --crop-x: -39.37%;
+    --crop-y: -13.85%;
+  }
+  /* fyrts-cover.jpg: the printed face, without the spine shading */
+  .crop-cover {
+    --crop-w: 118.56%;
+    --crop-x: -10.92%;
+    --crop-y: -9.5%;
+  }
+  .card-hairline {
+    background: var(--color-surface);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius);
+  }
+  .header-glass {
+    background: var(--color-header-bg);
+    -webkit-backdrop-filter: blur(var(--blur-header, 14px));
+    backdrop-filter: blur(var(--blur-header, 14px));
+    border-bottom: 1px solid var(--color-hairline);
+  }
+
+  /* ---------- Buttons and links ---------- */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -282,15 +676,16 @@
     padding: 0 var(--space-5);
     border-radius: var(--radius);
     border: 1px solid transparent;
-    font: 600 var(--text-ui)/1.25 var(--font-sans);
-    letter-spacing: 0.01em;
+    font: 600 var(--text-ui) / 1.25 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
     text-decoration: none;
     text-align: center;
     cursor: pointer;
     transition:
       background-color var(--duration-hover),
       color var(--duration-hover),
-      border-color var(--duration-hover);
+      border-color var(--duration-hover),
+      text-decoration-thickness var(--duration-hover);
   }
   .btn-primary {
     background: var(--color-action);
@@ -308,11 +703,35 @@
   .btn-quiet:hover {
     border-color: var(--color-text);
     background: var(--color-bg-alt);
+    color: var(--color-text);
   }
   .band-cocoa .btn-quiet:hover {
     background: transparent;
     border-color: var(--color-accent-text);
     color: var(--color-accent-text);
+  }
+  /* Text: a tertiary action ("Not now", "Keep as is"), underlined like a link */
+  .btn-text {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--size-control-sm);
+    padding: 0;
+    border: 0;
+    background: none;
+    font: 600 var(--text-ui) / 1.25 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-text);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.45em;
+    cursor: pointer;
+  }
+  .btn-text:hover {
+    background: none;
+    color: var(--color-accent-text);
+    text-decoration-thickness: 2px;
   }
   .btn-sm {
     min-height: var(--size-control-sm);
@@ -325,12 +744,43 @@
     width: 20px;
     height: 20px;
   }
+  .btn-sm svg.i {
+    width: 16px;
+    height: 16px;
+  }
+  /* Disabled: tertiary text and a dashed edge; a Tangerine fill is never faded */
+  .btn:disabled,
+  .btn:disabled:hover,
+  .btn[aria-disabled="true"],
+  .btn[aria-disabled="true"]:hover {
+    background: transparent;
+    color: var(--color-text-tertiary);
+    border: 1px dashed var(--color-field-border);
+    cursor: not-allowed;
+  }
+  .btn-text:is(:disabled, [aria-disabled="true"]),
+  .btn-text:is(:disabled, [aria-disabled="true"]):hover {
+    border: 0;
+    text-decoration-style: dashed;
+    text-decoration-color: var(--color-field-border);
+  }
+  /* Sending: the label changes and the button waits; it keeps its look */
+  .btn[aria-busy="true"] {
+    cursor: progress;
+  }
+  .btn-primary[aria-busy="true"]:is(:disabled, [aria-disabled="true"]) {
+    background: var(--color-action);
+    color: var(--color-on-action);
+    border: 1px solid transparent;
+    cursor: progress;
+  }
   .link {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     min-height: var(--size-control-sm);
-    font: 600 var(--text-ui)/1.3 var(--font-sans);
+    font: 600 var(--text-ui) / 1.3 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
     color: var(--color-text);
     text-decoration: underline;
     text-decoration-color: var(--color-accent-text);
@@ -345,8 +795,434 @@
     color: var(--color-accent-text);
     text-decoration-thickness: 2px;
   }
-  .link svg.i {
-    width: 18px;
-    height: 18px;
+  /* Quiet: Back and the pager. Secondary text; the accent underline shows on hover */
+  .link-quiet {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--size-control-sm);
+    font: 500 var(--text-ui) / 1.3 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-secondary);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.45em;
+    transition:
+      color var(--duration-hover),
+      text-decoration-color var(--duration-hover);
+  }
+  .link-quiet:hover {
+    color: var(--color-text);
+    text-decoration-color: var(--color-accent-text);
+  }
+  .link-quiet svg.i {
+    width: 16px;
+    height: 16px;
+  }
+  /* Links inside running text: 1px accent underline, accent and 2px on hover.
+     The reset strips every underline, so text roles bring it back. */
+  :where(
+      .prose,
+      .body,
+      .lead,
+      .small,
+      .caption,
+      .meta,
+      .fine,
+      .legal,
+      .field-hint,
+      .form-hint,
+      .form-alert,
+      .notice-bar
+    )
+    a:not([class]) {
+    text-decoration-line: underline;
+    text-decoration-color: var(--color-accent-text);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+    transition:
+      color var(--duration-hover),
+      text-decoration-thickness var(--duration-hover);
+  }
+  :where(
+      .prose,
+      .body,
+      .lead,
+      .small,
+      .caption,
+      .meta,
+      .fine,
+      .legal,
+      .field-hint,
+      .form-hint,
+      .form-alert,
+      .notice-bar
+    )
+    a:not([class]):hover {
+    color: var(--color-accent-text);
+    text-decoration-thickness: 2px;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-6);
+    margin-top: var(--space-6);
+  }
+
+  /* ---------- Badges: icon + word, 24px, 12px radius ---------- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 24px;
+    padding-inline: var(--space-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    font: 600 var(--text-label) / 1.3 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    white-space: nowrap;
+  }
+  .badge svg.i {
+    width: 14px;
+    height: 14px;
+  }
+  .badge--quiet {
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    border-color: var(--color-field-border);
+  }
+  .badge--approved {
+    background: var(--color-status-approved-bg);
+    color: var(--color-status-approved-fg);
+    border-color: var(--color-status-approved-border);
+  }
+  .badge--draft {
+    background: var(--color-status-draft-bg);
+    color: var(--color-status-draft-fg);
+    border: 1px dashed var(--color-status-draft-border);
+  }
+  .badge--stale {
+    background: var(--color-status-stale-bg);
+    color: var(--color-status-stale-fg);
+  }
+  .badge--missing {
+    background: var(--color-status-missing-bg);
+    color: var(--color-status-missing-fg);
+  }
+
+  /* ---------- Form fields ---------- */
+  .form {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .fields {
+    display: grid;
+    gap: var(--space-4);
+  }
+  @media (min-width: 720px) {
+    .fields--name-email {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    }
+    .fields--two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .field label,
+  .field-label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font: 600 var(--text-meta) / 1.3 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-secondary);
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    display: block;
+    width: 100%;
+    min-height: var(--size-control);
+    padding: 0 var(--space-4);
+    border: 1px solid var(--color-field-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    font: 400 var(--text-small) / 1.2 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text);
+    transition: border-color var(--duration-hover);
+  }
+  .field textarea {
+    min-height: 168px;
+    padding: var(--space-3) var(--space-4);
+    line-height: 1.5;
+    resize: vertical;
+  }
+  .field input:hover,
+  .field select:hover,
+  .field textarea:hover {
+    border-color: var(--color-text-secondary);
+  }
+  .field input:focus-visible,
+  .field select:focus-visible,
+  .field textarea:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-color: var(--color-text);
+  }
+  .field [aria-invalid="true"] {
+    border-color: var(--color-error);
+  }
+  .field-hint {
+    margin-top: var(--space-2);
+    font: 400 var(--text-meta) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-tertiary);
+  }
+  .form-hint {
+    font: 400 var(--text-meta) / 1.4 var(--font-sans);
+    color: var(--color-text-tertiary);
+  }
+  .field-error,
+  .form-alert {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+    font: 500 var(--text-meta) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-error);
+  }
+  .field-error {
+    margin-top: var(--space-2);
+  }
+  .field-error svg.i,
+  .form-alert svg.i {
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+  }
+  /* A 24px square box on a 44px row; the whole row is the target */
+  .check {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    min-height: var(--size-control-sm);
+    padding-block: var(--space-2);
+    font: 400 var(--text-meta) / 1.5 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+  }
+  .check input {
+    appearance: none;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    border: 1px solid var(--color-field-border);
+    border-radius: 0;
+    background: var(--color-surface);
+    cursor: pointer;
+  }
+  .check input:checked {
+    background: var(--color-selected);
+    border-color: var(--color-selected);
+  }
+  .check input:checked::after {
+    content: "";
+    width: 11px;
+    height: 6px;
+    border: 2px solid var(--color-on-selected);
+    border-top: 0;
+    border-right: 0;
+    transform: rotate(-45deg) translate(1px, -1px);
+  }
+  .check input:checked:focus-visible {
+    outline-offset: 2px;
+  }
+  /* Small print: the lock, the sentence and the link wrap as text */
+  .fine {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--space-2);
+    font: 400 var(--text-meta) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-tertiary);
+  }
+  .fine-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+  .fine svg.i {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+  }
+  .fine a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--size-control-sm);
+    padding-inline: var(--space-1);
+    color: var(--color-text-secondary);
+    text-underline-offset: 0.3em;
+  }
+  .turnstile {
+    max-width: 100%;
+  }
+  .turnstile:empty {
+    display: none;
+  }
+  /* A row of choices that select like the one selected style. A chip is a radio or a
+     checkbox (label.chip > input + span), or a link (a.chip, current = aria-current). */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .chip {
+    position: relative;
+    display: inline-flex;
+  }
+  .chip input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .chip > span,
+  a.chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--size-control-sm);
+    padding: 0 var(--space-4);
+    border: 1px solid var(--color-field-border);
+    border-radius: var(--radius);
+    font: 500 var(--text-ui) / 1.2 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    text-align: center;
+    transition:
+      background-color var(--duration-hover),
+      border-color var(--duration-hover),
+      color var(--duration-hover);
+  }
+  a.chip {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .chip:hover > span,
+  a.chip:hover {
+    border-color: var(--color-text);
+  }
+  .chip input:checked + span,
+  a.chip[aria-current="page"] {
+    border-color: var(--color-selected);
+    background: var(--color-selected);
+    color: var(--color-on-selected);
+  }
+  .chip input:focus-visible + span,
+  a.chip:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  .chip input:checked:focus-visible + span,
+  a.chip[aria-current="page"]:focus-visible {
+    outline-color: var(--color-on-selected);
+    outline-offset: -4px;
+  }
+  /* Segmented: a fieldset of radios; outer radius 12 + the 4px gap */
+  .segmented {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    padding: var(--space-1);
+    border: 1px solid var(--color-field-border);
+    border-radius: 16px;
+  }
+  .segmented label {
+    position: relative;
+    display: grid;
+  }
+  .segmented input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .segmented span {
+    display: grid;
+    place-items: center;
+    min-height: var(--size-control-sm);
+    padding-inline: var(--space-3);
+    border-radius: var(--radius);
+    font: 600 var(--text-ui) / 1 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-secondary);
+    transition:
+      background-color var(--duration-hover),
+      color var(--duration-hover);
+  }
+  .segmented input:checked + span {
+    background: var(--color-selected);
+    color: var(--color-on-selected);
+  }
+  .segmented input:focus-visible + span {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  .segmented input:checked:focus-visible + span {
+    outline-color: var(--color-on-selected);
+    outline-offset: -4px;
+  }
+}
+
+/* ---------- Forced colours: selection, progress and the ribbon keep a system colour ---------- */
+@media (forced-colors: active) {
+  .chip input:checked + span,
+  a.chip[aria-current="page"],
+  .segmented input:checked + span,
+  .check input:checked,
+  .lang--menu a[aria-current="page"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+  }
+  .check input:checked::after {
+    border-color: HighlightText;
+  }
+  /* Round controls lose their fill, so they keep an edge */
+  :is(.play, .ctl, .listen-disc, .play-badge, .menu-btn) {
+    border: 1px solid ButtonText;
+  }
+  .btn:is(:disabled, [aria-disabled="true"]):not([aria-busy="true"]) {
+    color: GrayText;
+    border-color: GrayText;
+  }
+  .scrub-fill,
+  .scrub-thumb,
+  .ribbon-tab,
+  .nav-progress {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+  .scrub-track {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  .edition:has(input:checked) {
+    outline: 2px solid Highlight;
+  }
+  .badge {
+    border: 1px solid CanvasText;
   }
 }

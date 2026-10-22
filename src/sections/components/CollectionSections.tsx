@@ -1,14 +1,28 @@
-import { caps } from "@/lib/i18n/caps";
-import { useRouterState } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon } from "@/components/site/Icon";
 import { SiteLink } from "@/components/site/SiteLink";
-import { useT } from "@/lib/i18n/context";
+import { useLocale, useT } from "@/lib/i18n/context";
 import { fmt, formatDate, formatMoney, formatWhen } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/locale";
-import type { EventCard, MediaMap, RenderedSection } from "@/sections/types";
+import { nb } from "@/lib/i18n/rag";
+import type {
+  EventCard,
+  MasterclassCard,
+  MediaMap,
+  PostCard,
+  RenderedSection,
+  ResolvedMedia,
+} from "@/sections/types";
 import { Picture } from "../render/Picture";
-import { FootLink, keyLang, SectionShell, type SectionContext } from "../render/SectionShell";
+import {
+  headLink,
+  keyLang,
+  SectionShell,
+  TextLink,
+  type HeadLink,
+  type SectionContext,
+} from "../render/SectionShell";
 import { Lines, RichHtml } from "../render/text";
 
 type Props<T extends RenderedSection["type"]> = {
@@ -17,52 +31,302 @@ type Props<T extends RenderedSection["type"]> = {
   ctx: SectionContext;
 };
 
-const langIf = (lang: Locale, page: Locale) => (lang !== page ? lang : undefined);
+type Level = "h2" | "h3";
 
-function SectionHead({
-  section,
-  ctx,
-  title,
-  intro,
+const langIf = (lang: Locale, page: Locale) => (lang !== page ? lang : undefined);
+/** Text that is only ever stored in English (foundation story categories). */
+const englishOn = (page: Locale) => langIf("en", page);
+
+/**
+ * Headings inside a section sit one level under the section's own: h3 under
+ * an h2, h2 when the section title is the page h1 (/blog, /shop, /events) or
+ * when the section has no title.
+ */
+const itemLevel = (ctx: SectionContext, titled: boolean): Level =>
+  titled && ctx.headingLevel === "h2" ? "h3" : "h2";
+
+/** The section's heading row: its title, and its link when it has one. */
+const titleHead = (section: RenderedSection & { props: { title: string } }) => ({
+  title: section.props.title,
+  titleLang: keyLang(section, "title"),
+});
+
+/** A tile spanning four columns (405px at 1440), two up from 720. */
+const TILE_SIZES =
+  "(min-width: 1440px) 405px, (min-width: 1024px) 30vw, (min-width: 720px) 45vw, calc(100vw - 32px)";
+/** The lead story's 3:2 photo on columns 7–12 (627px at 1440). */
+const LEAD_SIZES = "(min-width: 1440px) 627px, (min-width: 1024px) 45vw, 100vw";
+
+/** What is missing, and one next step. Left-aligned and roman, between hairlines. */
+export function Empty({
+  text,
+  link,
+  children,
 }: {
-  section: RenderedSection;
-  ctx: SectionContext;
-  title: string;
-  intro?: string;
+  text: string;
+  link?: HeadLink | null;
+  /** A next step that is not a plain link. */
+  children?: ReactNode;
 }) {
-  if (!title && !intro) return null;
   return (
-    <div className="head">
-      {title && (
-        <h2 id={ctx.headingId} className="display-l" lang={keyLang(section, "title")}>
-          {title}
-        </h2>
-      )}
-      {intro && (
-        <p className="lead" lang={keyLang(section, "intro")}>
-          {intro}
-        </p>
-      )}
+    <div className="empty">
+      <p className="body">{text}</p>
+      {link && <TextLink link={link} />}
+      {children}
     </div>
   );
 }
 
-function Empty({ text }: { text: string }) {
-  return <p className="empty body">{text}</p>;
+/**
+ * An open tile: the photo, then the words, with no border or fill. The
+ * title's link stretches over the whole tile, so it is one target and one stop.
+ */
+function Tile({
+  Item,
+  href,
+  title,
+  lang,
+  linkLang = lang,
+  cover,
+  upright = false,
+  label,
+  children,
+}: {
+  Item: Level;
+  href: string;
+  title: string;
+  /** The language of the item's own words, set on the title; its text sets its own. */
+  lang?: Locale;
+  /** The language of the page the link opens, when it isn't the item's own (null: unknown). */
+  linkLang?: Locale | null;
+  cover?: ResolvedMedia;
+  /** A book or eBook cover, at 3:4 rather than 3:2. */
+  upright?: boolean;
+  /** Above the title: a category or type label. */
+  label?: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <li>
+      <article className={upright ? "tile tile--cover" : "tile"}>
+        <Picture media={cover} sizes={TILE_SIZES} decorative />
+        {label}
+        <Item className="title" lang={lang}>
+          <SiteLink className="tile-link" href={href} hrefLang={linkLang ?? undefined}>
+            {title}
+          </SiteLink>
+        </Item>
+        {children}
+      </article>
+    </li>
+  );
 }
 
-/** Address of the journal index for a category and page; page 1 and "all" stay off the URL. */
-function indexHref(base: string, category: string | null, page: number): string {
-  const search = new URLSearchParams();
-  if (category) search.set("category", category);
-  if (page > 1) search.set("page", String(page));
-  return search.size ? `${base}?${search}` : base;
+/** A hairline row: meta on columns 1–3, the words on 4–10, an aside on 11–12. */
+function Row({
+  meta,
+  aside,
+  children,
+}: {
+  meta: ReactNode;
+  aside?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <li>
+      <div className="row-meta">{meta}</div>
+      <div className="row-text">{children}</div>
+      {aside && <div className="row-aside">{aside}</div>}
+    </li>
+  );
+}
+
+/** "March 12, 2026 · 7 min read": the dot hangs at the end of each item. */
+function Dots({ items }: { items: ReactNode[] }) {
+  const shown = items.filter(
+    (item) => item !== null && item !== undefined && item !== false && item !== "",
+  );
+  if (shown.length === 0) return null;
+  return (
+    <span className="dots meta">
+      {shown.map((item, index) => (
+        <span key={index}>{item}</span>
+      ))}
+    </span>
+  );
+}
+
+/** A date as `<time>`, or null when there is none. */
+function when(value: string | null, locale: Locale): ReactNode {
+  const text = formatDate(value, locale);
+  return value && text ? <time dateTime={value}>{text}</time> : null;
+}
+
+// ---------------------------------------------------------------------------
+// Stories
+// ---------------------------------------------------------------------------
+
+function StoryMeta({ post, locale }: { post: PostCard; locale: Locale }) {
+  const t = useT();
+  const m = post.readingMinutes;
+  return (
+    <Dots
+      items={[
+        when(post.publishedAt, locale),
+        m ? (m === 1 ? t.sections.posts.minutesOne : fmt(t.sections.posts.minutes, { m })) : null,
+      ]}
+    />
+  );
+}
+
+/** A story's title link; an English story on /el says so, outside the English words. */
+function StoryTitle({
+  post,
+  Item,
+  locale,
+  className = "title",
+}: {
+  post: PostCard;
+  Item: Level;
+  locale: Locale;
+  className?: string;
+}) {
+  const t = useT();
+  const lang = langIf(post.textLang, locale);
+  return (
+    <Item className={className}>
+      <SiteLink href={`/blog/${post.slug}`} lang={lang} hrefLang={lang}>
+        {className === "title" ? post.title : nb(post.title)}
+      </SiteLink>
+      {lang && (
+        <>
+          {" "}
+          <span className="meta">{t.sections.inEnglish}</span>
+        </>
+      )}
+    </Item>
+  );
+}
+
+/** The one lead story: its words on columns 1–5, its 3:2 photo on 7–12 (text first on phones). */
+function LeadStory({
+  post,
+  media,
+  locale,
+  Item,
+}: {
+  post: PostCard;
+  media: MediaMap;
+  locale: Locale;
+  Item: Level;
+}) {
+  const t = useT();
+  const href = `/blog/${post.slug}`;
+  const cover = post.coverMediaId ? media[post.coverMediaId] : undefined;
+  const photo = cover?.kind === "image";
+  const lang = langIf(post.textLang, locale);
+  return (
+    <article className={photo ? "lead-story" : "lead-story lead-story--text"}>
+      <div className="lead-text">
+        {post.category && <p className="label label--accent">{post.category.name}</p>}
+        <StoryTitle post={post} Item={Item} locale={locale} className="display-l" />
+        {post.excerpt && (
+          <p className="body" lang={lang}>
+            {post.excerpt}
+          </p>
+        )}
+        <p className="lead-meta">
+          <StoryMeta post={post} locale={locale} />
+        </p>
+        <SiteLink className="link" href={href} hrefLang={lang}>
+          {t.sections.posts.read}
+          <span className="sr-only">
+            : <span lang={lang}>{post.title}</span>
+          </span>
+          <Icon name="arrow-right" />
+        </SiteLink>
+      </div>
+      {photo && (
+        // The photo repeats the title's link for the pointer only.
+        <SiteLink className="lead-img" href={href} tabIndex={-1} aria-hidden="true">
+          <Picture media={cover} sizes={LEAD_SIZES} decorative />
+        </SiteLink>
+      )}
+    </article>
+  );
+}
+
+/** A text row: category, date and read time on columns 1–3; title and, from 720, excerpt on 4–10. */
+function StoryRow({ post, locale, Item }: { post: PostCard; locale: Locale; Item: Level }) {
+  return (
+    <article className="story-row">
+      <p className="story-meta">
+        {post.category && <span className="label label--accent">{post.category.name}</span>}
+        <StoryMeta post={post} locale={locale} />
+      </p>
+      <div className="story-text">
+        <StoryTitle post={post} Item={Item} locale={locale} />
+        {post.excerpt && (
+          <p className="body excerpt" lang={langIf(post.textLang, locale)}>
+            {post.excerpt}
+          </p>
+        )}
+      </div>
+    </article>
+  );
 }
 
 /**
- * The journal index: date and category, title and excerpt, a small plate on
- * the right. On the journal's own page it pages through every post and can
- * show one category at a time.
+ * A link within the stories index: a theme, a page, or the next step from an
+ * empty theme. The router calls any link to the current path "current", so
+ * these match the whole address and the filter says which theme is current.
+ * The page stays a number, so the address reads ?page=2; page 1 and "all"
+ * stay off it.
+ */
+function IndexLink({
+  base,
+  category,
+  page = 1,
+  current = false,
+  className,
+  rel,
+  children,
+}: {
+  base: string;
+  category: string | null;
+  page?: number;
+  current?: boolean;
+  className: string;
+  rel?: "prev" | "next";
+  children: ReactNode;
+}) {
+  const locale = useLocale();
+  const search = {
+    ...(category ? { category } : {}),
+    ...(page > 1 ? { page } : {}),
+    ...(locale === "el" ? { lang: "el" } : {}),
+  };
+  const state = { "aria-current": current ? ("page" as const) : undefined };
+  return (
+    <Link
+      to={base as "/"}
+      search={search as never}
+      className={className}
+      rel={rel}
+      activeOptions={{ exact: true, includeSearch: true }}
+      activeProps={state}
+      inactiveProps={state}
+    >
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * Stories (DESIGN.md §9). At home: one lead story, then text rows, then
+ * "Browse by theme". On the stories index (`paginate`) the themes sit above
+ * as chips, the lead shows on page 1 only and a pager follows; an empty theme
+ * says so and offers another. The grid layout sets the rest as tiles.
  */
 export function LatestPosts({ section, media, ctx }: Props<"latest_posts">) {
   const t = useT();
@@ -71,583 +335,751 @@ export function LatestPosts({ section, media, ctx }: Props<"latest_posts">) {
   const categories = section.data?.categories ?? [];
   const pagination = section.data?.pagination ?? null;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // An empty collection hides itself, except on the index, where a category can be empty.
-  if (posts.length === 0 && !pagination) return null;
+  const Item = itemLevel(ctx, !!p.title.trim());
   const base = pagination ? pathname : "/blog";
   const current = pagination?.category ?? null;
-  const link = p.link.href ? { label: p.link.label, href: p.link.href } : null;
+  const head = {
+    ...titleHead(section),
+    link: headLink(p.link, t.sections.posts.allStories, keyLang(section, "link.label")),
+  };
 
-  const themes = categories.length > 0 && (
-    <nav className="themes" aria-label={t.sections.posts.categories}>
-      {pagination &&
-        (current === null ? (
-          <span className="chip" aria-current="true">
-            {t.sections.posts.all}
-          </span>
-        ) : (
-          <SiteLink className="chip" href={base}>
-            {t.sections.posts.all}
-          </SiteLink>
-        ))}
-      {categories.map((c) =>
-        c.slug === current ? (
-          <span key={c.slug} className="chip" aria-current="true">
-            {c.name}
-          </span>
-        ) : (
-          <SiteLink key={c.slug} className="chip" href={indexHref(base, c.slug, 1)}>
-            {c.name}
-          </SiteLink>
-        ),
-      )}
-    </nav>
-  );
-
-  return (
-    <SectionShell
-      section={section}
-      ctx={ctx}
-      labelled={!!p.title}
-      label={p.eyebrow}
-      runhead={{ link }}
-    >
-      <SectionHead section={section} ctx={ctx} title={p.title} />
-      {pagination && themes}
-      {posts.length === 0 ? (
-        <Empty text={t.sections.posts.empty} />
-      ) : (
-        <div className={`index${section.variant === "grid" ? " index--grid" : ""}`}>
-          {posts.map((post) => {
-            const href = `/blog/${post.slug}`;
-            return (
-              <article className="story" key={post.id} lang={langIf(post.textLang, ctx.locale)}>
-                <p className="meta dots">
-                  {post.publishedAt && <span>{formatDate(post.publishedAt, ctx.locale)}</span>}
-                  {post.readingMinutes ? (
-                    <span>{fmt(t.sections.posts.minutes, { m: post.readingMinutes })}</span>
-                  ) : null}
-                  {post.category && <span className="meta-accent">{post.category.name}</span>}
-                </p>
-                <div className="story-text">
-                  <h3 className="story-title">
-                    <SiteLink href={href}>{post.title}</SiteLink>
-                  </h3>
-                  {post.excerpt && <p className="body excerpt">{post.excerpt}</p>}
-                </div>
-                {post.coverMediaId && media[post.coverMediaId] && (
-                  <SiteLink className="story-img" href={href} tabIndex={-1} aria-hidden="true">
-                    <Picture
-                      media={media[post.coverMediaId]}
-                      sizes="(min-width: 1024px) 18vw, 30vw"
-                      decorative
-                    />
-                  </SiteLink>
-                )}
-              </article>
-            );
-          })}
-        </div>
-      )}
-      {!pagination && themes}
-      {pagination && pagination.pages > 1 && (
-        <nav className="pager" aria-label={t.sections.posts.pages}>
-          {pagination.page > 1 ? (
-            <SiteLink
-              className="link-quiet"
-              rel="prev"
-              href={indexHref(base, current, pagination.page - 1)}
-            >
-              <Icon name="chev-left" />
-              {t.sections.posts.newer}
-            </SiteLink>
+  let list: ReactNode;
+  if (posts.length === 0) {
+    const name = categories.find((c) => c.slug === current)?.name;
+    // The next step is the first theme that has stories.
+    const other = categories.find((c) => c.slug !== current && c.count > 0);
+    list = name ? (
+      <Empty text={fmt(t.sections.posts.emptyCategory, { category: name })}>
+        <IndexLink className="link" base={base} category={other?.slug ?? null}>
+          {other
+            ? fmt(t.sections.posts.startWith, { category: other.name })
+            : t.sections.posts.allStories}
+          <Icon name="arrow-right" />
+        </IndexLink>
+      </Empty>
+    ) : (
+      <Empty
+        text={t.sections.posts.emptyAll}
+        link={{ label: t.sections.posts.emptyNext, href: "/about" }}
+      />
+    );
+  } else {
+    const [lead, ...rest] = !pagination || pagination.page === 1 ? posts : [null, ...posts];
+    list = (
+      <>
+        {lead && <LeadStory post={lead} media={media} locale={ctx.locale} Item={Item} />}
+        {rest.length > 0 &&
+          (section.variant === "grid" ? (
+            <ul className="tiles story-tiles">
+              {rest.map(
+                (post) =>
+                  post && (
+                    <Tile
+                      key={post.id}
+                      Item={Item}
+                      href={`/blog/${post.slug}`}
+                      title={post.title}
+                      lang={langIf(post.textLang, ctx.locale)}
+                      cover={post.coverMediaId ? media[post.coverMediaId] : undefined}
+                      label={
+                        post.category && <p className="label label--accent">{post.category.name}</p>
+                      }
+                    >
+                      <p className="tile-meta">
+                        <StoryMeta post={post} locale={ctx.locale} />
+                      </p>
+                    </Tile>
+                  ),
+              )}
+            </ul>
           ) : (
-            <span />
-          )}
-          <span className="meta">
-            {fmt(t.sections.posts.pageOf, { n: pagination.page, total: pagination.pages })}
-          </span>
-          {pagination.page < pagination.pages ? (
-            <SiteLink
-              className="link-quiet"
-              rel="next"
-              href={indexHref(base, current, pagination.page + 1)}
-            >
-              {t.sections.posts.older}
-              <Icon name="chev-right" />
-            </SiteLink>
-          ) : (
-            <span />
-          )}
-        </nav>
-      )}
-      <FootLink link={link} />
-    </SectionShell>
-  );
-}
-
-/** Praise: one large quotation, or a few to page through. */
-export function Testimonials({ section, media, ctx }: Props<"testimonials">) {
-  const t = useT();
-  const p = section.props;
-  const items = section.data?.items ?? [];
-  const track = useRef<HTMLUListElement>(null);
-  const [index, setIndex] = useState(0);
-  if (items.length === 0) return null;
-
-  if (section.variant === "single" || items.length === 1) {
-    const item = items[0];
-    const photo = item.photoMediaId ? media[item.photoMediaId] : undefined;
-    return (
-      <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow || item.name}>
-        <SectionHead section={section} ctx={ctx} title={p.title} />
-        <figure className="praise" lang={langIf(item.textLang, ctx.locale)}>
-          <blockquote>
-            <p>
-              <Lines text={item.quote} />
-            </p>
-          </blockquote>
-          <figcaption>
-            {photo && <Picture media={photo} sizes="56px" className="praise-photo" decorative />}
-            <span className="label">{caps(item.name)}</span>
-            {item.role && <span className="meta">{item.role}</span>}
-          </figcaption>
-        </figure>
-      </SectionShell>
+            <div className={lead ? "story-list" : "story-list story-list--first"}>
+              {rest.map(
+                (post) =>
+                  post && <StoryRow key={post.id} post={post} locale={ctx.locale} Item={Item} />,
+              )}
+            </div>
+          ))}
+      </>
     );
   }
 
-  const scrollTo = (next: number) => {
-    const clamped = Math.max(0, Math.min(items.length - 1, next));
-    const el = track.current?.children[clamped] as HTMLElement | undefined;
-    el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
-    setIndex(clamped);
-  };
-
+  const themesId = `${ctx.headingId}-themes`;
   return (
-    <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow}>
-      <SectionHead section={section} ctx={ctx} title={p.title} />
-      <ul
-        className="praise-track"
-        ref={track}
-        onScroll={(event) => {
-          const el = event.currentTarget;
-          const width = (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? el.clientWidth;
-          setIndex(Math.round(el.scrollLeft / Math.max(1, width)));
-        }}
-      >
-        {items.map((item) => {
-          const photo = item.photoMediaId ? media[item.photoMediaId] : undefined;
-          return (
-            <li key={item.id}>
-              <figure className="praise praise--card" lang={langIf(item.textLang, ctx.locale)}>
-                <blockquote>
-                  <p>
-                    <Lines text={item.quote} />
-                  </p>
-                </blockquote>
-                <figcaption>
-                  {photo && (
-                    <Picture media={photo} sizes="48px" className="praise-photo" decorative />
-                  )}
-                  <span className="label">{caps(item.name)}</span>
-                  {item.role && <span className="meta">{item.role}</span>}
-                </figcaption>
-              </figure>
-            </li>
-          );
-        })}
-      </ul>
-      <div className="track-ctl">
-        <button
-          type="button"
-          className="ctl"
-          aria-label={t.sections.testimonials.previous}
-          disabled={index === 0}
-          onClick={() => scrollTo(index - 1)}
-        >
-          <Icon name="chev-left" />
-        </button>
-        <span className="meta" aria-live="polite">
-          {fmt(t.sections.testimonials.counter, { n: index + 1, total: items.length })}
-        </span>
-        <button
-          type="button"
-          className="ctl"
-          aria-label={t.sections.testimonials.next}
-          disabled={index >= items.length - 1}
-          onClick={() => scrollTo(index + 1)}
-        >
-          <Icon name="chev-right" />
-        </button>
-      </div>
+    <SectionShell section={section} ctx={ctx} head={head}>
+      {pagination && categories.length > 0 && (
+        <nav className="chips index-themes" aria-label={t.sections.posts.themes}>
+          <IndexLink className="chip" base={base} category={null} current={current === null}>
+            {t.sections.posts.allStories}
+          </IndexLink>
+          {categories.map((c) => (
+            <IndexLink
+              key={c.slug}
+              className="chip"
+              base={base}
+              category={c.slug}
+              current={c.slug === current}
+            >
+              {c.name}
+            </IndexLink>
+          ))}
+        </nav>
+      )}
+      {list}
+      {!pagination && categories.length > 0 && (
+        <nav className="themes" aria-labelledby={themesId}>
+          <span className="meta" id={themesId}>
+            {t.sections.posts.themes}
+          </span>
+          {categories.map((c) => (
+            <SiteLink key={c.slug} href={`/blog?category=${encodeURIComponent(c.slug)}`}>
+              {c.name}
+            </SiteLink>
+          ))}
+        </nav>
+      )}
+      {pagination && pagination.pages > 1 && (
+        <nav className="pager" aria-label={t.sections.posts.pages}>
+          {pagination.page > 1 && (
+            <IndexLink
+              className="link-quiet"
+              rel="prev"
+              base={base}
+              category={current}
+              page={pagination.page - 1}
+            >
+              <Icon name="chev-left" />
+              {t.sections.posts.newerStories}
+            </IndexLink>
+          )}
+          <p className="meta pager-count">
+            {fmt(t.sections.posts.pageOf, { n: pagination.page, total: pagination.pages })}
+          </p>
+          {pagination.page < pagination.pages && (
+            <IndexLink
+              className="link-quiet"
+              rel="next"
+              base={base}
+              category={current}
+              page={pagination.page + 1}
+            >
+              {t.sections.posts.olderStories}
+              <Icon name="chev-right" />
+            </IndexLink>
+          )}
+        </nav>
+      )}
     </SectionShell>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Reviews
+// ---------------------------------------------------------------------------
+
+/**
+ * Reader reviews in the review pattern: a hairline above, the words in
+ * lead-size roman, the credit "Name, Place" in meta. One review sits on
+ * columns 1–8; several share a row of four-column reviews that scrolls
+ * sideways when there are more than fit.
+ */
+export function Testimonials({ section, ctx }: Props<"testimonials">) {
+  const t = useT();
+  const items = section.data?.items ?? [];
+  const track = useRef<HTMLUListElement>(null);
+  const [edges, setEdges] = useState({ overflow: false, start: true, end: true });
+
+  const measure = useCallback(() => {
+    const el = track.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setEdges({ overflow: max > 1, start: el.scrollLeft <= 1, end: el.scrollLeft >= max - 1 });
+  }, []);
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [measure]);
+
+  if (items.length === 0) return null;
+  const single = section.variant === "single" || items.length === 1;
+  const shown = single ? items.slice(0, 1) : items;
+  const move = (direction: 1 | -1) => {
+    const el = track.current;
+    const step = (el?.firstElementChild as HTMLElement | null)?.offsetWidth ?? 0;
+    el?.scrollBy({ left: direction * step, behavior: "smooth" });
+  };
+
+  return (
+    <SectionShell section={section} ctx={ctx} head={titleHead(section)}>
+      <ul
+        ref={single ? undefined : track}
+        className={single ? "reviews reviews--single grid-12" : "reviews reviews--track"}
+        onScroll={single ? undefined : measure}
+        // The track scrolls from the keyboard too.
+        tabIndex={!single && edges.overflow ? 0 : undefined}
+        aria-labelledby={
+          !single && edges.overflow && section.props.title ? ctx.headingId : undefined
+        }
+      >
+        {shown.map((item) => (
+          <li key={item.id}>
+            <figure className="review" lang={langIf(item.textLang, ctx.locale)}>
+              <blockquote>
+                <p>
+                  <Lines text={item.quote} />
+                </p>
+              </blockquote>
+              <figcaption className="meta">
+                {[item.name, item.role].filter(Boolean).join(", ")}
+              </figcaption>
+            </figure>
+          </li>
+        ))}
+      </ul>
+      {!single && edges.overflow && (
+        <div className="track-ctl">
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm icon-btn"
+            aria-label={t.sections.testimonials.previous}
+            disabled={edges.start}
+            onClick={() => move(-1)}
+          >
+            <Icon name="chev-left" />
+          </button>
+          <button
+            type="button"
+            className="btn btn-quiet btn-sm icon-btn"
+            aria-label={t.sections.testimonials.next}
+            disabled={edges.end}
+            onClick={() => move(1)}
+          >
+            <Icon name="chev-right" />
+          </button>
+        </div>
+      )}
+    </SectionShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Shop, masterclasses, foundation stories: tiles or rows
+// ---------------------------------------------------------------------------
+
+/** Product types shown as an upright cover (3:4). */
+const UPRIGHT = new Set(["ebook", "book"]);
+
 export function Products({ section, media, ctx }: Props<"products">) {
   const t = useT();
-  const p = section.props;
   const products = section.data?.products ?? [];
-  if (products.length === 0) return null;
+  const Item = itemLevel(ctx, !!section.props.title.trim());
+  const types: Record<string, string> = t.sections.products.type;
   return (
-    <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow}>
-      <SectionHead section={section} ctx={ctx} title={p.title} />
-      <ul className="cards">
-        {products.map((product) => {
-          const cover = product.coverMediaId ? media[product.coverMediaId] : undefined;
-          const price =
-            product.priceCents === 0
-              ? t.sections.products.free
-              : product.priceCents
-                ? formatMoney(product.priceCents, product.currency, ctx.locale)
-                : product.priceLabel;
-          return (
-            <li key={product.id} className="card" lang={langIf(product.textLang, ctx.locale)}>
-              {cover && (
-                <div className="card-img">
-                  <Picture media={cover} sizes="(min-width: 1024px) 30vw, 90vw" decorative />
-                </div>
-              )}
-              <div className="card-body">
-                <h3 className="title">
-                  <SiteLink href={`/shop/${product.slug}`} className="card-link">
-                    {product.name}
-                  </SiteLink>
-                </h3>
-                {product.summary && <p className="body">{product.summary}</p>}
-                {price && <p className="meta card-price">{price}</p>}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+    <SectionShell section={section} ctx={ctx} head={titleHead(section)}>
+      {products.length === 0 ? (
+        <Empty
+          text={t.sections.products.empty}
+          link={{ label: t.sections.products.emptyNext, href: "/books" }}
+        />
+      ) : (
+        <ul className="tiles">
+          {products.map((product) => {
+            const lang = langIf(product.textLang, ctx.locale);
+            const price =
+              product.priceCents === 0
+                ? t.sections.products.free
+                : product.priceCents
+                  ? formatMoney(product.priceCents, product.currency, ctx.locale)
+                  : product.priceLabel;
+            const type = types[product.productType];
+            return (
+              <Tile
+                key={product.id}
+                Item={Item}
+                href={product.checkoutUrl ?? `/shop/${product.slug}`}
+                title={product.name}
+                lang={lang}
+                // A bridge tile opens another page of this site, in the reader's language.
+                linkLang={product.checkoutUrl ? null : lang}
+                cover={product.coverMediaId ? media[product.coverMediaId] : undefined}
+                upright={UPRIGHT.has(product.productType)}
+                label={type && <p className="label label--accent">{type}</p>}
+              >
+                {product.summary && (
+                  <p className="body" lang={lang}>
+                    {product.summary}
+                  </p>
+                )}
+                {price && <p className="meta">{price}</p>}
+              </Tile>
+            );
+          })}
+        </ul>
+      )}
     </SectionShell>
+  );
+}
+
+const STATUS_ICON = { open: "check", waitlist: "clock", closed: "lock" } as const;
+
+/** Open, waitlist or closed: a quiet badge, an icon and a word, never Tangerine. */
+function Status({ availability }: { availability: MasterclassCard["availability"] }) {
+  const t = useT();
+  const words = t.sections.masterclasses;
+  const word =
+    availability === "open"
+      ? words.statusOpen
+      : availability === "waitlist"
+        ? words.statusWaitlist
+        : words.closed;
+  return (
+    <span className="badge badge--quiet">
+      <Icon name={STATUS_ICON[availability]} />
+      {word}
+    </span>
   );
 }
 
 export function Masterclasses({ section, media, ctx }: Props<"masterclasses">) {
   const t = useT();
-  const p = section.props;
   const items = section.data?.items ?? [];
-  if (items.length === 0) return null;
-  return (
-    <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow}>
-      <SectionHead section={section} ctx={ctx} title={p.title} intro={p.intro} />
-      <ul className={section.variant === "cards" ? "cards" : "rows"}>
-        {items.map((item) => {
-          const cover = item.coverMediaId ? media[item.coverMediaId] : undefined;
-          const when = item.startsAt
-            ? formatDate(item.startsAt, ctx.locale, {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })
-            : item.scheduleNote;
-          const status =
-            item.availability === "open"
-              ? t.sections.masterclasses.enrol
-              : item.availability === "waitlist"
-                ? t.sections.masterclasses.waitlist
-                : t.sections.masterclasses.closed;
-          return (
-            <li
-              key={item.id}
-              className={section.variant === "cards" ? "card" : "row"}
-              lang={langIf(item.textLang, ctx.locale)}
-            >
-              {section.variant === "cards" && cover && (
-                <div className="card-img">
-                  <Picture media={cover} sizes="(min-width: 1024px) 30vw, 90vw" decorative />
-                </div>
-              )}
-              <div className="card-body">
-                <p className="meta">
-                  {[t.sections.masterclasses.format[item.format], item.location, when]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-                <h3 className="title">
-                  <SiteLink href={`/masterclasses/${item.slug}`} className="card-link">
-                    {item.title}
-                  </SiteLink>
-                </h3>
-                {item.summary && <p className="body">{item.summary}</p>}
-                <p className="card-foot">
-                  {item.priceLabel && <span className="meta">{item.priceLabel}</span>}
-                  <span className={`pill pill--${item.availability}`}>{status}</span>
-                </p>
-              </div>
-            </li>
-          );
-        })}
+  const Item = itemLevel(ctx, !!section.props.title.trim());
+  const head = {
+    ...titleHead(section),
+    intro: section.props.intro,
+    introLang: keyLang(section, "intro"),
+  };
+  const facts = (item: MasterclassCard) => (
+    <Dots
+      items={[
+        item.startsAt
+          ? when(item.startsAt, ctx.locale)
+          : item.scheduleNote && (
+              <span lang={langIf(item.textLang, ctx.locale)}>{item.scheduleNote}</span>
+            ),
+        t.sections.masterclasses.format[item.format],
+        item.priceLabel,
+      ]}
+    />
+  );
+  const summary = (item: MasterclassCard) =>
+    item.summary && (
+      <p className="body" lang={langIf(item.textLang, ctx.locale)}>
+        {item.summary}
+      </p>
+    );
+
+  let list: ReactNode;
+  if (items.length === 0) {
+    list = (
+      <Empty
+        text={t.sections.masterclasses.empty}
+        link={{ label: t.sections.masterclasses.emptyNext, href: "/contact" }}
+      />
+    );
+  } else if (section.variant === "cards") {
+    list = (
+      <ul className="tiles">
+        {items.map((item) => (
+          <Tile
+            key={item.id}
+            Item={Item}
+            href={`/masterclasses/${item.slug}`}
+            title={item.title}
+            lang={langIf(item.textLang, ctx.locale)}
+            cover={item.coverMediaId ? media[item.coverMediaId] : undefined}
+            label={<p className="tile-meta">{facts(item)}</p>}
+          >
+            <p className="tile-status">
+              <Status availability={item.availability} />
+            </p>
+            {summary(item)}
+          </Tile>
+        ))}
       </ul>
-    </SectionShell>
-  );
-}
-
-function EventRow({ event, locale }: { event: EventCard; locale: Locale }) {
-  const t = useT();
-  const zone = event.timeZone || "Europe/Nicosia";
-  const day = formatDate(event.startsAt, locale, { day: "numeric" }, zone);
-  const month = formatDate(event.startsAt, locale, { month: "short" }, zone);
-  const full = formatWhen(event.startsAt, locale, { weekday: true, time: true, timeZone: zone });
-  const place = event.online
-    ? t.sections.events.online
-    : [event.venue, event.city].filter(Boolean).join(", ");
-  return (
-    <li className="event" lang={langIf(event.textLang, locale)}>
-      <time className="event-date" dateTime={event.startsAt} aria-label={full}>
-        <span className="event-day">{day}</span>
-        <span className="event-month">{caps(month)}</span>
-      </time>
-      <div className="event-body">
-        <h3 className="title">
-          <SiteLink href={`/events/${event.slug}`}>{event.title}</SiteLink>
-        </h3>
-        <p className="meta">
-          {place && (
-            <>
-              <Icon name={event.online ? "globe" : "pin"} />
-              <span>{place}</span>
-            </>
-          )}
-        </p>
-        {event.summary && <p className="body">{event.summary}</p>}
-      </div>
-      {event.ticketUrl && (
-        <a
-          className="btn btn-quiet btn-sm"
-          href={event.ticketUrl}
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          {t.sections.events.tickets}
-          <Icon name="arrow-ext" />
-        </a>
-      )}
-    </li>
-  );
-}
-
-export function Events({ section, ctx }: Props<"events">) {
-  const t = useT();
-  const p = section.props;
-  const upcoming = section.data?.upcoming ?? [];
-  const past = section.data?.past ?? [];
-  if (upcoming.length === 0 && past.length === 0) return null;
-  return (
-    <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow}>
-      <SectionHead section={section} ctx={ctx} title={p.title} />
-      {upcoming.length === 0 ? (
-        <Empty text={t.sections.events.empty} />
-      ) : (
-        <ul className="events">
-          {upcoming.map((event) => (
-            <EventRow key={event.id} event={event} locale={ctx.locale} />
-          ))}
-        </ul>
-      )}
-      {past.length > 0 && (
-        <details className="past">
-          <summary className="label">
-            {caps(t.sections.events.past)}
-            <Icon name="chev-down" />
-          </summary>
-          <ul className="events events--past">
-            {past.map((event) => (
-              <EventRow key={event.id} event={event} locale={ctx.locale} />
-            ))}
-          </ul>
-        </details>
-      )}
-    </SectionShell>
-  );
-}
-
-export function Press({ section, media, ctx }: Props<"press">) {
-  const t = useT();
-  const p = section.props;
-  const items = section.data?.items ?? [];
-  if (items.length === 0) return null;
-  if (section.variant === "logo_row") {
-    return (
-      <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow}>
-        <SectionHead section={section} ctx={ctx} title={p.title} />
-        <ul className="press-logos">
-          {items.map((item) => {
-            const logo = item.logoMediaId ? media[item.logoMediaId] : undefined;
-            const content = logo ? (
-              <Picture media={{ ...logo, alt: item.outlet }} sizes="160px" />
-            ) : (
-              <span className="press-name">{item.outlet}</span>
-            );
-            return (
-              <li key={item.id}>
-                {item.url ? (
-                  <a
-                    href={item.url}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                    aria-label={fmt(t.sections.press.read, { outlet: item.outlet })}
-                  >
-                    {content}
-                  </a>
-                ) : (
-                  content
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </SectionShell>
+    );
+  } else {
+    list = (
+      <ul className="rows">
+        {items.map((item) => (
+          <Row key={item.id} meta={facts(item)} aside={<Status availability={item.availability} />}>
+            <Item className="title" lang={langIf(item.textLang, ctx.locale)}>
+              <SiteLink href={`/masterclasses/${item.slug}`}>{item.title}</SiteLink>
+            </Item>
+            {summary(item)}
+          </Row>
+        ))}
+      </ul>
     );
   }
   return (
-    <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow}>
-      <SectionHead section={section} ctx={ctx} title={p.title} />
-      <ul className="rows press-list">
-        {items.map((item) => (
-          <li key={item.id} className="row">
-            <p className="label label--accent">{caps(item.outlet)}</p>
-            <h3 className="title">
-              {item.url ? (
-                <a href={item.url} rel="noopener noreferrer" target="_blank">
-                  {item.headline}
-                  <Icon name="arrow-ext" />
-                </a>
-              ) : (
-                item.headline
-              )}
-            </h3>
-            {item.publishedOn && <p className="meta">{formatDate(item.publishedOn, ctx.locale)}</p>}
-          </li>
-        ))}
-      </ul>
+    <SectionShell section={section} ctx={ctx} head={head}>
+      {list}
     </SectionShell>
   );
 }
 
 export function FoundationStories({ section, media, ctx }: Props<"foundation_stories">) {
   const t = useT();
-  const p = section.props;
   const stories = section.data?.stories ?? [];
-  if (stories.length === 0) return null;
-  return (
-    <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow}>
-      <SectionHead section={section} ctx={ctx} title={p.title} />
-      <ul className={section.variant === "list" ? "rows" : "cards"}>
-        {stories.map((story) => {
-          const cover = story.coverMediaId ? media[story.coverMediaId] : undefined;
-          return (
-            <li
-              key={story.id}
-              className={section.variant === "list" ? "row" : "card"}
-              lang={langIf(story.textLang, ctx.locale)}
-            >
-              {section.variant !== "list" && cover && (
-                <div className="card-img">
-                  <Picture media={cover} sizes="(min-width: 1024px) 30vw, 90vw" decorative />
-                </div>
-              )}
-              <div className="card-body">
-                {story.category && <p className="label label--accent">{caps(story.category)}</p>}
-                <h3 className="title">
-                  <SiteLink href={`/foundation/stories/${story.slug}`} className="card-link">
-                    {story.title}
-                  </SiteLink>
-                </h3>
-                {story.summary && <p className="body">{story.summary}</p>}
-                <p className="meta">
-                  {[story.personName, story.location].filter(Boolean).join(" · ")}
-                </p>
-              </div>
-            </li>
-          );
-        })}
+  const Item = itemLevel(ctx, !!section.props.title.trim());
+  const category = (name: string) =>
+    name && (
+      <p className="label label--accent" lang={englishOn(ctx.locale)}>
+        {name}
+      </p>
+    );
+
+  let list: ReactNode;
+  if (stories.length === 0) {
+    list = (
+      <Empty
+        text={t.sections.stories.empty}
+        link={{ label: t.sections.donation.donate, href: "#give" }}
+      />
+    );
+  } else if (section.variant === "list") {
+    list = (
+      <ul className="rows">
+        {stories.map((story) => (
+          <Row
+            key={story.id}
+            meta={
+              <>
+                {category(story.category)}
+                <Dots items={[story.personName, story.location]} />
+              </>
+            }
+          >
+            <Item className="title" lang={langIf(story.textLang, ctx.locale)}>
+              <SiteLink href={`/foundation/stories/${story.slug}`}>{story.title}</SiteLink>
+            </Item>
+            {story.summary && (
+              <p className="body" lang={langIf(story.textLang, ctx.locale)}>
+                {story.summary}
+              </p>
+            )}
+          </Row>
+        ))}
       </ul>
+    );
+  } else {
+    list = (
+      <ul className="tiles">
+        {stories.map((story) => (
+          <Tile
+            key={story.id}
+            Item={Item}
+            href={`/foundation/stories/${story.slug}`}
+            title={story.title}
+            lang={langIf(story.textLang, ctx.locale)}
+            cover={story.coverMediaId ? media[story.coverMediaId] : undefined}
+            label={category(story.category)}
+          >
+            {story.summary && (
+              <p className="body" lang={langIf(story.textLang, ctx.locale)}>
+                {story.summary}
+              </p>
+            )}
+            <p className="tile-meta">
+              <Dots items={[story.personName, story.location]} />
+            </p>
+          </Tile>
+        ))}
+      </ul>
+    );
+  }
+  return (
+    <SectionShell section={section} ctx={ctx} head={titleHead(section)}>
+      {list}
     </SectionShell>
   );
 }
 
-function CopyButton({ text }: { text: string }) {
+// ---------------------------------------------------------------------------
+// Events
+// ---------------------------------------------------------------------------
+
+/** "Mar 12, 2026", "Thursday, 19:00" and the city or "Online", in the event's own time zone. */
+function eventFacts(event: EventCard, locale: Locale, online: string) {
+  const zone = event.timeZone || "Europe/Nicosia";
+  const day = formatDate(
+    event.startsAt,
+    locale,
+    { day: "numeric", month: "short", year: "numeric" },
+    zone,
+  );
+  const weekday = formatDate(event.startsAt, locale, { weekday: "long" }, zone);
+  const time = formatWhen(event.startsAt, locale, { time: true, timeZone: zone }).split(", ").pop();
+  return {
+    day,
+    when: [weekday, time].filter(Boolean).join(", "),
+    place: event.online ? online : event.city || event.venue,
+  };
+}
+
+export function Events({ section, media, ctx }: Props<"events">) {
   const t = useT();
-  const [copied, setCopied] = useState(false);
+  const upcoming = section.data?.upcoming ?? [];
+  const past = section.data?.past ?? [];
+  const Item = itemLevel(ctx, !!section.props.title.trim());
+
+  const list = (events: EventCard[]) =>
+    section.variant === "cards" ? (
+      <ul className="tiles">
+        {events.map((event) => {
+          const { day, when, place } = eventFacts(event, ctx.locale, t.sections.events.online);
+          return (
+            <Tile
+              key={event.id}
+              Item={Item}
+              href={`/events/${event.slug}`}
+              title={event.title}
+              lang={langIf(event.textLang, ctx.locale)}
+              cover={event.coverMediaId ? media[event.coverMediaId] : undefined}
+              label={
+                <p className="label label--accent">
+                  <time dateTime={event.startsAt}>{day}</time>
+                </p>
+              }
+            >
+              <p className="tile-meta">
+                <Dots items={[when, place]} />
+              </p>
+            </Tile>
+          );
+        })}
+      </ul>
+    ) : (
+      <ul className="rows">
+        {events.map((event) => {
+          const { day, when, place } = eventFacts(event, ctx.locale, t.sections.events.online);
+          return (
+            <Row
+              key={event.id}
+              meta={
+                <>
+                  <p className="label label--accent">
+                    <time dateTime={event.startsAt}>{day}</time>
+                  </p>
+                  <Dots items={[when, place]} />
+                </>
+              }
+              aside={
+                event.ticketUrl && (
+                  <SiteLink className="btn btn-quiet btn-sm" href={event.ticketUrl} arrow>
+                    {t.sections.events.tickets}
+                  </SiteLink>
+                )
+              }
+            >
+              <Item className="title" lang={langIf(event.textLang, ctx.locale)}>
+                <SiteLink href={`/events/${event.slug}`}>{event.title}</SiteLink>
+              </Item>
+              {event.summary && (
+                <p className="body" lang={langIf(event.textLang, ctx.locale)}>
+                  {event.summary}
+                </p>
+              )}
+            </Row>
+          );
+        })}
+      </ul>
+    );
+
   return (
-    <button
-      type="button"
-      className="btn btn-quiet btn-sm"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        } catch {
-          setCopied(false);
-        }
-      }}
-    >
-      <Icon name={copied ? "check" : "copy"} />
-      <span aria-live="polite">
-        {copied ? t.sections.mediaKit.copied : t.sections.mediaKit.copy}
-      </span>
-    </button>
+    <SectionShell section={section} ctx={ctx} head={titleHead(section)}>
+      {upcoming.length === 0 ? (
+        <Empty
+          text={t.sections.events.empty}
+          link={{ label: t.sections.events.emptyNext, href: "/contact" }}
+        />
+      ) : (
+        list(upcoming)
+      )}
+      {past.length > 0 && (
+        <details className="past">
+          <summary>
+            <span className="title">{t.sections.events.pastEvents}</span>
+            <Icon name="chev-down" />
+          </summary>
+          {list(past)}
+        </details>
+      )}
+    </SectionShell>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Press and the media kit
+// ---------------------------------------------------------------------------
+
+export function Press({ section, ctx }: Props<"press">) {
+  const t = useT();
+  const items = section.data?.items ?? [];
+  const Item = itemLevel(ctx, !!section.props.title.trim());
+
+  let list: ReactNode;
+  if (items.length === 0) {
+    list = (
+      <Empty
+        text={t.sections.press.empty}
+        link={{ label: t.sections.press.emptyNext, href: "/contact" }}
+      />
+    );
+  } else if (section.variant === "logo_row") {
+    // The outlets by name, as written: no logos, no filters.
+    list = (
+      <p className="press-names dots title">
+        {items.map((item) =>
+          item.url ? (
+            <SiteLink key={item.id} href={item.url}>
+              {item.outlet}
+            </SiteLink>
+          ) : (
+            <span key={item.id}>{item.outlet}</span>
+          ),
+        )}
+      </p>
+    );
+  } else {
+    list = (
+      <ul className="rows">
+        {items.map((item) => (
+          <Row
+            key={item.id}
+            meta={
+              <>
+                <p className="label">{item.outlet}</p>
+                <Dots items={[when(item.publishedOn, ctx.locale)]} />
+              </>
+            }
+          >
+            <Item className="title">
+              {item.url ? (
+                <SiteLink className="press-link" href={item.url} arrow>
+                  {item.headline}
+                </SiteLink>
+              ) : (
+                item.headline
+              )}
+            </Item>
+          </Row>
+        ))}
+      </ul>
+    );
+  }
+  return (
+    <SectionShell section={section} ctx={ctx} head={titleHead(section)}>
+      {list}
+    </SectionShell>
+  );
+}
+
+/** Copies a bio; says "Copied" for two seconds, aloud too. */
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const t = useT();
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  return (
+    <p className="kit-copy">
+      <button
+        type="button"
+        className="btn btn-quiet btn-sm"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+          } catch {
+            setCopied(false);
+          }
+        }}
+      >
+        <Icon name={copied ? "check" : "copy"} />
+        {copied ? t.sections.mediaKit.copied : label}
+      </button>
+      <span className="sr-only" role="status">
+        {copied ? t.sections.mediaKit.copied : ""}
+      </span>
+    </p>
+  );
+}
+
+/** The system's ratios for a download's preview: 3:2 wide, 3:4 a cover, 4:5 a portrait. */
+function kitRatio(asset: ResolvedMedia): string {
+  const { width, height } = asset;
+  if (!width || !height) return "kit-thumb";
+  if (width > height) return "kit-thumb kit-thumb--wide";
+  return height / width >= 1.3 ? "kit-thumb kit-thumb--cover" : "kit-thumb";
+}
+
+/** For hosts and journalists: the short bio on 1–5, the long bio on 7–12, then the files. */
 export function MediaKit({ section, media, ctx }: Props<"media_kit">) {
   const t = useT();
   const p = section.props;
-  const downloads = p.downloadMediaIds.map((id) => media[id]).filter(Boolean);
+  const Item = itemLevel(ctx, !!p.title.trim());
+  const downloads = p.downloadMediaIds
+    .map((id) => media[id])
+    .filter((asset): asset is ResolvedMedia => !!asset);
   const longText = p.longBio
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   return (
-    <SectionShell section={section} ctx={ctx} labelled={!!p.title} label={p.eyebrow}>
-      <SectionHead section={section} ctx={ctx} title={p.title} />
+    <SectionShell section={section} ctx={ctx} head={titleHead(section)}>
       <div className="kit">
         <div className="kit-bio">
-          <div className="kit-head">
-            <h3 className="label">{caps(t.sections.mediaKit.shortBio)}</h3>
-            <CopyButton text={p.shortBio} />
-          </div>
+          <Item className="title">{t.sections.mediaKit.shortBio}</Item>
           <p className="body" lang={keyLang(section, "shortBio")}>
             {p.shortBio}
           </p>
+          <CopyButton text={p.shortBio} label={t.sections.mediaKit.copyShort} />
         </div>
         {longText && (
-          <div className="kit-bio">
-            <div className="kit-head">
-              <h3 className="label">{caps(t.sections.mediaKit.longBio)}</h3>
-              <CopyButton text={longText} />
-            </div>
-            <div lang={keyLang(section, "longBio")}>
-              <RichHtml html={p.longBio} />
-            </div>
+          <div className="kit-bio kit-bio--long">
+            <Item className="title">{t.sections.mediaKit.longBio}</Item>
+            <RichHtml html={p.longBio} className="body" lang={keyLang(section, "longBio")} />
+            <CopyButton text={longText} label={t.sections.mediaKit.copyLong} />
+          </div>
+        )}
+        {downloads.length > 0 && (
+          <div className="kit-files">
+            <Item className="title">{t.sections.mediaKit.downloads}</Item>
+            <ul className="kit-downloads">
+              {downloads.map((asset) => (
+                <li key={asset.id}>
+                  {asset.kind === "image" && (
+                    <div className={kitRatio(asset)}>
+                      <Picture
+                        media={asset}
+                        sizes="(min-width: 1440px) 296px, (min-width: 1024px) 22vw, 45vw"
+                        decorative
+                      />
+                    </div>
+                  )}
+                  <a className="link" href={asset.original} download>
+                    {t.sections.mediaKit.download}
+                    {(asset.alt || asset.caption) && (
+                      <span className="sr-only" lang={langIf(asset.textLang, ctx.locale)}>
+                        : {asset.alt || asset.caption}
+                      </span>
+                    )}
+                    <Icon name="arrow-down" />
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>
-      {downloads.length > 0 && (
-        <>
-          <h3 className="label kit-downloads-title">{caps(t.sections.mediaKit.downloads)}</h3>
-          <ul className="kit-downloads">
-            {downloads.map((asset) => (
-              <li key={asset!.id}>
-                {asset!.kind === "image" && (
-                  <Picture media={asset} sizes="(min-width: 1024px) 18vw, 45vw" decorative />
-                )}
-                <a className="link" href={asset!.src} download>
-                  <Icon name="arrow-down" />
-                  <span>
-                    {t.sections.mediaKit.download}
-                    <span className="sr-only">: {asset!.alt || asset!.caption}</span>
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
     </SectionShell>
   );
 }

@@ -1,0 +1,574 @@
+/* The audiobook player (the open book) and the docked mini player. */
+@layer components {
+  /* ---------- The section: 48 above at every width, the band's own padding below ---------- */
+  .listen-band {
+    --section-pt: var(--space-7);
+  }
+
+  /* ---------- Head: the h2 on 1–7, the editions on 8–12 ---------- */
+  .player-head {
+    margin-bottom: var(--space-5);
+  }
+  .player-title :is(h1, h2) {
+    max-width: 14ch;
+  }
+  .player-title .lead {
+    margin-top: var(--space-4);
+    max-width: 30em;
+  }
+  .player-note {
+    margin-top: var(--space-3);
+  }
+  @media (min-width: 1024px) {
+    .player-head {
+      align-items: start;
+      margin-bottom: var(--space-6);
+    }
+    .player-title {
+      grid-column: 1 / 8;
+    }
+    .player-editions {
+      grid-column: 8 / 13;
+    }
+  }
+
+  /* ---------- Editions: a plain radio list, hairline separated. Selected = text colour + check ---------- */
+  .edition {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--size-edition-cover) minmax(0, 1fr) 20px;
+    gap: var(--space-3);
+    align-items: center;
+    min-height: var(--size-row);
+    padding-block: var(--space-2);
+    border-top: 1px solid var(--color-hairline);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: color var(--duration-hover);
+  }
+  .edition:last-of-type {
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .edition:hover {
+    color: var(--color-text);
+  }
+  .edition input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+  }
+  /* Covers under 40px are square-cornered */
+  .edition img {
+    width: var(--size-edition-cover);
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+  }
+  .edition-title {
+    display: block;
+    font: 600 var(--text-small) / 1.25 var(--font-serif);
+    text-wrap: pretty;
+  }
+  .edition-meta {
+    display: flex;
+    margin-top: 2px;
+  }
+  .edition .tick {
+    color: var(--color-text);
+    visibility: hidden;
+  }
+  .edition:has(input:checked) {
+    color: var(--color-text);
+  }
+  .edition:has(input:checked) .tick {
+    visibility: visible;
+  }
+  .edition:has(input:focus-visible) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+    border-radius: var(--radius);
+  }
+  .edition--single {
+    color: var(--color-text);
+    cursor: default;
+  }
+
+  /* ---------- The spread: one surface, one fold. Verso = the chapter, recto = the contents ---------- */
+  .book-spread {
+    position: relative;
+    display: grid;
+    background: var(--color-surface);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius);
+  }
+  .book-spread > .verso {
+    padding: var(--space-5) var(--space-4);
+  }
+  .book-spread > .recto {
+    position: relative;
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    border-top: 1px solid var(--color-hairline);
+  }
+  @media (min-width: 720px) {
+    .book-spread > .verso {
+      padding: var(--space-6);
+    }
+    .book-spread > .recto {
+      padding: var(--space-5) var(--space-6) var(--space-4) var(--space-7);
+    }
+  }
+  @media (min-width: 1024px) {
+    .book-spread {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--grid-gap);
+    }
+    /* The fold: a hairline at exactly half */
+    .book-spread::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      background: var(--color-hairline);
+    }
+    .book-spread > .verso {
+      grid-column: 2 / 6;
+      padding: var(--space-7) 0;
+    }
+    .book-spread > .recto {
+      grid-column: 8 / 12;
+      padding: var(--space-7) 0;
+      border-top: 0;
+    }
+  }
+
+  /* ---------- Verso ---------- */
+  .page-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--size-control-sm);
+  }
+  .page-head .status {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--space-2);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+  /* The status icon keeps the 20px default */
+  .page-head .status svg.i {
+    color: var(--color-accent-text);
+  }
+  .page-head .status--error,
+  .page-head .status--error svg.i {
+    color: var(--color-error);
+  }
+  .page-head .retry {
+    min-height: var(--size-control-sm);
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-text);
+    text-underline-offset: 0.3em;
+    cursor: pointer;
+  }
+  .page-head .retry:hover {
+    color: var(--color-accent-text);
+    text-decoration-thickness: 2px;
+  }
+  /* The visible "1×" is the name; "Playback speed" is read before it */
+  .speed {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--size-control-sm);
+    min-height: var(--size-control-sm);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--color-field-border);
+    border-radius: var(--radius);
+    background: transparent;
+    font: 600 var(--text-meta) / 1 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: border-color var(--duration-hover);
+  }
+  .speed:hover {
+    border-color: var(--color-text);
+  }
+  .chapter-of {
+    margin-top: var(--space-5);
+  }
+  .chapter-title {
+    margin-top: var(--space-1);
+  }
+  /* Her words, set large while her voice plays */
+  .opening {
+    margin-top: var(--space-5);
+    font-family: var(--font-display);
+    font-size: var(--text-display-m);
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    font-optical-sizing: auto;
+  }
+
+  /* Scrubber: a native range (invisible) over a 44px hit area; the thumb carries the position */
+  .scrub {
+    position: relative;
+    height: var(--size-control-sm);
+    margin-top: var(--space-6);
+  }
+  .scrub-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(50% - 1.5px);
+    height: 3px;
+    background: var(--color-track);
+  }
+  .scrub-fill {
+    height: 100%;
+    background: var(--color-accent-text);
+  }
+  .scrub-thumb {
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--color-accent-text);
+    border: 4px solid var(--color-surface);
+  }
+  .scrub input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .scrub input:disabled {
+    cursor: not-allowed;
+  }
+  .scrub:has(input:focus-visible) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 4px;
+    border-radius: var(--radius);
+  }
+  .times {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Transport: round controls, 48 (44 below 360); play 72 (64 below 360), Tangerine with a Cocoa glyph */
+  .transport {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-1);
+    margin-top: var(--space-4);
+  }
+  .ctl {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--size-control);
+    height: var(--size-control);
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-hover),
+      color var(--duration-hover);
+  }
+  .ctl:hover {
+    background: var(--color-bg-alt);
+    color: var(--color-accent-text);
+  }
+  .ctl[aria-disabled="true"],
+  .ctl:disabled {
+    background: transparent;
+    color: var(--color-text-tertiary);
+    cursor: not-allowed;
+  }
+  .ctl svg.i {
+    width: 24px;
+    height: 24px;
+  }
+  .ctl svg.skip-arc {
+    width: 36px;
+    height: 36px;
+  }
+  .ctl .skip-n {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font: 600 var(--text-label) / 1 var(--font-sans);
+    font-variant-numeric: lining-nums;
+  }
+  .play {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--size-play);
+    height: var(--size-play);
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-action);
+    color: var(--color-on-action);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-hover),
+      color var(--duration-hover);
+  }
+  .play:hover {
+    background: var(--color-action-hover);
+    color: var(--color-on-action-hover);
+  }
+  .play svg.i {
+    width: 24px;
+    height: 24px;
+  }
+  /* The triangle's optical centre */
+  .play .i-play {
+    margin-left: 3px;
+  }
+  /* A Tangerine fill is never faded: disabled is a dashed outline */
+  .play:disabled {
+    background: transparent;
+    border: 1px dashed var(--color-field-border);
+    color: var(--color-text-tertiary);
+    cursor: not-allowed;
+  }
+  @media (max-width: 359px) {
+    .transport .ctl {
+      width: var(--size-control-sm);
+      height: var(--size-control-sm);
+    }
+    .transport .play {
+      width: 64px;
+      height: 64px;
+    }
+  }
+
+  /* ---------- Recto: the contents ---------- */
+  .toc-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    column-gap: var(--space-3);
+    min-height: var(--size-control-sm);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .toc li {
+    position: relative;
+  }
+  /* The number hangs on the title's first line; the leader and the duration sit on its last,
+     so a wrapped title never strands its dots */
+  .toc-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-3);
+    align-items: last baseline;
+    width: 100%;
+    min-height: var(--size-row);
+    padding: var(--space-4) 0 var(--space-3);
+    border: 0;
+    border-bottom: 1px solid var(--color-hairline);
+    background: none;
+    text-align: left;
+    text-decoration: none;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+  @supports not (align-items: last baseline) {
+    .toc-row {
+      align-items: end;
+    }
+  }
+  .toc .n {
+    display: inline-block;
+    width: calc(var(--space-5) + var(--space-3));
+    text-indent: 0;
+    font: 500 var(--text-meta) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-tertiary);
+  }
+  .toc .t {
+    overflow: clip;
+    padding-left: calc(var(--space-5) + var(--space-3));
+    text-indent: calc(-1 * (var(--space-5) + var(--space-3)));
+    font: 400 var(--text-body) / 1.35 var(--font-serif);
+    text-wrap: balance;
+    transition: color var(--duration-hover);
+  }
+  .toc .d {
+    font: 400 var(--text-meta) / 1.4 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-text-tertiary);
+    white-space: nowrap;
+  }
+  /* Played (a check) or not free to stream (a lock), before the duration */
+  .toc .d svg.i {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: var(--space-1);
+    vertical-align: -3px;
+  }
+  .toc-row:hover .t {
+    color: var(--color-accent-text);
+  }
+  .toc-row[aria-current="true"] .t {
+    font-weight: 600;
+    color: var(--color-accent-text);
+  }
+  .toc-row[aria-current="true"] .n,
+  .toc-row[aria-current="true"] .d {
+    color: var(--color-accent-text);
+    font-weight: 600;
+  }
+  .toc-row--locked .t {
+    color: var(--color-text-secondary);
+  }
+  /* The ribbon: one short bookmark tab beside the current row, never a bar */
+  .ribbon-tab {
+    position: absolute;
+    top: -1px;
+    left: calc(-1 * var(--space-4));
+    width: 12px;
+    height: 36px;
+    background: var(--color-ribbon);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - 8px), 0 100%);
+  }
+  .toc li.is-window-hidden {
+    display: none;
+  }
+  .toc-more {
+    display: flex;
+    justify-content: center;
+    padding-top: var(--space-2);
+  }
+  @media (min-width: 720px) {
+    /* Dotted leader from the end of the title's last line to the duration */
+    .toc .t::after {
+      content: "";
+      display: inline-block;
+      width: 100%;
+      margin-left: var(--space-3);
+      margin-right: -100%;
+      border-bottom: 2px dotted var(--color-leader);
+      vertical-align: 0.28em;
+    }
+  }
+  @media (min-width: 1024px) {
+    .toc li.is-window-hidden {
+      display: block;
+    }
+    .toc-more {
+      display: none;
+    }
+    .ribbon-tab {
+      left: calc(-1 * var(--space-6) - 12px);
+    }
+  }
+
+  /* ---------- Mini player: docked full width after the footer, once playback has started ---------- */
+  .mini-player {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-hairline);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  /* Chapter progress along the top edge: state, never animated */
+  .mini-player::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: -1px;
+    height: 2px;
+    width: var(--mini-progress, 0%);
+    background: var(--color-accent-text);
+  }
+  .mini-inner {
+    display: grid;
+    grid-template-columns: var(--size-mini-cover) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--size-row);
+    padding-block: var(--space-2);
+  }
+  .mini-player img {
+    width: var(--size-mini-cover);
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+  }
+  .mini-text {
+    display: grid;
+    min-width: 0;
+  }
+  .mini-text strong {
+    font: 600 var(--text-small) / 1.3 var(--font-serif);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mini-ctl {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .mini-player .play {
+    width: var(--size-control);
+    height: var(--size-control);
+  }
+  .mini-player .play svg.i {
+    width: 20px;
+    height: 20px;
+  }
+  .mini-player .play .i-play {
+    margin-left: 2px;
+  }
+  @media (max-width: 359px) {
+    .mini-player .ctl {
+      width: var(--size-control-sm);
+      height: var(--size-control-sm);
+    }
+  }
+}
+
+/* ---------- Forced colours: the fold and the mini progress keep a system colour ---------- */
+@media (forced-colors: active) {
+  .book-spread::before {
+    background: CanvasText;
+  }
+  .mini-player::before {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+}

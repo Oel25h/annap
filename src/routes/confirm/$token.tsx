@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { NewsletterForm } from "@/components/site/NewsletterForm";
-import { SiteLink } from "@/components/site/SiteLink";
-import { StatusPage } from "@/components/site/StatusPage";
+import { StatusLinks, StatusPage } from "@/components/site/StatusPage";
 import { localeFromSearch, useLocale, useT } from "@/lib/i18n/context";
 import { getMessages } from "@/lib/i18n/messages";
 import { utilityHead } from "@/lib/seo";
@@ -32,39 +31,33 @@ function ConfirmPage() {
 
   if (result === "confirmed") {
     return (
-      <StatusPage label={c.label} title={c.confirmedTitle}>
+      <StatusPage title={c.confirmedTitle}>
         <p className="lead">{c.confirmedBody}</p>
-        <ul className="status-links">
-          <li>
-            <SiteLink className="link" href="/blog">
-              {c.journal}
-            </SiteLink>
-          </li>
-          <li>
-            <SiteLink className="link" href="/">
-              {c.home}
-            </SiteLink>
-          </li>
-        </ul>
+        <StatusLinks
+          links={[
+            { label: c.stories, href: "/blog" },
+            { label: c.home, href: "/" },
+          ]}
+        />
       </StatusPage>
     );
   }
 
   if (result === "invalid") {
     return (
-      <StatusPage label={c.label} title={c.invalidTitle}>
+      <StatusPage title={c.invalidTitle}>
         <p className="lead">{c.invalidBody}</p>
-        <div className="status-form">
-          <NewsletterForm source="confirm-retry" />
+        <div className="status-actions">
+          <NewsletterForm source="confirm-retry" headingLevel="h2" />
         </div>
       </StatusPage>
     );
   }
 
   return (
-    <StatusPage label={c.label} title={c.title}>
+    <StatusPage title={c.title}>
       <p className="lead">{c.body}</p>
-      <form className="status-links" method="post" action="/api/newsletter/confirm">
+      <form className="status-actions" method="post" action="/api/newsletter/confirm">
         <input type="hidden" name="token" value={token} />
         <input type="hidden" name="lang" value={locale} />
         <button className="btn btn-primary" type="submit">

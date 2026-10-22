@@ -1,10 +1,19 @@
 @import "tailwindcss" source(none);
 @source "../src";
-@import "tw-animate-css";
 @import "./styles/fonts.css";
 @import "./styles/tokens.css";
 @import "./styles/base.css";
 @import "./styles/site.css";
 @import "./styles/sections.css";
 
-@custom-variant dark (&:is(.dark *));
+/* dark: follows the system unless <html class="light"> or "dark" forces a mode */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) {
+      @slot;
+    }
+  }
+}
