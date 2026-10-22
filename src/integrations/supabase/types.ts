@@ -1064,8 +1064,10 @@ export type Database = {
       };
       foundation_stories: {
         Row: {
+          anonymise: boolean;
           body: string;
           category: string;
+          consent_recorded: boolean;
           cover_media_id: string | null;
           cover_url: string | null;
           created_at: string;
@@ -1086,8 +1088,10 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          anonymise?: boolean;
           body?: string;
           category?: string;
+          consent_recorded?: boolean;
           cover_media_id?: string | null;
           cover_url?: string | null;
           created_at?: string;
@@ -1107,8 +1111,10 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          anonymise?: boolean;
           body?: string;
           category?: string;
+          consent_recorded?: boolean;
           cover_media_id?: string | null;
           cover_url?: string | null;
           created_at?: string;
@@ -2193,10 +2199,12 @@ export type Database = {
           contact_email: string;
           default_seo_description: string;
           default_seo_title: string;
+          favicon_media_id: string | null;
           footer_text: string;
           id: string;
           legal_address: string;
           legal_name: string;
+          logo_media_id: string | null;
           site_name: string;
           social_image_id: string | null;
           tagline: string;
@@ -2211,10 +2219,12 @@ export type Database = {
           contact_email?: string;
           default_seo_description?: string;
           default_seo_title?: string;
+          favicon_media_id?: string | null;
           footer_text?: string;
           id?: string;
           legal_address?: string;
           legal_name?: string;
+          logo_media_id?: string | null;
           site_name?: string;
           social_image_id?: string | null;
           tagline?: string;
@@ -2228,10 +2238,12 @@ export type Database = {
           contact_email?: string;
           default_seo_description?: string;
           default_seo_title?: string;
+          favicon_media_id?: string | null;
           footer_text?: string;
           id?: string;
           legal_address?: string;
           legal_name?: string;
+          logo_media_id?: string | null;
           site_name?: string;
           social_image_id?: string | null;
           tagline?: string;
@@ -2240,6 +2252,20 @@ export type Database = {
           vat_number?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "site_settings_favicon_media_id_fkey";
+            columns: ["favicon_media_id"];
+            isOneToOne: false;
+            referencedRelation: "media_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "site_settings_logo_media_id_fkey";
+            columns: ["logo_media_id"];
+            isOneToOne: false;
+            referencedRelation: "media_assets";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "site_settings_social_image_id_fkey";
             columns: ["social_image_id"];
@@ -2658,6 +2684,7 @@ export type Database = {
       };
       purge_expired: { Args: Record<PropertyKey, never>; Returns: Json };
       restore_version: { Args: { _version_id: string }; Returns: Json };
+      session_is_active: { Args: Record<PropertyKey, never>; Returns: boolean };
     };
     Enums: {
       app_role: "admin" | "translator";
