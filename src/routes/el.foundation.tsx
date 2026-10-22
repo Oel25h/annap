@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FoundationPage } from "./foundation";
+import { FoundationPage, loadFoundation } from "./foundation";
 import { absoluteUrl } from "@/lib/site-url";
 
 export const Route = createFileRoute("/el/foundation")({
+  loader: async () => loadFoundation(),
   head: () => ({
     meta: [
       { title: "Ίδρυμα Patience Humanitarian" },

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, MapPin, Heart } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
@@ -42,7 +42,7 @@ type Story = {
 
 type Cat = { id: string; name: string; slug: string; sort_order: number };
 
-async function loadFoundation() {
+export async function loadFoundation() {
   const [{ data: settings }, { data: stories }, { data: cats }] = await Promise.all([
     supabase
       .from("foundation_settings" as never)
@@ -112,7 +112,9 @@ const btnGhost = `${btnBase} border border-plum/20 bg-ivory text-plum hover:bord
 export function FoundationPage() {
   const locale = useLocale();
   const t = useT();
-  const loaded = Route.useLoaderData();
+  // Shared by /foundation and /el/foundation, so read the loader data of whichever route matched.
+  const loaded = useLoaderData({ strict: false }) as
+    Awaited<ReturnType<typeof loadFoundation>> | undefined;
   const [settings, setSettings] = useState<Settings | null>(loaded?.settings ?? null);
   const [settingsEl, setSettingsEl] = useState(false);
   const [stories, setStories] = useState<Story[]>(loaded?.stories ?? []);
