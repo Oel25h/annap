@@ -14,7 +14,8 @@
     "secrets:check": "bun run scripts/check-secrets-not-in-client.mjs",
     "build:cf": "NITRO_PRESET=cloudflare-module vite build",
     "preview:cf": "wrangler dev -c .output/server/wrangler.json",
-    "gate": "bun run typecheck && bun run lint && bun run build:cf && bun run secrets:check",
+    "test:e2e": "playwright test",
+    "gate": "bun run typecheck && bun run lint && bun run build:cf && bun run secrets:check && bun run test:e2e",
     "check": "bun run gate",
     "deploy": "bun run gate && wrangler deploy -c .output/server/wrangler.json"
   },
@@ -92,6 +93,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@playwright/test": "1.56.1",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
