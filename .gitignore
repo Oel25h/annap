@@ -25,10 +25,10 @@ dist-ssr
 .wrangler/
 .dev.vars
 
-# Netlify (removed — Vercel is deploy target)
+# Old hosts (the site deploys to Cloudflare Workers)
 .netlify
 
-# Vercel
+# Vercel (old host)
 .vercel
 
 # Ralph orchestrator (runtime; keep specs/config if you choose to commit them)
