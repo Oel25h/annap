@@ -681,7 +681,6 @@ export const el: Messages = {
       online: "Διαδικτυακά",
       tickets: "Εισιτήρια",
       past: "Η εκδήλωση έχει ολοκληρωθεί.",
-      timeZone: "Ώρες {zone}",
     },
     story: {
       giveTitle: "Στάσου δίπλα μας.",

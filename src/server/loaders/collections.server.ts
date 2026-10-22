@@ -215,11 +215,20 @@ async function postPage(
   if (category) query = query.eq("category_id", category.id);
   if (greek.length > 0) query = query.in("id", greek);
   const { data, error, count } = await query;
+  const categoryList = categories.map(({ slug, name }) => ({ slug, name }));
+  // A page past the last one: the database refuses the range, and the page is a 404.
+  if (error?.code === "PGRST103") {
+    return {
+      posts: [],
+      categories: categoryList,
+      pagination: { page, pages: 0, category: category?.slug ?? null },
+    };
+  }
   if (error) throw new Error(`Posts: ${error.message}`);
   const cards = await postCards(ctx, (data ?? []) as PostRow[], categories);
   return {
     posts: cards.map(strip),
-    categories: categories.map(({ slug, name }) => ({ slug, name })),
+    categories: categoryList,
     pagination: {
       page,
       pages: Math.max(1, Math.ceil((count ?? 0) / size)),

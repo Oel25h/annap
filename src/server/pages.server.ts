@@ -123,6 +123,25 @@ export function sectionsInGreek(sections: RenderedSection[]): boolean {
   );
 }
 
+/**
+ * Whether the journal page and category asked for exist. A page past the
+ * last, or a category that is not there, is a 404 rather than a copy of
+ * the first page.
+ */
+function queryExists(sections: RenderedSection[], query: PageQuery): boolean {
+  if (!query.page && !query.category) return true;
+  for (const section of sections) {
+    if (section.type !== "latest_posts") continue;
+    const pagination = (section as RenderedSection<"latest_posts">).data?.pagination;
+    if (!pagination) continue;
+    if ((query.page ?? 1) > pagination.pages) return false;
+    if (query.category && pagination.category !== query.category) return false;
+    return true;
+  }
+  // No journal index on this page: the query means nothing here, so it is ignored.
+  return true;
+}
+
 export async function loadPage(
   rawPath: string,
   locale: Locale,
@@ -145,6 +164,7 @@ export async function loadPage(
     prepareSections(db, parsed, locale, { extra: { page_meta: [row.id] }, query }),
     getSiteSettings(db),
   ]);
+  if (!queryExists(sections, query)) return null;
 
   const ogImageId = row.og_image_id ?? site.socialImageId;
   if (ogImageId) mediaIds.add(ogImageId);

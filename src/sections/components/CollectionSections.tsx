@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Icon } from "@/components/site/Icon";
 import { SiteLink } from "@/components/site/SiteLink";
 import { useT } from "@/lib/i18n/context";
-import { fmt, formatDate, formatMoney } from "@/lib/i18n/format";
+import { fmt, formatDate, formatMoney, formatWhen } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/locale";
 import type { EventCard, MediaMap, RenderedSection } from "@/sections/types";
 import { Picture } from "../render/Picture";
@@ -390,19 +390,7 @@ function EventRow({ event, locale }: { event: EventCard; locale: Locale }) {
   const zone = event.timeZone || "Europe/Nicosia";
   const day = formatDate(event.startsAt, locale, { day: "numeric" }, zone);
   const month = formatDate(event.startsAt, locale, { month: "short" }, zone);
-  const full = formatDate(
-    event.startsAt,
-    locale,
-    {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    },
-    zone,
-  );
+  const full = formatWhen(event.startsAt, locale, { weekday: true, time: true, timeZone: zone });
   const place = event.online
     ? t.sections.events.online
     : [event.venue, event.city].filter(Boolean).join(", ");

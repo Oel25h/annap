@@ -671,7 +671,6 @@ export const en = {
       online: "Online",
       tickets: "Get tickets",
       past: "This event has taken place.",
-      timeZone: "Times in {zone}",
     },
     story: {
       giveTitle: "Stand with us.",

@@ -9,7 +9,7 @@ import { CheckoutButton } from "@/components/site/CheckoutButton";
 import { Icon } from "@/components/site/Icon";
 import { SiteLink } from "@/components/site/SiteLink";
 import { useLocale, useT } from "@/lib/i18n/context";
-import { fmt, formatDate, formatMoney } from "@/lib/i18n/format";
+import { fmt, formatDate, formatMoney, formatWhen, utcOffset } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/locale";
 import { joinWaitlist } from "@/lib/forms.functions";
 import { BookCover, Offers } from "@/sections/components/BookSections";
@@ -380,14 +380,7 @@ function MasterclassIntro({ intro, media, locale }: IntroProps<"masterclass">) {
   const { masterclass } = intro;
   const cover = masterclass.coverMediaId ? media[masterclass.coverMediaId] : undefined;
   const when = [
-    masterclass.startsAt
-      ? formatDate(masterclass.startsAt, locale, {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
-      : "",
+    masterclass.startsAt ? formatWhen(masterclass.startsAt, locale, { weekday: true }) : "",
     masterclass.scheduleNote,
   ]
     .filter(Boolean)
@@ -450,15 +443,11 @@ function EventIntro({ intro, media, locale }: IntroProps<"event">) {
   const { event } = intro;
   const cover = event.coverMediaId ? media[event.coverMediaId] : undefined;
   const ended = new Date(event.endsAt ?? event.startsAt).getTime() < Date.now();
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  };
-  const when = formatDate(event.startsAt, locale, dateOptions, event.timeZone);
+  const when = formatWhen(event.startsAt, locale, {
+    weekday: true,
+    time: true,
+    timeZone: event.timeZone,
+  });
   const where = event.online ? e.online : [event.venue, event.city].filter(Boolean).join(", ");
   return (
     <header className="item-intro item-intro--event band-ivory">
@@ -472,8 +461,8 @@ function EventIntro({ intro, media, locale }: IntroProps<"event">) {
                 [
                   e.when,
                   <>
-                    {when}
-                    <span className="meta"> {fmt(e.timeZone, { zone: event.timeZone })}</span>
+                    {when}{" "}
+                    <span className="meta">({utcOffset(event.startsAt, event.timeZone)})</span>
                   </>,
                 ],
                 [e.where, where],
