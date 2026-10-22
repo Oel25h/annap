@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "secrets:check": "bun run scripts/check-secrets-not-in-client.mjs",
     "build:cf": "NITRO_PRESET=cloudflare-module vite build",
-    "preview:cf": "wrangler dev -c .output/server/wrangler.json",
+    "preview:cf": "wrangler dev -c .output/server/wrangler.json --env-file ../../.env",
     "test:e2e": "playwright test",
     "gate": "bun run typecheck && bun run lint && bun run build:cf && bun run secrets:check && bun run test:e2e",
     "check": "bun run gate",

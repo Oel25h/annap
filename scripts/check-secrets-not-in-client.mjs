@@ -63,8 +63,25 @@ function loadDotEnvIfPresent() {
   // No-op placeholder for node callers.
 }
 
+/** App config must come from the runtime environment (src/lib/public-config.ts), not build-time VITE_ vars. */
+async function checkNoBuildTimeConfig() {
+  const files = (await walk(join(ROOT, "src"))).filter((f) => /\.(tsx?|mjs|js)$/.test(f));
+  const offenders = [];
+  for (const file of files) {
+    const text = await readFile(file, "utf8");
+    if (/import\.meta\.env\??\.VITE_/.test(text)) offenders.push(file.slice(ROOT.length + 1));
+  }
+  if (offenders.length) {
+    console.error("[secrets:check] FAIL — build-time VITE_ config read in:");
+    for (const f of offenders) console.error(`  - ${f}`);
+    console.error("Read configuration through getPublicConfig() so one build serves every environment.");
+    process.exit(1);
+  }
+}
+
 async function main() {
   loadDotEnvIfPresent();
+  await checkNoBuildTimeConfig();
 
   const files = (await walk(DIST)).filter((f) => SCAN_EXTS.has(extname(f).toLowerCase()));
   if (files.length === 0) {

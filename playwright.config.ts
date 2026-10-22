@@ -25,7 +25,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `bunx wrangler dev -c .output/server/wrangler.json --port ${PORT} --ip 127.0.0.1`,
+    command: `bunx wrangler dev -c .output/server/wrangler.json --env-file ${process.cwd()}/.env --port ${PORT} --ip 127.0.0.1`,
     url: `http://127.0.0.1:${PORT}/`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

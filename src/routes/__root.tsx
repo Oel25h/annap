@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportClientError } from "../lib/error-reporting";
 import { absoluteUrl } from "../lib/site-url";
+import { getPublicConfig, publicConfigScript } from "../lib/public-config";
 import { SiteHeader } from "../components/SiteHeader";
 import { SiteFooter } from "../components/SiteFooter";
 import { LocaleProvider, useT } from "../lib/i18n/context";
@@ -127,6 +128,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: publicConfigScript(getPublicConfig()) }} />
         <HeadContent />
       </head>
       <body>
