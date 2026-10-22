@@ -23,10 +23,10 @@ const BOOK_SLUGS: Record<string, string> = {
 };
 
 let counter = 0;
-/** Stable ids per run of this script: the migration file is written once. */
+/** Section ids that come out the same on every run, so the seed diffs cleanly. */
 function uid(): string {
   counter += 1;
-  return `c0de${String(counter).padStart(4, "0")}-0000-4000-8000-${crypto.randomUUID().slice(-12)}`;
+  return `c0de${String(counter).padStart(4, "0")}-0000-4000-8000-${String(counter).padStart(12, "0")}`;
 }
 
 type Settings = Partial<{
