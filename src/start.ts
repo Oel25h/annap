@@ -15,6 +15,9 @@ const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
 });
 
+// Pages that hold personal or one-time content: never cached, never indexed.
+const PRIVATE_PATHS = /^\/(el\/)?(admin|auth|preview|download|confirm|checkout|unsubscribe)(\/|$)/;
+
 // Every response gets the static security headers. HTML documents also get a
 // Content-Security-Policy whose nonce the router stamps on inline scripts
 // (see ssr.nonce in src/router.tsx). Vite's dev server injects its own inline
@@ -31,7 +34,14 @@ const securityMiddleware = createMiddleware().server(async ({ next, request, pat
       studio: pathname.startsWith("/admin"),
     });
   }
-  if (request.method !== "GET") headers["Cache-Control"] = "no-store";
+  if (request.method !== "GET" || PRIVATE_PATHS.test(pathname)) {
+    headers["Cache-Control"] = "no-store";
+    headers["X-Robots-Tag"] = "noindex";
+  } else if (isHtml || pathname.startsWith("/_serverFn")) {
+    // Rendered per request; the browser may keep a copy but must check first.
+    if (!result.response.headers.has("Cache-Control"))
+      headers["Cache-Control"] = "private, no-cache";
+  }
   return { ...result, response: withHeaders(result.response, headers) };
 });
 
