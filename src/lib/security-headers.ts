@@ -66,7 +66,8 @@ export function contentSecurityPolicy(opts: {
     "frame-src": [...EMBED_HOSTS, TURNSTILE],
     "worker-src": ["'self'", "blob:"],
     "manifest-src": ["'self'"],
-    "form-action": ["'self'", STRIPE_CHECKOUT],
+    // Checkout forms go on to Stripe; download buttons go on to a signed storage link.
+    "form-action": ["'self'", STRIPE_CHECKOUT, ...supabase.http],
     "frame-ancestors": ["'none'"],
     "base-uri": ["'none'"],
     "object-src": ["'none'"],

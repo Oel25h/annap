@@ -6,6 +6,9 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import type { Locale } from "@/lib/i18n/locale";
+import type { DownloadState } from "@/server/downloads.server";
+
+export type { DownloadState } from "@/server/downloads.server";
 
 export type FormError = "invalid" | "busy" | "verify";
 export type FormFailure = { ok: false; error: FormError };
@@ -31,7 +34,7 @@ export type EbookRequest = {
   turnstile?: string;
 };
 
-export type DownloadLink = { label: string; href: string };
+export type DownloadLink = { label: string; href: string; action: string };
 
 export const requestFreeEbook = createServerFn({ method: "POST" })
   .validator((input: unknown) => asObject<EbookRequest>(input))
@@ -85,20 +88,11 @@ export const sendContactMessage = createServerFn({ method: "POST" })
     return forms.sendContactMessage(data);
   });
 
-/** Used by the /download/$token page: counts a use and returns where the file is. */
-export const redeemDownload = createServerFn({ method: "POST" })
+/** For the /download/$token page: what the link is for, without using it up. */
+export const inspectDownload = createServerFn({ method: "POST" })
   .validator(asToken)
-  .handler(async ({ data: token }) => {
-    if (!token) return { status: "invalid" as const };
-    const forms = await import("@/server/forms.server");
-    return forms.redeemDownload(token);
-  });
-
-/** Used by the /confirm/$token page. */
-export const confirmSubscription = createServerFn({ method: "POST" })
-  .validator(asToken)
-  .handler(async ({ data: token }) => {
-    if (!token) return "invalid" as const;
-    const forms = await import("@/server/forms.server");
-    return forms.confirmSubscription(token);
+  .handler(async ({ data: token }): Promise<DownloadState> => {
+    if (!token) return { status: "invalid" };
+    const downloads = await import("@/server/downloads.server");
+    return downloads.inspectDownload(token);
   });

@@ -108,3 +108,17 @@ export function pageHead(page: {
   ];
   return { meta, links };
 }
+
+/**
+ * Head tags for private one-off pages (downloads, receipts, confirmations):
+ * never indexed, and the token in the address is never sent on as a referrer.
+ */
+export function utilityHead(title: string) {
+  return {
+    meta: [
+      { title },
+      { name: "robots", content: "noindex, nofollow" },
+      { name: "referrer", content: "no-referrer" },
+    ],
+  };
+}

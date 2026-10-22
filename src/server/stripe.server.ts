@@ -18,9 +18,12 @@ export class StripeError extends Error {
   }
 }
 
-type Params = { [key: string]: Params | Params[] | string | number | boolean | null | undefined };
+type Scalar = string | number | boolean;
+type Params = {
+  [key: string]: Params | Params[] | Scalar | Scalar[] | null | undefined;
+};
 
-/** { a: { b: [ { c: 1 } ] } } → "a[b][0][c]=1" */
+/** { a: { b: [ { c: 1 } ], d: ["x"] } } → "a[b][0][c]=1&a[d][0]=x" */
 export function encodeForm(
   params: Params,
   prefix = "",
@@ -29,8 +32,12 @@ export function encodeForm(
   for (const [key, value] of Object.entries(params)) {
     if (value === undefined || value === null) continue;
     const name = prefix ? `${prefix}[${key}]` : key;
-    if (Array.isArray(value)) value.forEach((item, i) => encodeForm(item, `${name}[${i}]`, out));
-    else if (typeof value === "object") encodeForm(value, name, out);
+    if (Array.isArray(value)) {
+      value.forEach((item, i) => {
+        if (typeof item === "object") encodeForm(item, `${name}[${i}]`, out);
+        else out.append(`${name}[${i}]`, String(item));
+      });
+    } else if (typeof value === "object") encodeForm(value, name, out);
     else out.append(name, String(value));
   }
   return out;
@@ -85,12 +92,45 @@ export type CheckoutSession = {
   customer_details: { email: string | null; name: string | null } | null;
   payment_intent: string | null;
   subscription: string | null;
+  invoice: string | null;
   amount_subtotal: number | null;
   amount_total: number | null;
   total_details: { amount_tax: number; amount_shipping: number } | null;
   metadata: Record<string, string>;
   mode: "payment" | "subscription";
-  shipping_details?: { address: Record<string, string | null>; name: string | null } | null;
+  /** Where Stripe has put the shipping address since the 2025-03-31 API. */
+  collected_information?: { shipping_details: ShippingDetails | null } | null;
+  shipping_details?: ShippingDetails | null;
+};
+
+export type ShippingDetails = { address: Record<string, string | null>; name: string | null };
+
+/** The parts of a webhook event the site reads. */
+export type StripeEvent = {
+  id: string;
+  type: string;
+  data: { object: Record<string, unknown> };
+};
+
+export type StripeInvoice = {
+  id: string;
+  billing_reason: string | null;
+  amount_paid: number;
+  currency: string;
+  customer: string | null;
+  customer_email: string | null;
+  customer_name: string | null;
+  parent?: {
+    subscription_details?: { subscription: string; metadata: Record<string, string> | null } | null;
+  } | null;
+};
+
+export type StripeCharge = {
+  id: string;
+  payment_intent: string | null;
+  amount: number;
+  amount_refunded: number;
+  refunded: boolean;
 };
 
 const encoder = new TextEncoder();

@@ -1,4 +1,3 @@
-import { caps } from "@/lib/i18n/caps";
 import {
   HeadContent,
   Outlet,
@@ -18,6 +17,7 @@ import { LocaleProvider, localeFromSearch, useT } from "../lib/i18n/context";
 import { SiteHeader } from "../components/site/SiteHeader";
 import { SiteFooter } from "../components/site/SiteFooter";
 import { SiteLink } from "../components/site/SiteLink";
+import { StatusPage } from "../components/site/StatusPage";
 import { LanguageSuggestion } from "../components/site/LanguageSuggestion";
 import { AudioProvider } from "../components/audio/AudioProvider";
 import { MiniPlayer } from "../components/audio/MiniPlayer";
@@ -120,37 +120,31 @@ function SiteChrome({ children }: { children: ReactNode }) {
 function NotFound() {
   const t = useT();
   return (
-    <section className="chapter status-page" aria-labelledby="status-title">
-      <div className="wrap">
-        <p className="label label--accent">{caps(t.site.notFound.label)}</p>
-        <h1 id="status-title" className="display-l">
-          {t.site.notFound.title}
-        </h1>
-        <p className="lead">{t.site.notFound.body}</p>
-        <ul className="status-links">
-          <li>
-            <SiteLink className="link" href="/books">
-              {t.site.notFound.books}
-            </SiteLink>
-          </li>
-          <li>
-            <SiteLink className="link" href="/blog">
-              {t.site.notFound.journal}
-            </SiteLink>
-          </li>
-          <li>
-            <SiteLink className="link" href="/contact">
-              {t.site.notFound.contact}
-            </SiteLink>
-          </li>
-          <li>
-            <SiteLink className="link" href="/">
-              {t.site.notFound.home}
-            </SiteLink>
-          </li>
-        </ul>
-      </div>
-    </section>
+    <StatusPage label={t.site.notFound.label} title={t.site.notFound.title}>
+      <p className="lead">{t.site.notFound.body}</p>
+      <ul className="status-links">
+        <li>
+          <SiteLink className="link" href="/books">
+            {t.site.notFound.books}
+          </SiteLink>
+        </li>
+        <li>
+          <SiteLink className="link" href="/blog">
+            {t.site.notFound.journal}
+          </SiteLink>
+        </li>
+        <li>
+          <SiteLink className="link" href="/contact">
+            {t.site.notFound.contact}
+          </SiteLink>
+        </li>
+        <li>
+          <SiteLink className="link" href="/">
+            {t.site.notFound.home}
+          </SiteLink>
+        </li>
+      </ul>
+    </StatusPage>
   );
 }
 
@@ -162,25 +156,20 @@ function ErrorPage({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
   const offline = typeof navigator !== "undefined" && navigator.onLine === false;
   return (
-    <section className="chapter status-page" aria-labelledby="status-title" role="alert">
-      <div className="wrap">
-        <h1 id="status-title" className="display-l">
-          {t.site.error.title}
-        </h1>
-        <p className="lead">{offline ? t.site.error.offline : t.site.error.body}</p>
-        <p className="status-links">
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={() => {
-              reset();
-              void router.invalidate();
-            }}
-          >
-            {t.site.error.tryAgain}
-          </button>
-        </p>
-      </div>
-    </section>
+    <StatusPage title={t.site.error.title} alert>
+      <p className="lead">{offline ? t.site.error.offline : t.site.error.body}</p>
+      <p className="status-links">
+        <button
+          className="btn btn-primary"
+          type="button"
+          onClick={() => {
+            reset();
+            void router.invalidate();
+          }}
+        >
+          {t.site.error.tryAgain}
+        </button>
+      </p>
+    </StatusPage>
   );
 }

@@ -622,6 +622,87 @@ export const en = {
     moreStories: "More stories",
     filterAll: "All",
   },
+  utility: {
+    download: {
+      label: "Your download",
+      readyTitle: "{title} is ready.",
+      readyTitleNoName: "Your file is ready.",
+      readyBody: "This link works for seven days. Save the file somewhere you’ll find it again.",
+      button: "Download {format}",
+      expiredTitle: "This link has expired.",
+      expiredBody: "Download links last seven days. We can email you a fresh one.",
+      expiredPurchaseBody:
+        "Download links last seven days. Write to us with your order number and we’ll send new ones.",
+      resend: "Email me a fresh link",
+      resent:
+        "If this link is yours, a fresh one is on its way. Check your inbox in a minute or two.",
+      invalidTitle: "This link doesn’t work.",
+      invalidBody:
+        "Part of it may be missing. Open the link from your email again, or ask for the book once more.",
+      books: "See the books",
+      contact: "Contact us",
+    },
+    confirm: {
+      label: "Letters",
+      title: "One more step.",
+      body: "Press the button to confirm you’d like Anastasia’s letters at this address.",
+      button: "Confirm my subscription",
+      confirmedTitle: "You’re in.",
+      confirmedBody: "Thank you. Your first letter arrives with the next one she sends.",
+      invalidTitle: "This link has expired.",
+      invalidBody: "Confirmation links last 30 days. Sign up again and we’ll send a new one.",
+      journal: "Read the journal",
+      home: "Back to the site",
+    },
+    unsubscribe: {
+      label: "Letters",
+      title: "Stop the letters?",
+      body: "You’ll no longer receive Anastasia’s letters at this address. Receipts and download links you ask for still arrive.",
+      button: "Unsubscribe",
+      doneTitle: "You’re unsubscribed.",
+      doneBody:
+        "You won’t receive any more letters. Thank you for reading. The door is always open.",
+      invalidTitle: "This link doesn’t work.",
+      invalidBody:
+        "Part of it may be missing. Use the link at the bottom of any letter, or write to us and we’ll take you off the list.",
+      home: "Back to the site",
+      contact: "Contact us",
+    },
+    checkout: {
+      label: "Thank you",
+      orderTitle: "Thank you for your order.",
+      receipt: "A receipt is on its way to {email}.",
+      receiptNoEmail: "A receipt is on its way to your inbox.",
+      orderNumber: "Order {number}",
+      quantity: "Quantity {n}",
+      total: "Total",
+      downloadsTitle: "Your downloads",
+      downloadsBody: "These links work for seven days. Your receipt has them too.",
+      downloadsByEmail: "Your download links are in your receipt email.",
+      ships: "We’ll post your order and email you when it’s on its way.",
+      giftTitle: "Thank you for your gift.",
+      giftBody: "Your gift of {amount} goes to the Patience Humanitarian Foundation.",
+      giftMonthly:
+        "Your gift of {amount} a month goes to the Patience Humanitarian Foundation. To change or stop it, just write to us.",
+      pendingTitle: "Confirming your payment…",
+      pendingBody:
+        "This usually takes a few seconds. You can stay here or close the page: your receipt will arrive by email.",
+      pendingSlow:
+        "Still waiting for your bank. Your receipt will arrive by email as soon as the payment is confirmed.",
+      closedTitle: "This payment didn’t go through.",
+      closedBody: "Nothing was charged. You can try again whenever you’re ready.",
+      refundedTitle: "This order was refunded.",
+      refundedBody: "If you have any questions, we’re happy to help.",
+      invalidTitle: "We couldn’t find this order.",
+      invalidBody:
+        "If you paid, your receipt will arrive by email. If it doesn’t, write to us and we’ll sort it out.",
+      books: "Back to the books",
+      shop: "Back to the shop",
+      foundation: "Back to the foundation",
+      contact: "Contact us",
+      home: "Back to the site",
+    },
+  },
   seo: {
     siteName: "Anastasia Patience",
     home: {

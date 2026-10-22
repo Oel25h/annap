@@ -1,72 +1,84 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { localeFromSearch } from "@/lib/i18n/context";
+import { SiteLink } from "@/components/site/SiteLink";
+import { StatusPage } from "@/components/site/StatusPage";
+import { localeFromSearch, useLocale, useT } from "@/lib/i18n/context";
 import { getMessages } from "@/lib/i18n/messages";
-import { seoHead } from "@/lib/seo";
+import { utilityHead } from "@/lib/seo";
 
+type Search = { token?: string; result?: "done" | "invalid" };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The unsubscribe link at the foot of every letter. One button, no reasons
+ * asked; mail apps can also unsubscribe directly (/api/newsletter/unsubscribe).
+ */
 export const Route = createFileRoute("/unsubscribe")({
-  component: Unsubscribe,
-  head: ({ match }) => {
-    const locale = localeFromSearch(match.search);
-    return seoHead({
-      locale,
-      path: "/unsubscribe",
-      ...getMessages(locale).seo.unsubscribe,
-      noindex: true,
-    });
-  },
-  validateSearch: (s: Record<string, unknown>) => ({
-    token: typeof s.token === "string" ? s.token : "",
+  validateSearch: (search: Record<string, unknown>): Search => ({
+    ...(typeof search.token === "string" && UUID.test(search.token) ? { token: search.token } : {}),
+    ...(search.result === "done" || search.result === "invalid" ? { result: search.result } : {}),
   }),
+  head: ({ match }) => {
+    const t = getMessages(localeFromSearch(match.search));
+    return utilityHead(`${t.utility.unsubscribe.label} — ${t.seo.siteName}`);
+  },
+  component: UnsubscribePage,
 });
 
-function Unsubscribe() {
-  const { token } = Route.useSearch();
-  const [state, setState] = useState<"loading" | "done" | "invalid" | "already">("loading");
+function UnsubscribePage() {
+  const { token, result } = Route.useSearch();
+  const t = useT();
+  const locale = useLocale();
+  const u = t.utility.unsubscribe;
 
-  useEffect(() => {
-    (async () => {
-      if (!token) return setState("invalid");
-      try {
-        const res = await fetch("/api/public/unsubscribe", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ token }),
-        });
-        const body = (await res.json()) as { ok: boolean; already?: boolean };
-        if (!body.ok) return setState("invalid");
-        setState(body.already ? "already" : "done");
-      } catch {
-        setState("invalid");
-      }
-    })();
-  }, [token]);
+  if (result === "done") {
+    return (
+      <StatusPage label={u.label} title={u.doneTitle}>
+        <p className="lead">{u.doneBody}</p>
+        <ul className="status-links">
+          <li>
+            <SiteLink className="link" href="/">
+              {u.home}
+            </SiteLink>
+          </li>
+        </ul>
+      </StatusPage>
+    );
+  }
+
+  if (result === "invalid" || !token) {
+    return (
+      <StatusPage label={u.label} title={u.invalidTitle}>
+        <p className="lead">{u.invalidBody}</p>
+        <ul className="status-links">
+          <li>
+            <SiteLink className="link" href="/contact">
+              {u.contact}
+            </SiteLink>
+          </li>
+          <li>
+            <SiteLink className="link" href="/">
+              {u.home}
+            </SiteLink>
+          </li>
+        </ul>
+      </StatusPage>
+    );
+  }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-ivory px-6 py-24">
-      <div className="w-full max-w-lg rounded-[2rem] border border-plum/10 bg-bone/60 p-10 text-center soft-shadow">
-        <div className="text-[10px] uppercase tracking-[0.32em] text-burgundy">Newsletter</div>
-        <h1 className="mt-3 font-display text-4xl text-plum">
-          {state === "loading" && "Just a moment…"}
-          {state === "done" && "You've been unsubscribed"}
-          {state === "already" && "You're already unsubscribed"}
-          {state === "invalid" && "This link is invalid"}
-        </h1>
-        <p className="mt-4 text-sm text-ink">
-          {state === "done" &&
-            "You won't receive any more emails from us. We're grateful you spent time with us."}
-          {state === "already" && "No further action needed — you're removed from our list."}
-          {state === "invalid" &&
-            "The unsubscribe link may have expired or been mistyped. If you meant to unsubscribe, reply to any email and we'll take care of it."}
-          {state === "loading" && "Processing your request."}
-        </p>
-        <a
-          href="/"
-          className="mt-8 inline-flex items-center justify-center rounded-full bg-burgundy px-6 py-3 text-[11px] font-medium uppercase tracking-[0.22em] text-ivory hover:bg-terracotta"
-        >
-          Return to site
-        </a>
-      </div>
-    </main>
+    <StatusPage label={u.label} title={u.title}>
+      <p className="lead">{u.body}</p>
+      <form className="status-links" method="post" action="/api/newsletter/unsubscribe">
+        <input type="hidden" name="token" value={token} />
+        <input type="hidden" name="lang" value={locale} />
+        <button className="btn btn-primary" type="submit">
+          {u.button}
+        </button>
+        <SiteLink className="btn btn-quiet" href="/">
+          {u.home}
+        </SiteLink>
+      </form>
+    </StatusPage>
   );
 }

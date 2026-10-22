@@ -8,9 +8,9 @@
  */
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { localizePath, type Locale } from "@/lib/i18n/locale";
-import { readServerPublicConfig } from "@/lib/public-config";
+import { type Locale } from "@/lib/i18n/locale";
 import { guard, type FormError } from "./guard.server";
+import { absoluteUrl } from "./outbox.server";
 import { readIntegration } from "./secrets.server";
 import { stripeRequest, type CheckoutSession } from "./stripe.server";
 
@@ -30,19 +30,67 @@ const returnPath = z
 const locale = z.enum(["en", "el"]);
 const turnstile = z.string().max(4096).optional();
 
-function absolute(path: string, lang: Locale) {
-  return `${readServerPublicConfig().siteUrl}${localizePath(path, lang)}`;
-}
-
 /** Where Checkout sends a reader who backs out: back where they were, with a note. */
 function cancelUrl(path: string, lang: Locale) {
-  return `${absolute(path, lang)}?cancelled=1`;
+  return `${absoluteUrl(path, lang)}?cancelled=1`;
 }
+
+/**
+ * Where Checkout sends a reader who paid. Stripe fills in the session id, and
+ * the success page needs it as well as ours before it shows anything.
+ */
+function successUrl(kind: "order" | "donation", id: string, lang: Locale) {
+  return `${absoluteUrl("/checkout/success", lang)}?${kind}=${id}&session={CHECKOUT_SESSION_ID}`;
+}
+
+/** Countries posted to unless the studio says otherwise: Greece, Cyprus, the EU, UK and US. */
+export const DEFAULT_SHIPPING_COUNTRIES = [
+  "GR",
+  "CY",
+  "AT",
+  "BE",
+  "BG",
+  "HR",
+  "CZ",
+  "DK",
+  "EE",
+  "FI",
+  "FR",
+  "DE",
+  "HU",
+  "IE",
+  "IT",
+  "LV",
+  "LT",
+  "LU",
+  "MT",
+  "NL",
+  "PL",
+  "PT",
+  "RO",
+  "SK",
+  "SI",
+  "ES",
+  "SE",
+  "GB",
+  "US",
+];
 
 async function checkoutConfig() {
   const stripe = await readIntegration("stripe");
   if (!stripe) return null;
-  return { automaticTax: stripe.config.automatic_tax === true };
+  const countries = Array.isArray(stripe.config.shipping_countries)
+    ? stripe.config.shipping_countries.filter(
+        (c): c is string => typeof c === "string" && /^[A-Z]{2}$/.test(c),
+      )
+    : [];
+  const rate = stripe.config.shipping_rate;
+  return {
+    automaticTax: stripe.config.automatic_tax === true,
+    shippingCountries: countries.length > 0 ? countries : DEFAULT_SHIPPING_COUNTRIES,
+    /** A Stripe shipping rate (shr_…) added to posted orders, if one is set. */
+    shippingRate: typeof rate === "string" && /^shr_[A-Za-z0-9]+$/.test(rate) ? rate : null,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -160,11 +208,19 @@ export async function startCheckout(raw: unknown): Promise<CheckoutResult> {
       client_reference_id: order.id,
       metadata: { kind: "order", order_id: order.id },
       payment_intent_data: { metadata: { kind: "order", order_id: order.id } },
-      success_url: `${absolute("/checkout/success", input.locale)}?order=${order.id}`,
+      success_url: successUrl("order", order.id, input.locale),
       cancel_url: cancelUrl(input.returnPath, input.locale),
       locale: input.locale,
       automatic_tax: config.automaticTax ? { enabled: true } : undefined,
       billing_address_collection: config.automaticTax ? "required" : "auto",
+      ...(item.digital
+        ? {}
+        : {
+            shipping_address_collection: { allowed_countries: config.shippingCountries },
+            ...(config.shippingRate
+              ? { shipping_options: [{ shipping_rate: config.shippingRate }] }
+              : {}),
+          }),
     },
     { idempotencyKey: `order:${order.id}` },
   );
@@ -236,7 +292,7 @@ export async function startDonation(raw: unknown): Promise<CheckoutResult> {
       client_reference_id: donation.id,
       metadata,
       ...(monthly ? { subscription_data: { metadata } } : { payment_intent_data: { metadata } }),
-      success_url: `${absolute("/checkout/success", input.locale)}?donation=${donation.id}`,
+      success_url: successUrl("donation", donation.id, input.locale),
       cancel_url: cancelUrl(input.returnPath, input.locale),
       locale: input.locale,
     },

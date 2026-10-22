@@ -16,6 +16,9 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as CheckoutSuccessRouteImport } from './routes/checkout/success'
+import { Route as ConfirmTokenRouteImport } from './routes/confirm/$token'
+import { Route as DownloadTokenRouteImport } from './routes/download/$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminBlogRouteImport } from './routes/_authenticated/admin.blog'
 import { Route as AuthenticatedAdminBooksRouteImport } from './routes/_authenticated/admin.books'
@@ -29,7 +32,10 @@ import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminSocialsRouteImport } from './routes/_authenticated/admin.socials'
 import { Route as AuthenticatedAdminStartRouteImport } from './routes/_authenticated/admin.start'
 import { Route as AuthenticatedAdminSubscribersRouteImport } from './routes/_authenticated/admin.subscribers'
-import { Route as ApiPublicUnsubscribeRouteImport } from './routes/api/public/unsubscribe'
+import { Route as ApiDownloadTokenRouteImport } from './routes/api/download/$token'
+import { Route as ApiNewsletterConfirmRouteImport } from './routes/api/newsletter/confirm'
+import { Route as ApiNewsletterUnsubscribeRouteImport } from './routes/api/newsletter/unsubscribe'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +70,21 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
+  id: '/checkout/success',
+  path: '/checkout/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmTokenRoute = ConfirmTokenRouteImport.update({
+  id: '/confirm/$token',
+  path: '/confirm/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DownloadTokenRoute = DownloadTokenRouteImport.update({
+  id: '/download/$token',
+  path: '/download/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
@@ -138,9 +159,25 @@ const AuthenticatedAdminSubscribersRoute =
     path: '/subscribers',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const ApiPublicUnsubscribeRoute = ApiPublicUnsubscribeRouteImport.update({
-  id: '/api/public/unsubscribe',
-  path: '/api/public/unsubscribe',
+const ApiDownloadTokenRoute = ApiDownloadTokenRouteImport.update({
+  id: '/api/download/$token',
+  path: '/api/download/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNewsletterConfirmRoute = ApiNewsletterConfirmRouteImport.update({
+  id: '/api/newsletter/confirm',
+  path: '/api/newsletter/confirm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNewsletterUnsubscribeRoute =
+  ApiNewsletterUnsubscribeRouteImport.update({
+    id: '/api/newsletter/unsubscribe',
+    path: '/api/newsletter/unsubscribe',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe/webhook',
+  path: '/api/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -151,6 +188,9 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/checkout/success': typeof CheckoutSuccessRoute
+  '/confirm/$token': typeof ConfirmTokenRoute
+  '/download/$token': typeof DownloadTokenRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -163,7 +203,10 @@ export interface FileRoutesByFullPath {
   '/admin/socials': typeof AuthenticatedAdminSocialsRoute
   '/admin/start': typeof AuthenticatedAdminStartRoute
   '/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
-  '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/download/$token': typeof ApiDownloadTokenRoute
+  '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
+  '/api/newsletter/unsubscribe': typeof ApiNewsletterUnsubscribeRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -172,6 +215,9 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
+  '/confirm/$token': typeof ConfirmTokenRoute
+  '/download/$token': typeof DownloadTokenRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -184,7 +230,10 @@ export interface FileRoutesByTo {
   '/admin/socials': typeof AuthenticatedAdminSocialsRoute
   '/admin/start': typeof AuthenticatedAdminStartRoute
   '/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
-  '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/download/$token': typeof ApiDownloadTokenRoute
+  '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
+  '/api/newsletter/unsubscribe': typeof ApiNewsletterUnsubscribeRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -196,6 +245,9 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/checkout/success': typeof CheckoutSuccessRoute
+  '/confirm/$token': typeof ConfirmTokenRoute
+  '/download/$token': typeof DownloadTokenRoute
   '/_authenticated/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/_authenticated/admin/books': typeof AuthenticatedAdminBooksRoute
   '/_authenticated/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -208,7 +260,10 @@ export interface FileRoutesById {
   '/_authenticated/admin/socials': typeof AuthenticatedAdminSocialsRoute
   '/_authenticated/admin/start': typeof AuthenticatedAdminStartRoute
   '/_authenticated/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
-  '/api/public/unsubscribe': typeof ApiPublicUnsubscribeRoute
+  '/api/download/$token': typeof ApiDownloadTokenRoute
+  '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
+  '/api/newsletter/unsubscribe': typeof ApiNewsletterUnsubscribeRoute
+  '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -220,6 +275,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin'
+    | '/checkout/success'
+    | '/confirm/$token'
+    | '/download/$token'
     | '/admin/blog'
     | '/admin/books'
     | '/admin/foundation'
@@ -232,7 +290,10 @@ export interface FileRouteTypes {
     | '/admin/socials'
     | '/admin/start'
     | '/admin/subscribers'
-    | '/api/public/unsubscribe'
+    | '/api/download/$token'
+    | '/api/newsletter/confirm'
+    | '/api/newsletter/unsubscribe'
+    | '/api/stripe/webhook'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -241,6 +302,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/unsubscribe'
+    | '/checkout/success'
+    | '/confirm/$token'
+    | '/download/$token'
     | '/admin/blog'
     | '/admin/books'
     | '/admin/foundation'
@@ -253,7 +317,10 @@ export interface FileRouteTypes {
     | '/admin/socials'
     | '/admin/start'
     | '/admin/subscribers'
-    | '/api/public/unsubscribe'
+    | '/api/download/$token'
+    | '/api/newsletter/confirm'
+    | '/api/newsletter/unsubscribe'
+    | '/api/stripe/webhook'
     | '/admin'
   id:
     | '__root__'
@@ -264,6 +331,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/_authenticated/admin'
+    | '/checkout/success'
+    | '/confirm/$token'
+    | '/download/$token'
     | '/_authenticated/admin/blog'
     | '/_authenticated/admin/books'
     | '/_authenticated/admin/foundation'
@@ -276,7 +346,10 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/socials'
     | '/_authenticated/admin/start'
     | '/_authenticated/admin/subscribers'
-    | '/api/public/unsubscribe'
+    | '/api/download/$token'
+    | '/api/newsletter/confirm'
+    | '/api/newsletter/unsubscribe'
+    | '/api/stripe/webhook'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -287,7 +360,13 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
-  ApiPublicUnsubscribeRoute: typeof ApiPublicUnsubscribeRoute
+  CheckoutSuccessRoute: typeof CheckoutSuccessRoute
+  ConfirmTokenRoute: typeof ConfirmTokenRoute
+  DownloadTokenRoute: typeof DownloadTokenRoute
+  ApiDownloadTokenRoute: typeof ApiDownloadTokenRoute
+  ApiNewsletterConfirmRoute: typeof ApiNewsletterConfirmRoute
+  ApiNewsletterUnsubscribeRoute: typeof ApiNewsletterUnsubscribeRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -340,6 +419,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/checkout/success': {
+      id: '/checkout/success'
+      path: '/checkout/success'
+      fullPath: '/checkout/success'
+      preLoaderRoute: typeof CheckoutSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirm/$token': {
+      id: '/confirm/$token'
+      path: '/confirm/$token'
+      fullPath: '/confirm/$token'
+      preLoaderRoute: typeof ConfirmTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/download/$token': {
+      id: '/download/$token'
+      path: '/download/$token'
+      fullPath: '/download/$token'
+      preLoaderRoute: typeof DownloadTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -432,11 +532,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSubscribersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/api/public/unsubscribe': {
-      id: '/api/public/unsubscribe'
-      path: '/api/public/unsubscribe'
-      fullPath: '/api/public/unsubscribe'
-      preLoaderRoute: typeof ApiPublicUnsubscribeRouteImport
+    '/api/download/$token': {
+      id: '/api/download/$token'
+      path: '/api/download/$token'
+      fullPath: '/api/download/$token'
+      preLoaderRoute: typeof ApiDownloadTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/newsletter/confirm': {
+      id: '/api/newsletter/confirm'
+      path: '/api/newsletter/confirm'
+      fullPath: '/api/newsletter/confirm'
+      preLoaderRoute: typeof ApiNewsletterConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/newsletter/unsubscribe': {
+      id: '/api/newsletter/unsubscribe'
+      path: '/api/newsletter/unsubscribe'
+      fullPath: '/api/newsletter/unsubscribe'
+      preLoaderRoute: typeof ApiNewsletterUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe/webhook': {
+      id: '/api/stripe/webhook'
+      path: '/api/stripe/webhook'
+      fullPath: '/api/stripe/webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -495,7 +616,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
-  ApiPublicUnsubscribeRoute: ApiPublicUnsubscribeRoute,
+  CheckoutSuccessRoute: CheckoutSuccessRoute,
+  ConfirmTokenRoute: ConfirmTokenRoute,
+  DownloadTokenRoute: DownloadTokenRoute,
+  ApiDownloadTokenRoute: ApiDownloadTokenRoute,
+  ApiNewsletterConfirmRoute: ApiNewsletterConfirmRoute,
+  ApiNewsletterUnsubscribeRoute: ApiNewsletterUnsubscribeRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

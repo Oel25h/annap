@@ -3,6 +3,7 @@ import { useId, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { startCheckout } from "@/lib/payments.functions";
 import { field, Honeypot, useFormAction } from "@/components/forms/useFormAction";
+import { DownloadButton } from "@/components/site/DownloadButton";
 import { Icon } from "@/components/site/Icon";
 import { SiteLink } from "@/components/site/SiteLink";
 import { useLocale, useT } from "@/lib/i18n/context";
@@ -268,14 +269,13 @@ export function EbookForm({
             <div className="bp-done" role="status">
               <p className="title">{t.sections.ebook.doneTitle}</p>
               <p className="body">{t.sections.ebook.doneBody}</p>
-              <p className="actions">
+              <div className="actions">
                 {state.result.downloads.map((download) => (
-                  <a key={download.href} className="btn btn-primary" href={download.href}>
-                    <Icon name="arrow-down" />
-                    <span>{fmt(t.sections.ebook.download, { label: download.label })}</span>
-                  </a>
+                  <DownloadButton key={download.action} action={download.action}>
+                    {fmt(t.sections.ebook.download, { label: download.label })}
+                  </DownloadButton>
                 ))}
-              </p>
+              </div>
             </div>
           ) : (
             <>

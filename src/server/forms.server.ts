@@ -8,19 +8,15 @@
  */
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { localizePath, type Locale } from "@/lib/i18n/locale";
-import { readServerPublicConfig } from "@/lib/public-config";
-import { hashToken, randomToken, seal } from "./crypto.server";
+import { type Locale } from "@/lib/i18n/locale";
+import { hashToken, randomToken } from "./crypto.server";
+import { bookFiles, issueDownloads } from "./downloads.server";
 import { guard, hit, type FormError } from "./guard.server";
+import { absoluteUrl, DAY, queueEmail } from "./outbox.server";
 
 export type { FormError };
 export type FormResult<T extends object = object> =
   ({ ok: true } & T) | { ok: false; error: FormError };
-
-const DAY = 24 * 3600;
-const DOWNLOAD_DAYS = 7;
-/** Outgoing form emails per day, across all forms. */
-const DAILY_EMAILS = 200;
 
 const locale = z.enum(["en", "el"]);
 const email = z.string().trim().toLowerCase().email().max(320);
@@ -29,10 +25,6 @@ const turnstile = z.string().max(4096).optional();
 // ---------------------------------------------------------------------------
 // Shared pieces
 // ---------------------------------------------------------------------------
-
-function absolute(path: string, lang: Locale): string {
-  return `${readServerPublicConfig().siteUrl}${localizePath(path, lang)}`;
-}
 
 async function consentVersion(key: string): Promise<number> {
   const { data } = await supabaseAdmin
@@ -43,33 +35,6 @@ async function consentVersion(key: string): Promise<number> {
     .limit(1)
     .maybeSingle();
   return data?.version ?? 0;
-}
-
-/**
- * Queues an email for the outbox sender. Params can hold links, so they are
- * sealed and cleared once sent. Over the daily cap the email is dropped and
- * the form still succeeds.
- */
-async function queueEmail(input: {
-  to: string;
-  template: string;
-  locale: Locale;
-  params: Record<string, unknown>;
-}): Promise<void> {
-  if (!(await hit("outbox:forms", DAILY_EMAILS, DAY))) {
-    console.warn("[forms] daily email cap reached; email not queued", input.template);
-    return;
-  }
-  const id = crypto.randomUUID();
-  const sealed = await seal(input.params, `outbox:${id}`);
-  const { error } = await supabaseAdmin.from("email_outbox").insert({
-    id,
-    to_email: input.to,
-    template: input.template,
-    locale: input.locale,
-    params: { sealed },
-  });
-  if (error) throw new Error(`Outbox: ${error.message}`);
 }
 
 function escapeLike(value: string): string {
@@ -126,7 +91,7 @@ async function startSubscription(input: { email: string; locale: Locale; source:
     to: input.email,
     template: "newsletter_confirm",
     locale: input.locale,
-    params: { confirmUrl: absolute(`/confirm/${token}`, input.locale) },
+    params: { confirmUrl: absoluteUrl(`/confirm/${token}`, input.locale) },
   });
   return { subscriberId };
 }
@@ -144,63 +109,7 @@ const EbookInput = z.object({
   turnstile,
 });
 
-type DownloadLink = { label: string; href: string };
-
-const FORMAT_LABELS: Record<string, string> = {
-  "application/pdf": "PDF",
-  "application/epub+zip": "EPUB",
-  "audio/mpeg": "MP3",
-  "audio/mp4": "M4A",
-  "application/zip": "ZIP",
-};
-
-type FreeFile = { mediaId: string; mime: string };
-
-/** The book's free files in the page's language, otherwise English. */
-async function freeFiles(bookId: string, lang: Locale): Promise<FreeFile[]> {
-  const { data, error } = await supabaseAdmin
-    .from("book_files")
-    .select("locale, media:media_assets(id, mime)")
-    .eq("book_id", bookId)
-    .eq("purpose", "free_download");
-  if (error) throw new Error(`Book files: ${error.message}`);
-  const rows = (data ?? []) as unknown as {
-    locale: Locale;
-    media: { id: string; mime: string } | null;
-  }[];
-  const pick = (l: Locale) =>
-    rows
-      .filter((r) => r.locale === l && r.media)
-      .map((r) => ({ mediaId: r.media!.id, mime: r.media!.mime }));
-  const files = pick(lang);
-  return files.length > 0 ? files : pick("en");
-}
-
-async function issueDownloads(leadId: string, files: FreeFile[], lang: Locale) {
-  const expires = new Date(Date.now() + DOWNLOAD_DAYS * DAY * 1000).toISOString();
-  const issued = await Promise.all(files.map(async (file) => ({ file, token: randomToken() })));
-  const { error } = await supabaseAdmin.from("download_tokens").insert(
-    await Promise.all(
-      issued.map(async ({ file, token }) => ({
-        token_hash: await hashToken(token),
-        lead_id: leadId,
-        media_id: file.mediaId,
-        expires_at: expires,
-      })),
-    ),
-  );
-  if (error) throw new Error(`Download tokens: ${error.message}`);
-  // PDF first, then EPUB, then anything else.
-  const order = (mime: string) => Object.keys(FORMAT_LABELS).indexOf(mime) >>> 0;
-  return issued
-    .sort((a, b) => order(a.file.mime) - order(b.file.mime))
-    .map(({ file, token }) => ({
-      label: FORMAT_LABELS[file.mime] ?? "File",
-      path: `/download/${token}`,
-      href: localizePath(`/download/${token}`, lang),
-      url: absolute(`/download/${token}`, lang),
-    }));
-}
+type DownloadLink = { label: string; href: string; action: string };
 
 export async function requestFreeEbook(
   raw: unknown,
@@ -219,7 +128,7 @@ export async function requestFreeEbook(
     .eq("status", "published")
     .maybeSingle();
   if (!book) return { ok: false, error: "invalid" };
-  const files = await freeFiles(book.id, input.locale);
+  const files = await bookFiles(book.id, "free_download", input.locale);
   if (files.length === 0) return { ok: false, error: "invalid" };
 
   const source = `ebook:${book.slug}`;
@@ -246,7 +155,7 @@ export async function requestFreeEbook(
     .single();
   if (error) throw new Error(`Leads: ${error.message}`);
 
-  const downloads = await issueDownloads(saved.id, files, input.locale);
+  const downloads = await issueDownloads({ leadId: saved.id }, files, input.locale);
 
   if (await hit(`ebook-email:${input.email}`, 1, DAY)) {
     await queueEmail({
@@ -261,50 +170,15 @@ export async function requestFreeEbook(
     });
   }
 
-  return { ok: true, downloads: downloads.map(({ label, href }) => ({ label, href })) };
+  return {
+    ok: true,
+    downloads: downloads.map(({ label, href, action }) => ({ label, href, action })),
+  };
 }
 
 // ---------------------------------------------------------------------------
 // Download links
 // ---------------------------------------------------------------------------
-
-export type RedeemResult = { status: "ok"; url: string } | { status: "expired" | "invalid" };
-
-/** Counts a use and returns a one-minute signed URL for the file. */
-export async function redeemDownload(token: string): Promise<RedeemResult> {
-  const { data: row } = await supabaseAdmin
-    .from("download_tokens")
-    .select("id, expires_at, uses, max_uses, media:media_assets(bucket, path, original_name, mime)")
-    .eq("token_hash", await hashToken(token))
-    .maybeSingle();
-  if (!row) return { status: "invalid" };
-  const media = row.media as unknown as {
-    bucket: string;
-    path: string;
-    original_name: string | null;
-    mime: string;
-  } | null;
-  if (!media) return { status: "invalid" };
-  if (new Date(row.expires_at).getTime() < Date.now() || row.uses >= row.max_uses) {
-    return { status: "expired" };
-  }
-
-  const { data: counted } = await supabaseAdmin
-    .from("download_tokens")
-    .update({ uses: row.uses + 1, last_used_at: new Date().toISOString() })
-    .eq("id", row.id)
-    .eq("uses", row.uses)
-    .select("id");
-  if (!counted?.length) return { status: "expired" };
-
-  const extension = FORMAT_LABELS[media.mime]?.toLowerCase();
-  const filename = media.original_name || `download${extension ? `.${extension}` : ""}`;
-  const { data: signed, error } = await supabaseAdmin.storage
-    .from(media.bucket)
-    .createSignedUrl(media.path, 60, { download: filename });
-  if (error || !signed) throw new Error(`Signed URL: ${error?.message ?? "none"}`);
-  return { status: "ok", url: signed.signedUrl };
-}
 
 /**
  * "Email me a fresh link" from an expired link. Always reports success, so a
@@ -339,10 +213,10 @@ export async function refreshDownload(raw: unknown): Promise<FormResult> {
     .eq("id", lead.book_id)
     .eq("status", "published")
     .maybeSingle();
-  const files = book ? await freeFiles(lead.book_id, lead.locale) : [];
+  const files = book ? await bookFiles(lead.book_id, "free_download", lead.locale) : [];
   if (!book || files.length === 0) return { ok: true };
 
-  const downloads = await issueDownloads(lead.id, files, lead.locale);
+  const downloads = await issueDownloads({ leadId: lead.id }, files, lead.locale);
   await queueEmail({
     to: lead.email,
     template: "ebook_link",
@@ -386,21 +260,55 @@ export async function subscribe(raw: unknown): Promise<FormResult> {
 
 export type ConfirmResult = "confirmed" | "invalid";
 
-/** Confirms a subscription from the emailed link (valid for 30 days). */
+/**
+ * Confirms a subscription from the emailed link (valid for 30 days). The
+ * token stays until a new one is sent, so pressing the button twice still
+ * says "confirmed".
+ */
 export async function confirmSubscription(token: string): Promise<ConfirmResult> {
+  if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return "invalid";
   const since = new Date(Date.now() - 30 * DAY * 1000).toISOString();
-  const { data } = await supabaseAdmin
+  const hash = await hashToken(token);
+  const { data, error } = await supabaseAdmin
     .from("subscribers")
-    .update({
-      status: "active",
-      confirmed_at: new Date().toISOString(),
-      confirm_token_hash: null,
-      unsubscribed_at: null,
-    })
-    .eq("confirm_token_hash", await hashToken(token))
+    .update({ status: "active", confirmed_at: new Date().toISOString(), unsubscribed_at: null })
+    .eq("confirm_token_hash", hash)
+    .eq("status", "pending")
     .gte("confirm_sent_at", since)
     .select("id");
-  return data?.length ? "confirmed" : "invalid";
+  if (error) throw new Error(`Subscribers: ${error.message}`);
+  if (data?.length) return "confirmed";
+  const { data: already } = await supabaseAdmin
+    .from("subscribers")
+    .select("id")
+    .eq("confirm_token_hash", hash)
+    .eq("status", "active")
+    .maybeSingle();
+  return already ? "confirmed" : "invalid";
+}
+
+export type UnsubscribeResult = "done" | "invalid";
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Unsubscribes the address behind an emailed link. Doing it twice is fine. */
+export async function unsubscribe(token: string): Promise<UnsubscribeResult> {
+  if (!UUID.test(token)) return "invalid";
+  const { data: subscriber, error } = await supabaseAdmin
+    .from("subscribers")
+    .select("id, status")
+    .eq("unsubscribe_token", token)
+    .maybeSingle();
+  if (error) throw new Error(`Subscribers: ${error.message}`);
+  if (!subscriber) return "invalid";
+  if (subscriber.status !== "unsubscribed") {
+    const { error: updateError } = await supabaseAdmin
+      .from("subscribers")
+      .update({ status: "unsubscribed", unsubscribed_at: new Date().toISOString() })
+      .eq("id", subscriber.id);
+    if (updateError) throw new Error(`Subscribers: ${updateError.message}`);
+  }
+  return "done";
 }
 
 // ---------------------------------------------------------------------------

@@ -25,6 +25,8 @@ export function LanguageSwitch() {
               })) as never
             }
             hash={(prev) => prev ?? ""}
+            // `lang: undefined` must mean "no lang", or English also counts as current on Greek pages.
+            activeOptions={{ explicitUndefined: true }}
             hrefLang={code}
             lang={code}
             aria-current={locale === code ? "true" : undefined}
