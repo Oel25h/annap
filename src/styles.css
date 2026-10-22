@@ -1,0 +1,258 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/dm-sans";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Anastasia Patience — Design tokens
+ * Warm cream editorial palette with plum, burgundy, gold, terracotta accents.
+ */
+
+@theme inline {
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.75rem;
+  --radius-2xl: 2.25rem;
+  --radius-3xl: 2.75rem;
+
+  --font-display: "Space Grotesk Variable", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans Variable", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* brand tokens */
+  --color-ivory: var(--ivory);
+  --color-bone: var(--bone);
+  --color-plum: var(--plum);
+  --color-burgundy: var(--burgundy);
+  --color-gold: var(--gold);
+  --color-terracotta: var(--terracotta);
+  --color-charcoal: var(--charcoal);
+  --color-ink: var(--ink);
+}
+
+:root {
+  --radius: 1.25rem;
+
+  /* Brand — cream base, coral primary, soft peach secondary, charcoal text */
+  --ivory: #fbf6ef; /* cream base */
+  --bone: #fbe4d6; /* soft peach */
+  --plum: #1a1a1a; /* charcoal (text + rare dark surfaces) */
+  --burgundy: #e85d3a; /* vibrant coral — primary accent */
+  --gold: #f4a582; /* warm peach-coral highlight (used with restraint) */
+  --terracotta: #d64520; /* deeper coral for italic emphasis so it pops */
+  --charcoal: #1a1a1a;
+  --ink: #2a2a2a;
+
+  /* Semantic → brand */
+  --background: var(--ivory);
+  --foreground: var(--charcoal);
+  --card: var(--bone);
+  --card-foreground: var(--charcoal);
+  --popover: var(--ivory);
+  --popover-foreground: var(--charcoal);
+  --primary: var(--plum);
+  --primary-foreground: var(--ivory);
+  --secondary: var(--bone);
+  --secondary-foreground: var(--plum);
+  --muted: var(--bone);
+  --muted-foreground: oklch(0.44 0.03 40);
+  --accent: var(--gold);
+  --accent-foreground: var(--plum);
+  --destructive: #c14953;
+  --destructive-foreground: var(--ivory);
+  --border: oklch(0.87 0.02 75);
+  --input: oklch(0.87 0.02 75);
+  --ring: var(--gold);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+  }
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--color-plum);
+  }
+  em,
+  i {
+    font-style: normal;
+  }
+
+  ::selection {
+    background-color: var(--color-gold);
+    color: var(--color-plum);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+@utility font-italic-display {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-weight: 600;
+  color: var(--color-burgundy);
+}
+
+@utility hairline {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--color-gold), transparent);
+}
+
+@utility pattern-bg {
+  background-image:
+    radial-gradient(
+      circle at 20% 30%,
+      color-mix(in oklab, var(--color-gold) 8%, transparent) 0,
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      color-mix(in oklab, var(--color-burgundy) 6%, transparent) 0,
+      transparent 25%
+    );
+}
+
+/* African-inspired subtle pattern (kente-adjacent linework, very low opacity) */
+@utility pattern-kente {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      color-mix(in oklab, var(--color-gold) 6%, transparent) 0 1px,
+      transparent 1px 22px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in oklab, var(--color-plum) 5%, transparent) 0 1px,
+      transparent 1px 22px
+    );
+}
+
+@utility btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  border-radius: 9999px;
+  padding: 0.95rem 1.75rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition:
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 260ms,
+    background-color 260ms,
+    color 260ms;
+  will-change: transform;
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+@utility btn-primary-pill {
+  background: var(--color-burgundy);
+  color: var(--color-ivory);
+  box-shadow: 0 10px 24px -14px color-mix(in oklab, var(--color-burgundy) 65%, transparent);
+  &:hover {
+    background: var(--color-charcoal);
+    box-shadow: 0 18px 34px -18px color-mix(in oklab, var(--color-charcoal) 70%, transparent);
+  }
+}
+
+@utility btn-ghost-pill {
+  background: transparent;
+  color: var(--color-charcoal);
+  border: 1px solid color-mix(in oklab, var(--color-charcoal) 15%, transparent);
+  &:hover {
+    border-color: var(--color-burgundy);
+    color: var(--color-burgundy);
+  }
+}
+
+@utility soft-shadow {
+  box-shadow: 0 1px 2px rgba(20, 12, 8, 0.04);
+}
+
+@utility soft-shadow-lg {
+  box-shadow: 0 1px 3px rgba(20, 12, 8, 0.06);
+}
+
+@utility blob-mask {
+  border-radius: 1.25rem;
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@utility animate-float {
+  animation: float-y 6s ease-in-out infinite;
+}
