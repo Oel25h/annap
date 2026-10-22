@@ -250,6 +250,8 @@ const latestPosts = section(
     categoryId: id.nullable().default(null),
     count: z.number().int().min(1).max(12).default(3),
     showCategories: z.boolean().default(true),
+    /** The journal index: every post, `count` per page, filtered by ?category=. */
+    paginate: z.boolean().default(false),
     link: optionalLink,
   }),
 );

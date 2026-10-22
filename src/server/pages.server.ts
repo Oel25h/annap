@@ -13,13 +13,13 @@ import {
   type SectionType,
 } from "@/sections/schemas";
 import { applyOverlay, extractTranslatable } from "@/sections/translation";
-import type { PageData, RenderedSection } from "@/sections/types";
+import type { PageData, PageQuery, RenderedSection } from "@/sections/types";
 import { collectMediaIds, resolveMedia } from "./media.server";
-import { fetchOverlays, overlayKey, type OverlayMap } from "./overlays.server";
+import { fetchOverlays, overlayKey, type OverlayMap, type OverlayRequest } from "./overlays.server";
 import { sanitizeRichText } from "./rich-text.server";
 import { loadSectionData } from "./section-data.server";
 import { getSiteSettings } from "./site.server";
-import { publicDb } from "./supabase-public.server";
+import { publicDb, type PublicDb } from "./supabase-public.server";
 
 const PAGE_PATH = /^\/([a-z0-9-]+(\/[a-z0-9-]+)*)?$/;
 
@@ -86,7 +86,48 @@ function localizeSection(
   return { ...greek, lang: "el", englishKeys } as never;
 }
 
-export async function loadPage(rawPath: string, locale: Locale): Promise<PageData | null> {
+/**
+ * Sections ready to render: approved Greek applied, rich text sanitised and
+ * each section's data loaded. `extra` asks for more Greek in the same query.
+ */
+export async function prepareSections(
+  db: PublicDb,
+  parsed: AnySection[],
+  locale: Locale,
+  options: { extra?: OverlayRequest; query?: PageQuery } = {},
+): Promise<{ sections: RenderedSection[]; overlays: OverlayMap; mediaIds: Set<string> }> {
+  const [overlays, sectionData] = await Promise.all([
+    locale === "el"
+      ? fetchOverlays(db, { page_section: parsed.map((s) => s.id), ...options.extra })
+      : Promise.resolve<OverlayMap>(new Map()),
+    loadSectionData(db, parsed, locale, options.query),
+  ]);
+  const sections = parsed.map((section) => {
+    const localized = localizeSection(section, locale, overlays);
+    return {
+      ...sanitizeSection(localized as unknown as AnySection),
+      lang: localized.lang,
+      englishKeys: localized.englishKeys,
+      data: sectionData.get(section.id) ?? null,
+    } as RenderedSection;
+  });
+  const mediaIds = collectMediaIds(sections.map((s) => s.props));
+  for (const data of sectionData.values()) collectMediaIds(data, mediaIds);
+  return { sections, overlays, mediaIds };
+}
+
+/** Whether a Greek page counts as translated: some of its section text is approved Greek. */
+export function sectionsInGreek(sections: RenderedSection[]): boolean {
+  return sections.some(
+    (s) => s.lang === "el" && Object.keys(extractTranslatable(s as AnySection)).length > 0,
+  );
+}
+
+export async function loadPage(
+  rawPath: string,
+  locale: Locale,
+  query: PageQuery = {},
+): Promise<PageData | null> {
   const path = normalizePagePath(rawPath);
   if (!path) return null;
   const db = publicDb();
@@ -100,26 +141,11 @@ export async function loadPage(rawPath: string, locale: Locale): Promise<PageDat
   if (!row) return null;
 
   const parsed = parseSections(row.sections, path);
-  const [overlays, sectionData, site] = await Promise.all([
-    locale === "el"
-      ? fetchOverlays(db, { page_section: parsed.map((s) => s.id), page_meta: [row.id] })
-      : Promise.resolve<OverlayMap>(new Map()),
-    loadSectionData(db, parsed, locale),
+  const [{ sections, overlays, mediaIds }, site] = await Promise.all([
+    prepareSections(db, parsed, locale, { extra: { page_meta: [row.id] }, query }),
     getSiteSettings(db),
   ]);
 
-  const sections = parsed.map((section) => {
-    const localized = localizeSection(section, locale, overlays);
-    return {
-      ...sanitizeSection(localized as unknown as AnySection),
-      lang: localized.lang,
-      englishKeys: localized.englishKeys,
-      data: sectionData.get(section.id) ?? null,
-    } as RenderedSection;
-  });
-
-  const mediaIds = collectMediaIds(sections.map((s) => s.props));
-  for (const data of sectionData.values()) collectMediaIds(data, mediaIds);
   const ogImageId = row.og_image_id ?? site.socialImageId;
   if (ogImageId) mediaIds.add(ogImageId);
   const media = await resolveMedia(db, mediaIds, locale);
@@ -131,15 +157,18 @@ export async function loadPage(rawPath: string, locale: Locale): Promise<PageDat
   const titleLang: Locale = greekTitle ? "el" : "en";
 
   // A Greek URL counts as translated once its title and some of its text are approved.
-  const translatedSections = sections.filter(
-    (s) => s.lang === "el" && Object.keys(extractTranslatable(s as AnySection)).length > 0,
-  );
   const hasTranslatableText = parsed.some((s) => Object.keys(extractTranslatable(s)).length > 0);
-  const greekReady = !!greekTitle && (translatedSections.length > 0 || !hasTranslatableText);
+  const greekReady = !!greekTitle && (sectionsInGreek(sections) || !hasTranslatableText);
 
   const { siteUrl } = readServerPublicConfig();
-  const englishUrl = `${siteUrl}${localizePath(path, "en")}`;
-  const greekUrl = `${siteUrl}${localizePath(path, "el")}`;
+  // The journal index's pages and categories are pages of their own.
+  const paginated = parsed.some((s) => s.type === "latest_posts" && s.props.paginate);
+  const search = new URLSearchParams();
+  if (paginated && query.category) search.set("category", query.category);
+  if (paginated && query.page && query.page > 1) search.set("page", String(query.page));
+  const qs = search.size ? `?${search}` : "";
+  const englishUrl = `${siteUrl}${localizePath(path, "en")}${qs}`;
+  const greekUrl = `${siteUrl}${localizePath(path, "el")}${qs}`;
   const canonical = locale === "el" && greekReady ? greekUrl : englishUrl;
 
   const seoTitle = (titleLang === "el" ? meta?.seo_title?.trim() : row.seo_title.trim()) || title;

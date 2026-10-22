@@ -5,11 +5,11 @@
  */
 import type { Locale } from "@/lib/i18n/locale";
 import type { AnySection, SectionOf, SectionType } from "@/sections/schemas";
-import type { SectionDataMap } from "@/sections/types";
+import type { PageQuery, SectionDataMap } from "@/sections/types";
 import * as collections from "./loaders/collections.server";
 import type { PublicDb } from "./supabase-public.server";
 
-export type SectionLoaderContext = { db: PublicDb; locale: Locale };
+export type SectionLoaderContext = { db: PublicDb; locale: Locale; query?: PageQuery };
 
 type SectionLoader<T extends SectionType> = (
   ctx: SectionLoaderContext,
@@ -39,6 +39,7 @@ export async function loadSectionData(
   db: PublicDb,
   sections: AnySection[],
   locale: Locale,
+  query: PageQuery = {},
 ): Promise<Map<string, unknown>> {
   const byType = new Map<SectionType, AnySection[]>();
   for (const section of sections) {
@@ -48,7 +49,7 @@ export async function loadSectionData(
   }
   const results = await Promise.all(
     [...byType].map(([type, list]) =>
-      (LOADERS[type] as SectionLoader<SectionType>)({ db, locale }, list as never),
+      (LOADERS[type] as SectionLoader<SectionType>)({ db, locale, query }, list as never),
     ),
   );
   const out = new Map<string, unknown>();

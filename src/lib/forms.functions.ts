@@ -88,6 +88,23 @@ export const sendContactMessage = createServerFn({ method: "POST" })
     return forms.sendContactMessage(data);
   });
 
+export type WaitlistRequest = {
+  masterclassId: string;
+  firstName: string;
+  email: string;
+  locale: Locale;
+  website?: string;
+  turnstile?: string;
+};
+
+export const joinWaitlist = createServerFn({ method: "POST" })
+  .validator((input: unknown) => asObject<WaitlistRequest>(input))
+  .handler(async ({ data }): Promise<{ ok: true } | FormFailure> => {
+    if (data.website) return { ok: true };
+    const forms = await import("@/server/forms.server");
+    return forms.joinWaitlist(data);
+  });
+
 /** For the /download/$token page: what the link is for, without using it up. */
 export const inspectDownload = createServerFn({ method: "POST" })
   .validator(asToken)

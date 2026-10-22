@@ -16,9 +16,14 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
+import { Route as BooksSlugRouteImport } from './routes/books/$slug'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout/success'
 import { Route as ConfirmTokenRouteImport } from './routes/confirm/$token'
 import { Route as DownloadTokenRouteImport } from './routes/download/$token'
+import { Route as EventsSlugRouteImport } from './routes/events/$slug'
+import { Route as MasterclassesSlugRouteImport } from './routes/masterclasses/$slug'
+import { Route as ShopSlugRouteImport } from './routes/shop/$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminBlogRouteImport } from './routes/_authenticated/admin.blog'
 import { Route as AuthenticatedAdminBooksRouteImport } from './routes/_authenticated/admin.books'
@@ -36,6 +41,7 @@ import { Route as ApiDownloadTokenRouteImport } from './routes/api/download/$tok
 import { Route as ApiNewsletterConfirmRouteImport } from './routes/api/newsletter/confirm'
 import { Route as ApiNewsletterUnsubscribeRouteImport } from './routes/api/newsletter/unsubscribe'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
+import { Route as FoundationStoriesSlugRouteImport } from './routes/foundation/stories/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -71,6 +77,16 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksSlugRoute = BooksSlugRouteImport.update({
+  id: '/books/$slug',
+  path: '/books/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
   id: '/checkout/success',
   path: '/checkout/success',
@@ -84,6 +100,21 @@ const ConfirmTokenRoute = ConfirmTokenRouteImport.update({
 const DownloadTokenRoute = DownloadTokenRouteImport.update({
   id: '/download/$token',
   path: '/download/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsSlugRoute = EventsSlugRouteImport.update({
+  id: '/events/$slug',
+  path: '/events/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterclassesSlugRoute = MasterclassesSlugRouteImport.update({
+  id: '/masterclasses/$slug',
+  path: '/masterclasses/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShopSlugRoute = ShopSlugRouteImport.update({
+  id: '/shop/$slug',
+  path: '/shop/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -180,6 +211,11 @@ const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   path: '/api/stripe/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FoundationStoriesSlugRoute = FoundationStoriesSlugRouteImport.update({
+  id: '/foundation/stories/$slug',
+  path: '/foundation/stories/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -188,9 +224,14 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
+  '/books/$slug': typeof BooksSlugRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/confirm/$token': typeof ConfirmTokenRoute
   '/download/$token': typeof DownloadTokenRoute
+  '/events/$slug': typeof EventsSlugRoute
+  '/masterclasses/$slug': typeof MasterclassesSlugRoute
+  '/shop/$slug': typeof ShopSlugRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -207,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
   '/api/newsletter/unsubscribe': typeof ApiNewsletterUnsubscribeRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/foundation/stories/$slug': typeof FoundationStoriesSlugRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -215,9 +257,14 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/books/$slug': typeof BooksSlugRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/confirm/$token': typeof ConfirmTokenRoute
   '/download/$token': typeof DownloadTokenRoute
+  '/events/$slug': typeof EventsSlugRoute
+  '/masterclasses/$slug': typeof MasterclassesSlugRoute
+  '/shop/$slug': typeof ShopSlugRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -234,6 +281,7 @@ export interface FileRoutesByTo {
   '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
   '/api/newsletter/unsubscribe': typeof ApiNewsletterUnsubscribeRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/foundation/stories/$slug': typeof FoundationStoriesSlugRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -245,9 +293,14 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/blog/$slug': typeof BlogSlugRoute
+  '/books/$slug': typeof BooksSlugRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/confirm/$token': typeof ConfirmTokenRoute
   '/download/$token': typeof DownloadTokenRoute
+  '/events/$slug': typeof EventsSlugRoute
+  '/masterclasses/$slug': typeof MasterclassesSlugRoute
+  '/shop/$slug': typeof ShopSlugRoute
   '/_authenticated/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/_authenticated/admin/books': typeof AuthenticatedAdminBooksRoute
   '/_authenticated/admin/foundation': typeof AuthenticatedAdminFoundationRoute
@@ -264,6 +317,7 @@ export interface FileRoutesById {
   '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
   '/api/newsletter/unsubscribe': typeof ApiNewsletterUnsubscribeRoute
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
+  '/foundation/stories/$slug': typeof FoundationStoriesSlugRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -275,9 +329,14 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin'
+    | '/blog/$slug'
+    | '/books/$slug'
     | '/checkout/success'
     | '/confirm/$token'
     | '/download/$token'
+    | '/events/$slug'
+    | '/masterclasses/$slug'
+    | '/shop/$slug'
     | '/admin/blog'
     | '/admin/books'
     | '/admin/foundation'
@@ -294,6 +353,7 @@ export interface FileRouteTypes {
     | '/api/newsletter/confirm'
     | '/api/newsletter/unsubscribe'
     | '/api/stripe/webhook'
+    | '/foundation/stories/$slug'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -302,9 +362,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/unsubscribe'
+    | '/blog/$slug'
+    | '/books/$slug'
     | '/checkout/success'
     | '/confirm/$token'
     | '/download/$token'
+    | '/events/$slug'
+    | '/masterclasses/$slug'
+    | '/shop/$slug'
     | '/admin/blog'
     | '/admin/books'
     | '/admin/foundation'
@@ -321,6 +386,7 @@ export interface FileRouteTypes {
     | '/api/newsletter/confirm'
     | '/api/newsletter/unsubscribe'
     | '/api/stripe/webhook'
+    | '/foundation/stories/$slug'
     | '/admin'
   id:
     | '__root__'
@@ -331,9 +397,14 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/_authenticated/admin'
+    | '/blog/$slug'
+    | '/books/$slug'
     | '/checkout/success'
     | '/confirm/$token'
     | '/download/$token'
+    | '/events/$slug'
+    | '/masterclasses/$slug'
+    | '/shop/$slug'
     | '/_authenticated/admin/blog'
     | '/_authenticated/admin/books'
     | '/_authenticated/admin/foundation'
@@ -350,6 +421,7 @@ export interface FileRouteTypes {
     | '/api/newsletter/confirm'
     | '/api/newsletter/unsubscribe'
     | '/api/stripe/webhook'
+    | '/foundation/stories/$slug'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -360,13 +432,19 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  BlogSlugRoute: typeof BlogSlugRoute
+  BooksSlugRoute: typeof BooksSlugRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   ConfirmTokenRoute: typeof ConfirmTokenRoute
   DownloadTokenRoute: typeof DownloadTokenRoute
+  EventsSlugRoute: typeof EventsSlugRoute
+  MasterclassesSlugRoute: typeof MasterclassesSlugRoute
+  ShopSlugRoute: typeof ShopSlugRoute
   ApiDownloadTokenRoute: typeof ApiDownloadTokenRoute
   ApiNewsletterConfirmRoute: typeof ApiNewsletterConfirmRoute
   ApiNewsletterUnsubscribeRoute: typeof ApiNewsletterUnsubscribeRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  FoundationStoriesSlugRoute: typeof FoundationStoriesSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -420,6 +498,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books/$slug': {
+      id: '/books/$slug'
+      path: '/books/$slug'
+      fullPath: '/books/$slug'
+      preLoaderRoute: typeof BooksSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/success': {
       id: '/checkout/success'
       path: '/checkout/success'
@@ -439,6 +531,27 @@ declare module '@tanstack/react-router' {
       path: '/download/$token'
       fullPath: '/download/$token'
       preLoaderRoute: typeof DownloadTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$slug': {
+      id: '/events/$slug'
+      path: '/events/$slug'
+      fullPath: '/events/$slug'
+      preLoaderRoute: typeof EventsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/masterclasses/$slug': {
+      id: '/masterclasses/$slug'
+      path: '/masterclasses/$slug'
+      fullPath: '/masterclasses/$slug'
+      preLoaderRoute: typeof MasterclassesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shop/$slug': {
+      id: '/shop/$slug'
+      path: '/shop/$slug'
+      fullPath: '/shop/$slug'
+      preLoaderRoute: typeof ShopSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/': {
@@ -560,6 +673,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/foundation/stories/$slug': {
+      id: '/foundation/stories/$slug'
+      path: '/foundation/stories/$slug'
+      fullPath: '/foundation/stories/$slug'
+      preLoaderRoute: typeof FoundationStoriesSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -616,13 +736,19 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  BlogSlugRoute: BlogSlugRoute,
+  BooksSlugRoute: BooksSlugRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   ConfirmTokenRoute: ConfirmTokenRoute,
   DownloadTokenRoute: DownloadTokenRoute,
+  EventsSlugRoute: EventsSlugRoute,
+  MasterclassesSlugRoute: MasterclassesSlugRoute,
+  ShopSlugRoute: ShopSlugRoute,
   ApiDownloadTokenRoute: ApiDownloadTokenRoute,
   ApiNewsletterConfirmRoute: ApiNewsletterConfirmRoute,
   ApiNewsletterUnsubscribeRoute: ApiNewsletterUnsubscribeRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  FoundationStoriesSlugRoute: FoundationStoriesSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

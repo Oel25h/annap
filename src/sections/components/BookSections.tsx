@@ -1,8 +1,7 @@
 import { caps } from "@/lib/i18n/caps";
-import { useId, useState } from "react";
-import { useRouterState } from "@tanstack/react-router";
-import { startCheckout } from "@/lib/payments.functions";
+import { useId } from "react";
 import { field, Honeypot, useFormAction } from "@/components/forms/useFormAction";
+import { CheckoutButton } from "@/components/site/CheckoutButton";
 import { DownloadButton } from "@/components/site/DownloadButton";
 import { Icon } from "@/components/site/Icon";
 import { SiteLink } from "@/components/site/SiteLink";
@@ -25,49 +24,6 @@ function price(cents: number, currency: string, locale: string) {
     style: "currency",
     currency,
   }).format(cents / 100);
-}
-
-/** Buy here: straight to Stripe Checkout, returning to this page if the reader backs out. */
-function BuyButton({ offerId }: { offerId: string }) {
-  const t = useT();
-  const locale = useLocale();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const [state, setState] = useState<"idle" | "sending" | "error">("idle");
-  return (
-    <>
-      <button
-        type="button"
-        className="btn btn-primary btn-sm"
-        aria-disabled={state === "sending" || undefined}
-        onClick={async () => {
-          if (state === "sending") return;
-          setState("sending");
-          try {
-            const result = await startCheckout({
-              data: {
-                kind: "book_format",
-                id: offerId,
-                locale,
-                returnPath: pathname.replace(/^\/el(?=\/|$)/, "") || "/",
-              },
-            });
-            if (result.ok) window.location.assign(result.url);
-            else setState("error");
-          } catch {
-            setState("error");
-          }
-        }}
-      >
-        {state === "sending" ? t.sections.forms.sending : t.sections.books.buy}
-      </button>
-      {state === "error" && (
-        <span className="field-error" role="status">
-          <Icon name="alert" />
-          {t.sections.forms.error}
-        </span>
-      )}
-    </>
-  );
 }
 
 /** A book cover set in the arch niche: the arch frames the cover and never crops its type. */
@@ -124,7 +80,7 @@ export function Offers({ book, listenAnchor }: { book: BookSummary; listenAnchor
                 <Icon name="arrow-up" />
               </a>
             ) : offer.buyHere ? (
-              <BuyButton offerId={offer.id} />
+              <CheckoutButton kind="book_format" id={offer.id} label={t.sections.books.buy} small />
             ) : offer.externalUrl ? (
               <a className="btn btn-quiet btn-sm" href={offer.externalUrl} rel="noopener">
                 {offer.retailer

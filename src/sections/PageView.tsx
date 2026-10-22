@@ -21,6 +21,7 @@ import {
   Testimonials,
 } from "./components/CollectionSections";
 import { ContactForm, Donation, Newsletter } from "./components/FormSections";
+import { ItemIntro } from "./items/ItemIntro";
 import { Hero } from "./components/Hero";
 import { Embed, Gallery, Video } from "./components/MediaSections";
 import {
@@ -126,13 +127,22 @@ function SectionView({
 export function PageView({ page }: { page: PageData }) {
   const t = useT();
   const listenAnchor = findListenAnchor(page.sections);
-  const opensWithHero = page.sections[0]?.type === "hero";
+  // A collection item opens with its own intro, which holds the H1.
+  const opensWithHero = !page.intro && page.sections[0]?.type === "hero";
   const path = page.locale === "el" ? (page.path === "/" ? "/el" : `/el${page.path}`) : page.path;
   let chapter = 0;
 
   return (
     <>
-      {!opensWithHero && (
+      {page.intro && (
+        <ItemIntro
+          intro={page.intro}
+          media={page.media}
+          locale={page.locale}
+          listenAnchor={listenAnchor}
+        />
+      )}
+      {!page.intro && !opensWithHero && (
         <header className="title-band">
           <div className="wrap">
             <h1

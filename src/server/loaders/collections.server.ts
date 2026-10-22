@@ -108,49 +108,70 @@ export const audiobookPlayer: Loader<"audiobook_player"> = async (ctx, sections)
   );
 };
 
-export const latestPosts: Loader<"latest_posts"> = async (ctx, sections) => {
-  const max = Math.max(...sections.map((s) => s.props.count));
-  const [posts, categories] = await Promise.all([
-    ctx.db
-      .from("blog_posts")
-      .select(
-        "id, slug, title, excerpt, published_at, publish_date, reading_minutes, cover_media_id, category:blog_categories(id, slug, name)",
-      )
-      .order("published_at", { ascending: false, nullsFirst: false })
-      .limit(Math.min(max * 3, 36)),
-    ctx.db.from("blog_categories").select("id, slug, name").order("sort_order"),
-  ]);
-  if (posts.error) throw new Error(`Posts: ${posts.error.message}`);
-  const rows = posts.data ?? [];
-  const [postGreek, categoryGreek] = await Promise.all([
-    itemOverlays(
-      ctx,
-      "blog_post",
-      rows.map((r) => r.id),
-    ),
-    itemOverlays(
-      ctx,
-      "blog_category",
-      (categories.data ?? []).map((c) => c.id),
-    ),
-  ]);
-  const categoryName = (c: { id: string; name: string }) =>
-    overlayFields({ name: c.name }, categoryGreek, "blog_category", c.id, ["name"]).item.name;
+const POST_CARD_COLUMNS =
+  "id, slug, title, excerpt, published_at, publish_date, reading_minutes, cover_media_id, category:blog_categories(id, slug, name)";
 
-  const cards: (PostCard & { categoryId: string | null })[] = rows.map((row) => {
+type PostRow = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  published_at: string | null;
+  publish_date: string | null;
+  reading_minutes: number | null;
+  cover_media_id: string | null;
+  category: unknown;
+};
+
+type Category = { id: string; slug: string; name: string };
+
+/** Journal categories in shelf order, with approved Greek names on Greek pages. */
+export async function postCategories(ctx: LoaderContext): Promise<Category[]> {
+  const { data, error } = await ctx.db
+    .from("blog_categories")
+    .select("id, slug, name")
+    .order("sort_order");
+  if (error) throw new Error(`Categories: ${error.message}`);
+  const rows = data ?? [];
+  const greek = await itemOverlays(
+    ctx,
+    "blog_category",
+    rows.map((c) => c.id),
+  );
+  return rows.map((c) => ({
+    ...c,
+    name: overlayFields({ name: c.name }, greek, "blog_category", c.id, ["name"]).item.name,
+  }));
+}
+
+/** Cards for post rows, with approved Greek titles and excerpts on Greek pages. */
+export async function postCards(
+  ctx: LoaderContext,
+  rows: PostRow[],
+  categories: Category[],
+): Promise<(PostCard & { categoryId: string | null })[]> {
+  const greek = await itemOverlays(
+    ctx,
+    "blog_post",
+    rows.map((r) => r.id),
+  );
+  const names = new Map(categories.map((c) => [c.id, c.name]));
+  return rows.map((row) => {
     const { item, lang } = overlayFields(
       { title: row.title, excerpt: row.excerpt ?? "" },
-      postGreek,
+      greek,
       "blog_post",
       row.id,
       ["title", "excerpt"],
     );
-    const category = row.category as { id: string; slug: string; name: string } | null;
+    const category = row.category as Category | null;
     return {
       id: row.id,
       slug: row.slug,
       ...item,
-      category: category ? { slug: category.slug, name: categoryName(category) } : null,
+      category: category
+        ? { slug: category.slug, name: names.get(category.id) ?? category.name }
+        : null,
       categoryId: category?.id ?? null,
       publishedAt: row.published_at ?? row.publish_date,
       readingMinutes: row.reading_minutes,
@@ -158,24 +179,94 @@ export const latestPosts: Loader<"latest_posts"> = async (ctx, sections) => {
       textLang: lang,
     };
   });
+}
 
+/** Ids of the items of one type that have approved Greek. */
+export async function greekIds(ctx: LoaderContext, entityType: string): Promise<string[]> {
+  if (ctx.locale !== "el") return [];
+  const { data, error } = await ctx.db
+    .from("content_translations")
+    .select("entity_id")
+    .eq("entity_type", entityType)
+    .eq("locale", "el")
+    .eq("status", "approved");
+  if (error) throw new Error(`Greek ids: ${error.message}`);
+  return (data ?? []).map((r) => r.entity_id);
+}
+
+const strip = ({ categoryId: _drop, ...card }: PostCard & { categoryId: string | null }) => card;
+
+/** The journal index: one page of posts, optionally in one category. */
+async function postPage(
+  ctx: LoaderContext,
+  size: number,
+  categories: Category[],
+): Promise<SectionDataMap["latest_posts"]> {
+  const requested = ctx.query?.page ?? 1;
+  const page = Number.isInteger(requested) && requested > 0 ? requested : 1;
+  const category = categories.find((c) => c.slug === ctx.query?.category) ?? null;
   // On a Greek page, list Greek posts; fall back to English ones only if none are translated.
-  const greek = cards.filter((c) => c.textLang === "el");
-  const pool = ctx.locale === "el" && greek.length > 0 ? greek : cards;
-  const categoryList = (categories.data ?? []).map((c) => ({
-    slug: c.slug,
-    name: categoryName(c),
-  }));
+  const greek = await greekIds(ctx, "blog_post");
+  let query = ctx.db
+    .from("blog_posts")
+    .select(POST_CARD_COLUMNS, { count: "exact" })
+    .order("published_at", { ascending: false, nullsFirst: false })
+    .range((page - 1) * size, page * size - 1);
+  if (category) query = query.eq("category_id", category.id);
+  if (greek.length > 0) query = query.in("id", greek);
+  const { data, error, count } = await query;
+  if (error) throw new Error(`Posts: ${error.message}`);
+  const cards = await postCards(ctx, (data ?? []) as PostRow[], categories);
+  return {
+    posts: cards.map(strip),
+    categories: categories.map(({ slug, name }) => ({ slug, name })),
+    pagination: {
+      page,
+      pages: Math.max(1, Math.ceil((count ?? 0) / size)),
+      category: category?.slug ?? null,
+    },
+  };
+}
 
-  return new Map(
-    sections.map((section) => {
-      const posts = pool
-        .filter((c) => !section.props.categoryId || c.categoryId === section.props.categoryId)
-        .slice(0, section.props.count)
-        .map(({ categoryId: _drop, ...card }) => card);
-      return [section.id, { posts, categories: section.props.showCategories ? categoryList : [] }];
-    }),
-  );
+export const latestPosts: Loader<"latest_posts"> = async (ctx, sections) => {
+  const categories = await postCategories(ctx);
+  const listed = sections.filter((s) => !s.props.paginate);
+  let pool: (PostCard & { categoryId: string | null })[] = [];
+  if (listed.length) {
+    const max = Math.max(...listed.map((s) => s.props.count));
+    const { data, error } = await ctx.db
+      .from("blog_posts")
+      .select(POST_CARD_COLUMNS)
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .limit(Math.min(max * 3, 36));
+    if (error) throw new Error(`Posts: ${error.message}`);
+    const cards = await postCards(ctx, (data ?? []) as PostRow[], categories);
+    const greek = cards.filter((c) => c.textLang === "el");
+    pool = ctx.locale === "el" && greek.length > 0 ? greek : cards;
+  }
+  const categoryList = categories.map(({ slug, name }) => ({ slug, name }));
+
+  const out = new Map<string, SectionDataMap["latest_posts"]>();
+  for (const section of sections) {
+    if (section.props.paginate) {
+      const data = await postPage(ctx, section.props.count, categories);
+      out.set(section.id, {
+        ...data,
+        categories: section.props.showCategories ? data.categories : [],
+      });
+      continue;
+    }
+    const posts = pool
+      .filter((c) => !section.props.categoryId || c.categoryId === section.props.categoryId)
+      .slice(0, section.props.count)
+      .map(strip);
+    out.set(section.id, {
+      posts,
+      categories: section.props.showCategories ? categoryList : [],
+      pagination: null,
+    });
+  }
+  return out;
 };
 
 export const video: Loader<"video"> = async (ctx, sections) => {

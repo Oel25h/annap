@@ -312,6 +312,63 @@ export async function unsubscribe(token: string): Promise<UnsubscribeResult> {
 }
 
 // ---------------------------------------------------------------------------
+// Masterclass waitlist
+// ---------------------------------------------------------------------------
+
+const WaitlistInput = z.object({
+  masterclassId: z.string().uuid(),
+  firstName: z.string().trim().min(1).max(80),
+  email,
+  locale,
+  turnstile,
+});
+
+/** One lead per email and masterclass; asking again only refreshes it. */
+export async function joinWaitlist(raw: unknown): Promise<FormResult> {
+  const parsed = WaitlistInput.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const input = parsed.data;
+  const blocked = await guard("waitlist", 5, input.turnstile);
+  if (blocked) return { ok: false, error: blocked };
+
+  const { data: masterclass } = await supabaseAdmin
+    .from("masterclasses")
+    .select("id, slug, title")
+    .eq("id", input.masterclassId)
+    .eq("status", "published")
+    .maybeSingle();
+  if (!masterclass) return { ok: false, error: "invalid" };
+
+  const { error } = await supabaseAdmin.from("leads").upsert(
+    {
+      first_name: input.firstName,
+      email: input.email,
+      locale: input.locale,
+      source: `masterclass:${masterclass.slug}`,
+      consent_key: "waitlist",
+      consent_version: await consentVersion("waitlist"),
+      last_requested_at: new Date().toISOString(),
+    },
+    { onConflict: "email_normalized,source" },
+  );
+  if (error) throw new Error(`Leads: ${error.message}`);
+
+  if (await hit(`waitlist-email:${input.email}`, 1, DAY)) {
+    await queueEmail({
+      to: input.email,
+      template: "waitlist_confirm",
+      locale: input.locale,
+      params: {
+        firstName: input.firstName,
+        title: masterclass.title,
+        url: absoluteUrl(`/masterclasses/${masterclass.slug}`, input.locale),
+      },
+    });
+  }
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
 // Contact
 // ---------------------------------------------------------------------------
 

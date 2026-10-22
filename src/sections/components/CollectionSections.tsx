@@ -1,4 +1,5 @@
 import { caps } from "@/lib/i18n/caps";
+import { useRouterState } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { Icon } from "@/components/site/Icon";
 import { SiteLink } from "@/components/site/SiteLink";
@@ -50,15 +51,58 @@ function Empty({ text }: { text: string }) {
   return <p className="empty body">{text}</p>;
 }
 
-/** The journal index: label and date on the left, title and excerpt, a small plate on the right. */
+/** Address of the journal index for a category and page; page 1 and "all" stay off the URL. */
+function indexHref(base: string, category: string | null, page: number): string {
+  const search = new URLSearchParams();
+  if (category) search.set("category", category);
+  if (page > 1) search.set("page", String(page));
+  return search.size ? `${base}?${search}` : base;
+}
+
+/**
+ * The journal index: date and category, title and excerpt, a small plate on
+ * the right. On the journal's own page it pages through every post and can
+ * show one category at a time.
+ */
 export function LatestPosts({ section, media, ctx }: Props<"latest_posts">) {
   const t = useT();
   const p = section.props;
   const posts = section.data?.posts ?? [];
   const categories = section.data?.categories ?? [];
-  // An empty collection hides itself on the public site.
-  if (posts.length === 0) return null;
+  const pagination = section.data?.pagination ?? null;
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // An empty collection hides itself, except on the index, where a category can be empty.
+  if (posts.length === 0 && !pagination) return null;
+  const base = pagination ? pathname : "/blog";
+  const current = pagination?.category ?? null;
   const link = p.link.href ? { label: p.link.label, href: p.link.href } : null;
+
+  const themes = categories.length > 0 && (
+    <nav className="themes" aria-label={t.sections.posts.categories}>
+      {pagination &&
+        (current === null ? (
+          <span className="chip" aria-current="true">
+            {t.sections.posts.all}
+          </span>
+        ) : (
+          <SiteLink className="chip" href={base}>
+            {t.sections.posts.all}
+          </SiteLink>
+        ))}
+      {categories.map((c) =>
+        c.slug === current ? (
+          <span key={c.slug} className="chip" aria-current="true">
+            {c.name}
+          </span>
+        ) : (
+          <SiteLink key={c.slug} className="chip" href={indexHref(base, c.slug, 1)}>
+            {c.name}
+          </SiteLink>
+        ),
+      )}
+    </nav>
+  );
+
   return (
     <SectionShell
       section={section}
@@ -68,46 +112,72 @@ export function LatestPosts({ section, media, ctx }: Props<"latest_posts">) {
       runhead={{ link }}
     >
       <SectionHead section={section} ctx={ctx} title={p.title} />
-      <div className={`index${section.variant === "grid" ? " index--grid" : ""}`}>
-        {posts.map((post) => {
-          const href = `/blog/${post.slug}`;
-          const meta = [
-            formatDate(post.publishedAt, ctx.locale),
-            post.readingMinutes ? fmt(t.sections.posts.minutes, { m: post.readingMinutes }) : "",
-          ]
-            .filter(Boolean)
-            .join(" · ");
-          return (
-            <article className="story" key={post.id} lang={langIf(post.textLang, ctx.locale)}>
-              {post.category && <p className="label label--accent">{caps(post.category.name)}</p>}
-              {meta && <p className="meta">{meta}</p>}
-              <div className="story-text">
-                <h3 className="story-title">
-                  <SiteLink href={href}>{post.title}</SiteLink>
-                </h3>
-                {post.excerpt && <p className="body excerpt">{post.excerpt}</p>}
-              </div>
-              {post.coverMediaId && media[post.coverMediaId] && (
-                <SiteLink className="story-img" href={href} tabIndex={-1} aria-hidden="true">
-                  <Picture
-                    media={media[post.coverMediaId]}
-                    sizes="(min-width: 1024px) 18vw, 30vw"
-                    decorative
-                  />
-                </SiteLink>
-              )}
-            </article>
-          );
-        })}
-      </div>
-      {categories.length > 0 && (
-        <nav className="themes" aria-label={t.sections.posts.categories}>
-          <span className="label">{caps(t.sections.posts.categories)}</span>
-          {categories.map((c) => (
-            <SiteLink key={c.slug} href={`/blog?category=${encodeURIComponent(c.slug)}`}>
-              {c.name}
+      {pagination && themes}
+      {posts.length === 0 ? (
+        <Empty text={t.sections.posts.empty} />
+      ) : (
+        <div className={`index${section.variant === "grid" ? " index--grid" : ""}`}>
+          {posts.map((post) => {
+            const href = `/blog/${post.slug}`;
+            return (
+              <article className="story" key={post.id} lang={langIf(post.textLang, ctx.locale)}>
+                <p className="meta dots">
+                  {post.publishedAt && <span>{formatDate(post.publishedAt, ctx.locale)}</span>}
+                  {post.readingMinutes ? (
+                    <span>{fmt(t.sections.posts.minutes, { m: post.readingMinutes })}</span>
+                  ) : null}
+                  {post.category && <span className="meta-accent">{post.category.name}</span>}
+                </p>
+                <div className="story-text">
+                  <h3 className="story-title">
+                    <SiteLink href={href}>{post.title}</SiteLink>
+                  </h3>
+                  {post.excerpt && <p className="body excerpt">{post.excerpt}</p>}
+                </div>
+                {post.coverMediaId && media[post.coverMediaId] && (
+                  <SiteLink className="story-img" href={href} tabIndex={-1} aria-hidden="true">
+                    <Picture
+                      media={media[post.coverMediaId]}
+                      sizes="(min-width: 1024px) 18vw, 30vw"
+                      decorative
+                    />
+                  </SiteLink>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+      {!pagination && themes}
+      {pagination && pagination.pages > 1 && (
+        <nav className="pager" aria-label={t.sections.posts.pages}>
+          {pagination.page > 1 ? (
+            <SiteLink
+              className="link-quiet"
+              rel="prev"
+              href={indexHref(base, current, pagination.page - 1)}
+            >
+              <Icon name="chev-left" />
+              {t.sections.posts.newer}
             </SiteLink>
-          ))}
+          ) : (
+            <span />
+          )}
+          <span className="meta">
+            {fmt(t.sections.posts.pageOf, { n: pagination.page, total: pagination.pages })}
+          </span>
+          {pagination.page < pagination.pages ? (
+            <SiteLink
+              className="link-quiet"
+              rel="next"
+              href={indexHref(base, current, pagination.page + 1)}
+            >
+              {t.sections.posts.older}
+              <Icon name="chev-right" />
+            </SiteLink>
+          ) : (
+            <span />
+          )}
         </nav>
       )}
       <FootLink link={link} />

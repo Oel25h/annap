@@ -122,3 +122,12 @@ export function utilityHead(title: string) {
     ],
   };
 }
+
+/**
+ * A JSON-LD script for the head. `<` is escaped so text typed in the studio
+ * can never close the script element.
+ */
+export function jsonLdScript(json: string | undefined) {
+  if (!json) return [];
+  return [{ type: "application/ld+json", children: json.replace(/</g, "\\u003c") }];
+}

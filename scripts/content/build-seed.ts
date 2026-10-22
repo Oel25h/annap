@@ -308,6 +308,7 @@ const pages: Page[] = [
         title: "Letters for the brave and the becoming.",
         count: 12,
         showCategories: true,
+        paginate: true,
       }),
       s(
         "newsletter",

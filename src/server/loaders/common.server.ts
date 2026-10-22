@@ -1,8 +1,9 @@
 import type { Locale } from "@/lib/i18n/locale";
+import type { PageQuery } from "@/sections/types";
 import { fetchOverlays, overlayKey, type OverlayMap } from "../overlays.server";
 import type { PublicDb } from "../supabase-public.server";
 
-export type LoaderContext = { db: PublicDb; locale: Locale };
+export type LoaderContext = { db: PublicDb; locale: Locale; query?: PageQuery };
 
 /** Approved Greek for a list of items of one type (nothing on English pages). */
 export async function itemOverlays(

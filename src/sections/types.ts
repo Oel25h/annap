@@ -178,6 +178,16 @@ export type StoryCard = {
   textLang: Locale;
 };
 
+export type PostPagination = {
+  page: number;
+  pages: number;
+  /** The category slug being shown, or null for all. */
+  category: string | null;
+};
+
+/** Query parameters a page's sections may read (the journal index's page and category). */
+export type PageQuery = { page?: number; category?: string };
+
 /** Data a section needs beyond its own props, for the section types that have a loader. */
 type SectionDataByType = {
   featured_book: { book: BookSummary };
@@ -185,7 +195,12 @@ type SectionDataByType = {
   book_list: { books: BookSummary[] };
   book_excerpts: { book: { slug: string; title: string } | null };
   audiobook_player: { audiobooks: AudiobookItem[]; fallbackToEnglish: boolean };
-  latest_posts: { posts: PostCard[]; categories: { slug: string; name: string }[] };
+  latest_posts: {
+    posts: PostCard[];
+    categories: { slug: string; name: string }[];
+    /** Present on the journal index (a section with `paginate`). */
+    pagination: PostPagination | null;
+  };
   video: { videos: VideoCard[] };
   testimonials: { items: TestimonialItem[] };
   gallery: { imageMediaIds: string[] };
@@ -221,6 +236,40 @@ export type PageSeo = {
   image: ResolvedMedia | null;
 };
 
+/**
+ * The opening of a collection item's page (a book, a post, a product…): the
+ * item itself, set above its sections in place of the title band.
+ */
+export type ItemIntro =
+  | { kind: "book"; book: BookSummary; whoFor: string }
+  | { kind: "post"; post: PostCard; bodyHtml: string; related: PostCard[] }
+  | {
+      kind: "product";
+      product: ProductCard;
+      description: string;
+      whoFor: string;
+      included: string[];
+      compareAtCents: number | null;
+      stockNote: string;
+      /** Sold here through Stripe Checkout. */
+      buyHere: boolean;
+      /** Otherwise, where to get it. */
+      externalUrl: string | null;
+    }
+  | {
+      kind: "masterclass";
+      masterclass: MasterclassCard;
+      endsAt: string | null;
+      description: string;
+      included: string[];
+      enrolUrl: string | null;
+      /** A product sold here that enrols the buyer. */
+      enrolProductId: string | null;
+      payments: boolean;
+    }
+  | { kind: "event"; event: EventCard }
+  | { kind: "story"; story: StoryCard; bodyHtml: string };
+
 export type PageData = {
   id: string;
   path: string;
@@ -234,4 +283,8 @@ export type PageData = {
   sections: RenderedSection[];
   media: MediaMap;
   seo: PageSeo;
+  /** Collection items only. */
+  intro?: ItemIntro;
+  /** schema.org data for search engines (Book, BlogPosting, Product, Event), as JSON text. */
+  jsonLd?: string;
 };
