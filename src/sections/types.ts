@@ -64,6 +64,8 @@ export type AudiobookTrack = {
   /** Null for chapters that are not free to stream: they show a lock and the buy link. */
   audioMediaId: string | null;
   durationSeconds: number | null;
+  /** The chapter's first sentence, set large beside her voice. May be empty. */
+  openingLine: string;
 };
 
 export type AudiobookItem = {

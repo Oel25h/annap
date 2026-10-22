@@ -178,53 +178,128 @@ async function fixtures() {
       .select("id")
       .eq("slug", "find-your-reason-to-smile")
       .maybeSingle();
+    const { data: secondBook } = await db
+      .from("books")
+      .select("id")
+      .eq("slug", "turning-pain-into-purpose")
+      .maybeSingle();
+    // Chapter titles and opening lines in her words (the About page and the
+    // book's own copy); the recordings are short tones.
     const editions = [
       {
         id: FIXTURE(100),
+        bookId: book?.id ?? null,
         locale: "en",
         title: "Find Your Reason to Smile",
         subtitle: "Sample recording",
-        narrator: "Anastasia Patience",
+        cover: MEDIA.coverFyrts.id,
         chapters: [
-          "My Greatest Teachers",
-          "A Young Girl Full of Dreams",
-          "Two Suitcases and a Promise",
-          "My Biggest Question to God",
-          "Faith, When the Doctors Said No",
+          [
+            "My Greatest Teachers",
+            "My mother taught me the power of prayer and how to stay resilient through life's difficulties.",
+          ],
+          [
+            "A Young Girl Full of Dreams",
+            "At twenty-four, I was a young girl full of dreams, not knowing that life had another plan for me.",
+          ],
+          ["Two Suitcases", "I boarded a plane with two suitcases and a promise."],
+          [
+            "My Brother",
+            "When my younger brother died, something inside me broke that I didn't know could break.",
+          ],
+          [
+            "My Biggest Question to God",
+            "Losing four of my family in the same season became my biggest question to God.",
+          ],
+          ["The Pregnancy", "The doctors said terminate. There were risks. There were reasons."],
+          [
+            "Faith, When the Doctors Said No",
+            "He came into this world small, perfect, and quiet, living in his own world.",
+          ],
+          ["The Dark Room", "Postpartum depression came like a fog with no exit."],
+          [
+            "Find Your Reason to Smile",
+            "I write the books I needed, for every woman who ever felt too broken to begin again.",
+          ],
         ],
       },
       {
         id: FIXTURE(200),
+        bookId: book?.id ?? null,
         locale: "el",
-        title: "Find Your Reason to Smile",
+        title: "Βρες τον λόγο σου να χαμογελάς",
         subtitle: "Δείγμα ηχογράφησης",
-        narrator: "Anastasia Patience",
+        cover: MEDIA.coverFyrts.id,
         chapters: [
-          "Οι μεγαλύτεροι δάσκαλοί μου",
-          "Ένα νεαρό κορίτσι γεμάτο όνειρα",
-          "Δύο βαλίτσες και μια υπόσχεση",
+          [
+            "Οι μεγαλύτεροι δάσκαλοί μου",
+            "Η μητέρα μου μού έμαθε τη δύναμη της προσευχής και πώς να μένω ανθεκτική στις δυσκολίες.",
+          ],
+          [
+            "Ένα κορίτσι γεμάτο όνειρα",
+            "Στα είκοσι τέσσερα ήμουν ένα κορίτσι γεμάτο όνειρα, χωρίς να ξέρω ότι η ζωή είχε άλλα σχέδια για μένα.",
+          ],
+          ["Δύο βαλίτσες", "Μπήκα σε ένα αεροπλάνο με δύο βαλίτσες και μια υπόσχεση."],
+          [
+            "Ο αδελφός μου",
+            "Όταν πέθανε ο μικρότερος αδελφός μου, κάτι μέσα μου έσπασε που δεν ήξερα ότι μπορούσε να σπάσει.",
+          ],
+          [
+            "Η μεγαλύτερη ερώτησή μου στον Θεό",
+            "Η απώλεια τεσσάρων ανθρώπων της οικογένειάς μου στην ίδια εποχή έγινε η μεγαλύτερη ερώτησή μου στον Θεό.",
+          ],
+          ["Η εγκυμοσύνη", "Οι γιατροί είπαν να διακόψω. Υπήρχαν κίνδυνοι. Υπήρχαν λόγοι."],
+          [
+            "Πίστη, όταν οι γιατροί είπαν όχι",
+            "Ήρθε στον κόσμο μικρός, ήσυχος και τέλειος, ζώντας στον δικό του κόσμο.",
+          ],
+          ["Το σκοτεινό δωμάτιο", "Η επιλόχεια κατάθλιψη ήρθε σαν ομίχλη χωρίς έξοδο."],
+          [
+            "Βρες τον λόγο σου να χαμογελάς",
+            "Γράφω τα βιβλία που χρειαζόμουν, για κάθε γυναίκα που ένιωσε πολύ σπασμένη για να ξαναρχίσει.",
+          ],
+        ],
+      },
+      {
+        id: FIXTURE(300),
+        bookId: secondBook?.id ?? null,
+        locale: "en",
+        title: "Turning Pain into Purpose",
+        subtitle: "Sample recording",
+        cover: MEDIA.coverTpip.id,
+        chapters: [
+          ["Sample Chapter One", ""],
+          ["Sample Chapter Two", ""],
+          ["Sample Chapter Three", ""],
+          ["Sample Chapter Four", ""],
+          ["Sample Chapter Five", ""],
+          ["Sample Chapter Six", ""],
         ],
       },
     ];
     for (const edition of editions) {
       const { error } = await db.from("audiobooks").upsert({
         id: edition.id,
-        book_id: book?.id ?? null,
+        book_id: edition.bookId,
         locale: edition.locale,
         title: edition.title,
         subtitle: edition.subtitle,
-        narrator: edition.narrator,
-        cover_media_id: MEDIA.coverFyrts.id,
+        narrator: "Anastasia Patience",
+        cover_media_id: edition.cover,
         status: "published",
         published_at: new Date().toISOString(),
-        position: edition.locale === "en" ? 0 : 1,
+        position: edition.id === FIXTURE(200) ? 1 : edition.id === FIXTURE(300) ? 2 : 0,
       });
       if (error) throw new Error(`audiobooks: ${error.message}`);
-      for (const [i, title] of edition.chapters.entries()) {
+      // Start the chapter list afresh, so renamed or removed sample chapters do not linger.
+      const cleared = await db.from("audiobook_tracks").delete().eq("audiobook_id", edition.id);
+      if (cleared.error) throw new Error(`tracks: ${cleared.error.message}`);
+      const base = Number(edition.id.slice(-3));
+      for (const [i, [title, openingLine]] of edition.chapters.entries()) {
         const seconds = 24 + i * 6;
-        const mediaId = FIXTURE(edition.locale === "en" ? 110 + i : 210 + i);
-        const path = `fixtures/${edition.locale}/chapter-${i + 1}.mp3`;
-        const body = tone(dir, `${edition.locale}-${i}`, seconds, 196 + i * 22);
+        const mediaId = FIXTURE(base + 10 + i);
+        const path = `fixtures/${base}/chapter-${i + 1}.mp3`;
+        const body = tone(dir, `${base}-${i}`, seconds, 196 + i * 22);
         await upload("audio", path, body, "audio/mpeg");
         const media = await db.from("media_assets").upsert({
           id: mediaId,
@@ -243,9 +318,10 @@ async function fixtures() {
         });
         if (media.error) throw new Error(`audio media: ${media.error.message}`);
         const track = await db.from("audiobook_tracks").upsert({
-          id: FIXTURE(edition.locale === "en" ? 120 + i : 220 + i),
+          id: FIXTURE(base + 30 + i),
           audiobook_id: edition.id,
           title,
+          opening_line: openingLine,
           audio_media_id: mediaId,
           duration_seconds: seconds,
           // The last chapter is "in the full audiobook" so the locked state shows.
@@ -254,7 +330,7 @@ async function fixtures() {
         });
         if (track.error) throw new Error(`tracks: ${track.error.message}`);
       }
-      console.log(`✓ sample audiobook (${edition.locale})`);
+      console.log(`✓ sample audiobook (${edition.title}, ${edition.locale})`);
     }
 
     if (book) {
@@ -314,15 +390,13 @@ async function fixtures() {
         .eq("format", "audiobook")
         .maybeSingle();
       if (!audiobookFormat) {
-        const format = await db
-          .from("book_formats")
-          .insert({
-            book_id: book.id,
-            format: "audiobook",
-            retailer: "",
-            available: true,
-            position: 3,
-          });
+        const format = await db.from("book_formats").insert({
+          book_id: book.id,
+          format: "audiobook",
+          retailer: "",
+          available: true,
+          position: 3,
+        });
         if (format.error) throw new Error(`book_formats: ${format.error.message}`);
       }
       console.log("✓ sample free ebook");

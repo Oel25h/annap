@@ -70,7 +70,7 @@ export const audiobookPlayer: Loader<"audiobook_player"> = async (ctx, sections)
   const { data, error } = await ctx.db
     .from("audiobooks")
     .select(
-      "id, locale, title, subtitle, narrator, cover_media_id, position, book:books(slug), audiobook_tracks(id, title, audio_media_id, duration_seconds, free_to_stream, position)",
+      "id, locale, title, subtitle, narrator, cover_media_id, position, book:books(slug), audiobook_tracks(id, title, opening_line, audio_media_id, duration_seconds, free_to_stream, position)",
     )
     .order("position");
   if (error) throw new Error(`Audiobooks: ${error.message}`);
@@ -89,6 +89,7 @@ export const audiobookPlayer: Loader<"audiobook_player"> = async (ctx, sections)
         title: t.title,
         audioMediaId: t.free_to_stream ? t.audio_media_id : null,
         durationSeconds: t.duration_seconds === null ? null : Number(t.duration_seconds),
+        openingLine: t.opening_line,
       })),
   }));
   const playable = all.filter((a) => a.tracks.some((t) => t.audioMediaId));

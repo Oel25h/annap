@@ -11,6 +11,7 @@ export type Database = {
           duration_seconds: number | null;
           free_to_stream: boolean;
           id: string;
+          opening_line: string;
           position: number;
           title: string;
           updated_at: string;
@@ -23,6 +24,7 @@ export type Database = {
           duration_seconds?: number | null;
           free_to_stream?: boolean;
           id?: string;
+          opening_line?: string;
           position?: number;
           title: string;
           updated_at?: string;
@@ -34,6 +36,7 @@ export type Database = {
           duration_seconds?: number | null;
           free_to_stream?: boolean;
           id?: string;
+          opening_line?: string;
           position?: number;
           title?: string;
           updated_at?: string;
