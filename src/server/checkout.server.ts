@@ -56,10 +56,13 @@ async function itemFiles(
   }
   const { data: format } = await supabaseAdmin
     .from("book_formats")
-    .select("book_id, format")
+    .select("book_id, format, delivery:media_assets!book_formats_delivery_media_id_fkey(id, mime)")
     .eq("id", item.item_id)
     .maybeSingle();
   if (!format || (format.format !== "ebook" && format.format !== "audiobook")) return [];
+  // The file set on the format in the studio ("File buyers receive"), else the book's purchase files.
+  const delivery = format.delivery as unknown as { id: string; mime: string } | null;
+  if (delivery) return [{ mediaId: delivery.id, mime: delivery.mime }];
   const files = await bookFiles(format.book_id, "purchase", lang);
   return files.filter((file) => isAudio(file.mime) === (format.format === "audiobook"));
 }
@@ -273,12 +276,42 @@ async function refundCharge(charge: StripeCharge) {
         .in("order_item_id", ids);
     }
   }
-  const { error: donationError } = await supabaseAdmin
+  const { data: gifts, error: donationError } = await supabaseAdmin
     .from("donations")
     .update({ status: "refunded" })
     .eq("stripe_payment_intent_id", charge.payment_intent)
-    .eq("status", "paid");
+    .eq("status", "paid")
+    .select("id");
   if (donationError) throw new Error(`Donations: ${donationError.message}`);
+  if (orders?.length || gifts?.length) return;
+
+  // A month of a monthly gift is paid through an invoice, which is how it is recorded.
+  const invoice = await invoiceForPayment(charge.payment_intent);
+  if (!invoice) return;
+  const { error: monthlyError } = await supabaseAdmin
+    .from("donations")
+    .update({ status: "refunded" })
+    .eq("stripe_invoice_id", invoice)
+    .eq("status", "paid");
+  if (monthlyError) throw new Error(`Donations: ${monthlyError.message}`);
+}
+
+/** The invoice a payment paid, if any (a month of a monthly gift). */
+async function invoiceForPayment(paymentIntent: string): Promise<string | null> {
+  try {
+    const list = await stripeRequest<{ data: { invoice: string | null }[] }>(
+      "GET",
+      "/invoice_payments",
+      { payment: { type: "payment_intent", payment_intent: paymentIntent }, limit: 1 },
+    );
+    return list.data[0]?.invoice ?? null;
+  } catch (failure) {
+    console.warn(
+      "[stripe] could not look up a refunded payment's invoice:",
+      failure instanceof Error ? failure.message : "unknown",
+    );
+    return null;
+  }
 }
 
 /** Each later month of a monthly gift becomes its own paid donation. */
@@ -294,23 +327,41 @@ async function recordMonthlyGift(invoice: StripeInvoice) {
     .limit(1)
     .maybeSingle();
   if (!first && details.metadata?.kind !== "donation") return;
-  const { error } = await supabaseAdmin.from("donations").insert({
-    amount_cents: invoice.amount_paid,
-    currency: invoice.currency.toUpperCase(),
-    interval: "month",
-    status: "paid",
-    paid_at: new Date().toISOString(),
-    stripe_invoice_id: invoice.id,
-    stripe_subscription_id: details.subscription,
-    stripe_customer_id: invoice.customer,
-    donor_email: invoice.customer_email ?? first?.donor_email ?? null,
-    donor_name: invoice.customer_name ?? first?.donor_name ?? null,
-    anonymous: first?.anonymous ?? false,
-    locale: first?.locale ?? "en",
-    return_path: first?.return_path ?? "/foundation",
+  const { data: gift, error } = await supabaseAdmin
+    .from("donations")
+    .insert({
+      amount_cents: invoice.amount_paid,
+      currency: invoice.currency.toUpperCase(),
+      interval: "month",
+      status: "paid",
+      paid_at: new Date().toISOString(),
+      stripe_invoice_id: invoice.id,
+      stripe_subscription_id: details.subscription,
+      stripe_customer_id: invoice.customer,
+      donor_email: invoice.customer_email ?? first?.donor_email ?? null,
+      donor_name: invoice.customer_name ?? first?.donor_name ?? null,
+      anonymous: first?.anonymous ?? false,
+      locale: first?.locale ?? "en",
+      return_path: first?.return_path ?? "/foundation",
+    })
+    .select("donor_email, donor_name, locale, amount_cents, currency")
+    .single();
+  // A retried event finds the invoice already recorded, and its thanks already queued.
+  if (error?.code === "23505") return;
+  if (error) throw new Error(`Donations: ${error.message}`);
+  if (!gift.donor_email) return;
+  await queueEmail({
+    to: gift.donor_email,
+    template: "donation_thanks",
+    locale: gift.locale as Locale,
+    capped: false,
+    params: {
+      name: gift.donor_name,
+      amountCents: gift.amount_cents,
+      currency: gift.currency,
+      monthly: true,
+    },
   });
-  // A retried event finds the invoice already recorded.
-  if (error && error.code !== "23505") throw new Error(`Donations: ${error.message}`);
 }
 
 async function dispatch(event: StripeEvent) {
@@ -329,16 +380,6 @@ async function dispatch(event: StripeEvent) {
       return recordMonthlyGift(object as unknown as StripeInvoice);
   }
 }
-
-/** The events the site listens for; the studio shows these when setting up the webhook. */
-export const WEBHOOK_EVENTS = [
-  "checkout.session.completed",
-  "checkout.session.async_payment_succeeded",
-  "checkout.session.async_payment_failed",
-  "checkout.session.expired",
-  "charge.refunded",
-  "invoice.paid",
-] as const;
 
 /**
  * POST /api/stripe/webhook. Each event is handled once: its id goes into
