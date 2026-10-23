@@ -1256,6 +1256,7 @@ export type Database = {
           config: NonNullable<Json>;
           iv: string | null;
           last_error: string | null;
+          last_result: Json | null;
           last4: string;
           locked_until: string | null;
           provider: string;
@@ -1271,6 +1272,7 @@ export type Database = {
           config?: NonNullable<Json>;
           iv?: string | null;
           last_error?: string | null;
+          last_result?: Json | null;
           last4?: string;
           locked_until?: string | null;
           provider: string;
@@ -1285,6 +1287,7 @@ export type Database = {
           config?: NonNullable<Json>;
           iv?: string | null;
           last_error?: string | null;
+          last_result?: Json | null;
           last4?: string;
           locked_until?: string | null;
           provider?: string;
@@ -2611,6 +2614,7 @@ export type Database = {
           description: string;
           duration_seconds: number | null;
           featured: boolean;
+          gone_at: string | null;
           hidden: boolean;
           id: string;
           position: number | null;
@@ -2627,6 +2631,7 @@ export type Database = {
           description?: string;
           duration_seconds?: number | null;
           featured?: boolean;
+          gone_at?: string | null;
           hidden?: boolean;
           id?: string;
           position?: number | null;
@@ -2642,6 +2647,7 @@ export type Database = {
           description?: string;
           duration_seconds?: number | null;
           featured?: boolean;
+          gone_at?: string | null;
           hidden?: boolean;
           id?: string;
           position?: number | null;

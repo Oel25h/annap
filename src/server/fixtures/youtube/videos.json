@@ -1,0 +1,120 @@
+{
+  "kind": "youtube#videoListResponse",
+  "etag": "v9",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "v1",
+      "id": "qaPO_4kKq4c",
+      "snippet": {
+        "publishedAt": "2026-10-20T16:00:07Z",
+        "channelId": "UCzAbCdEfGhIjKlMnOpQrStU",
+        "title": "  Why I wrote the last chapter twice  ",
+        "description": "A short talk about rewriting.\n\nThe book: https://example.com/books",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/qaPO_4kKq4c/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/qaPO_4kKq4c/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/qaPO_4kKq4c/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/qaPO_4kKq4c/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          },
+          "maxres": {
+            "url": "https://i.ytimg.com/vi/qaPO_4kKq4c/maxresdefault.jpg",
+            "width": 1280,
+            "height": 720
+          }
+        },
+        "channelTitle": "Anastasia Patience",
+        "liveBroadcastContent": "none",
+        "defaultAudioLanguage": "en"
+      },
+      "contentDetails": {
+        "duration": "PT1H2M5S",
+        "dimension": "2d",
+        "definition": "hd",
+        "caption": "true"
+      },
+      "status": {
+        "uploadStatus": "processed",
+        "privacyStatus": "public",
+        "license": "youtube",
+        "embeddable": true
+      }
+    },
+    {
+      "kind": "youtube#video",
+      "etag": "v2",
+      "id": "7GmLtrV3_Jk",
+      "snippet": {
+        "publishedAt": "2026-10-11T09:30:00Z",
+        "title": "Γράμμα σε μια γυναίκα που ξεκινά από την αρχή",
+        "description": "",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/7GmLtrV3_Jk/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/7GmLtrV3_Jk/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "liveBroadcastContent": "none"
+      },
+      "contentDetails": { "duration": "PT9M" },
+      "status": { "uploadStatus": "processed", "privacyStatus": "public" }
+    },
+    {
+      "kind": "youtube#video",
+      "etag": "v3",
+      "id": "LiveSoon001",
+      "snippet": {
+        "publishedAt": "2026-10-22T08:00:00Z",
+        "title": "Live reading, Sunday",
+        "description": "Join me live.",
+        "thumbnails": {
+          "high": {
+            "url": "https://i.ytimg.com/vi/LiveSoon001/hqdefault_live.jpg",
+            "width": 480,
+            "height": 360
+          }
+        },
+        "liveBroadcastContent": "upcoming"
+      },
+      "contentDetails": { "duration": "P0D" },
+      "status": { "uploadStatus": "uploaded", "privacyStatus": "public" }
+    },
+    {
+      "kind": "youtube#video",
+      "etag": "v4",
+      "id": "Ux-0aB1cD2e",
+      "snippet": {
+        "publishedAt": "not a date",
+        "title": "",
+        "description": "Unlisted draft",
+        "thumbnails": {},
+        "liveBroadcastContent": "none"
+      },
+      "contentDetails": { "duration": "PT45S" },
+      "status": { "uploadStatus": "processed", "privacyStatus": "unlisted" }
+    },
+    { "kind": "youtube#video", "etag": "v5", "id": "no" }
+  ],
+  "pageInfo": { "totalResults": 4, "resultsPerPage": 4 }
+}

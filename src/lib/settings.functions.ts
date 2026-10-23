@@ -33,3 +33,11 @@ export const disconnectKeys = createServerFn({ method: "POST" })
     await disconnect(context.userId, data.provider);
     return { ok: true };
   });
+
+/** Keys and links → YouTube → "Sync now": the same sync the hourly cron runs. */
+export const syncYouTubeNow = createServerFn({ method: "POST" })
+  .middleware([requireAdmin])
+  .handler(async () => {
+    const { syncYouTube } = await import("@/server/youtube-sync.server");
+    return syncYouTube("manual");
+  });

@@ -41,10 +41,12 @@ export default defineConfig(({ mode }) => {
         tasks: {
           "outbox:drain": { handler: fromRoot("./src/server/tasks/outbox-drain.ts") },
           "purge:expired": { handler: fromRoot("./src/server/tasks/purge-expired.ts") },
+          "youtube:sync": { handler: fromRoot("./src/server/tasks/youtube-sync.ts") },
         },
         scheduledTasks: {
           "*/5 * * * *": ["outbox:drain"],
           "17 3 * * *": ["purge:expired"],
+          "0 * * * *": ["youtube:sync"],
         },
       }),
       viteReact(),

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { Icon } from "@/components/site/Icon";
-import { errorText, savedWords } from "@/components/studio/format";
+import { ago, errorText, savedWords } from "@/components/studio/format";
 import { useAnnounce, useNow } from "@/components/studio/hooks";
 import {
   AreaField,
@@ -17,7 +17,7 @@ import {
 import { MediaField } from "@/components/studio/MediaPicker";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { disconnectKeys, getKeys, saveKeys } from "@/lib/settings.functions";
+import { disconnectKeys, getKeys, saveKeys, syncYouTubeNow } from "@/lib/settings.functions";
 import type { ProviderState, SettingsProvider } from "@/server/studio-settings.server";
 
 /**
@@ -239,7 +239,7 @@ const PROVIDERS: {
       {
         key: "webhookSecret",
         label: "Webhook signing secret",
-        hint: "From the webhook endpoint for the address below. Starts with whsec_.",
+        hint: "Stripe shows it once you add the webhook below. Starts with whsec_.",
       },
     ],
     config: [
@@ -259,7 +259,7 @@ const PROVIDERS: {
   {
     provider: "youtube",
     title: "Videos (YouTube)",
-    lead: "Lets the site read your channel's newest videos.",
+    lead: "Every hour the site reads your channel's newest videos: titles, descriptions, lengths and thumbnails. Videos you delete or make private on YouTube are hidden here, not deleted.",
     secrets: [
       { key: "apiKey", label: "API key", hint: "A Google Cloud key with YouTube Data API access." },
     ],
@@ -344,7 +344,6 @@ function ProviderCard({
     Object.values(secrets).some((v) => v.trim()) ||
     Object.entries(config).some(([k, v]) => v !== (state.config[k] ?? ""));
   const connected = state.status === "connected";
-  const origin = typeof window === "undefined" ? "" : window.location.origin;
 
   async function save() {
     setBusy(true);
@@ -397,14 +396,7 @@ function ProviderCard({
             />
           );
         })}
-        {spec.provider === "stripe" && (
-          <Field
-            label="Webhook address"
-            hint="Add this endpoint in Stripe and send it the checkout.session events (completed, expired, async_payment_succeeded and async_payment_failed) and charge.refunded."
-          >
-            {(p) => <input {...p} readOnly value={`${origin}/api/stripe/webhook`} />}
-          </Field>
-        )}
+        {state.webhook && <WebhookSetup webhook={state.webhook} />}
         {spec.config.map((f) =>
           f.kind === "switch" ? (
             <Switch
@@ -438,6 +430,7 @@ function ProviderCard({
           )}
         </SaveLine>
       </form>
+      {state.sync && <YouTubeSync connected={connected} sync={state.sync} onChange={onChange} />}
       <ConfirmDialog
         open={removing}
         title={`Disconnect ${spec.title}?`}
@@ -453,6 +446,114 @@ function ProviderCard({
         onClose={() => setRemoving(false)}
       />
     </Card>
+  );
+}
+
+/** Where Stripe sends payments: the address to paste and the events to tick. */
+function WebhookSetup({ webhook }: { webhook: NonNullable<ProviderState["webhook"]> }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <>
+      <Field
+        label="Webhook address"
+        hint="In Stripe: Developers → Webhooks → Add destination. Paste this address, choose the events below, then copy the signing secret into the field above."
+        aside={
+          <button
+            className="btn-text"
+            type="button"
+            onClick={() =>
+              navigator.clipboard.writeText(webhook.url).then(
+                () => setCopied(true),
+                () => setCopied(false),
+              )
+            }
+          >
+            {copied ? "Copied" : "Copy"}
+            <span className="sr-only"> the webhook address</span>
+          </button>
+        }
+      >
+        {(p) => (
+          <input
+            {...p}
+            readOnly
+            spellCheck={false}
+            value={webhook.url}
+            onFocus={(e) => e.target.select()}
+          />
+        )}
+      </Field>
+      <div className="set-events">
+        <p className="meta">Events to send:</p>
+        <ul>
+          {webhook.events.map((event) => (
+            <li key={event}>
+              <code>{event}</code>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
+}
+
+/** YouTube's hourly sync: when it last ran, what it found, and a button to run it now. */
+function YouTubeSync({
+  connected,
+  sync,
+  onChange,
+}: {
+  connected: boolean;
+  sync: NonNullable<ProviderState["sync"]>;
+  onChange: (state: ProviderState) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [announce, say] = useAnnounce();
+  const now = useNow();
+  const last = sync.last;
+
+  async function run() {
+    setBusy(true);
+    setError(null);
+    try {
+      const outcome = await syncYouTubeNow();
+      const next = (await getKeys()).find((s) => s.provider === "youtube");
+      if (next) onChange(next);
+      if (outcome.ok) say(`Synced. ${outcome.message}`);
+      else setError(outcome.message);
+    } catch (e) {
+      setError(errorText(e, "The sync didn't run. Try again."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  let status = "Not synced yet. It runs every hour once the key and channel are saved.";
+  if (last?.ok) status = `Synced ${ago(last.at, now)}: ${last.message}`;
+  else if (last) {
+    status = `Last try ${ago(last.at, now)} didn't work: ${last.message}`;
+    if (sync.syncedAt) status += ` Last good sync ${ago(sync.syncedAt, now)}.`;
+  }
+
+  return (
+    <div className="set-sync">
+      {announce}
+      <div className="mgr-save">
+        <p className="meta">{busy ? "Syncing…" : status}</p>
+        <button
+          className="btn btn-quiet"
+          type="button"
+          disabled={busy || !connected}
+          aria-busy={busy || undefined}
+          onClick={() => void run()}
+        >
+          <Icon name="redo" />
+          Sync now
+        </button>
+      </div>
+      {error && <FormAlert>{error}</FormAlert>}
+    </div>
   );
 }
 

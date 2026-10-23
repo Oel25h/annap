@@ -13,6 +13,19 @@ export function savedWords(at: number | null, now: number): string {
   return "Saved";
 }
 
+/** "just now", "12 min ago", "3 hours ago", then the date: for times read from the server. */
+export function ago(value: string | null | undefined, now: number): string {
+  if (!value) return "";
+  const at = Date.parse(value);
+  if (Number.isNaN(at)) return "";
+  const minutes = Math.floor((now - at) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  return `on ${day(value)}`;
+}
+
 /** Errors from Supabase or a server function, in words. */
 export function errorText(e: unknown, fallback = "Something went wrong. Try again."): string {
   if (e instanceof Error && e.message) {

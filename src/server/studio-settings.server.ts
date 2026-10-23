@@ -6,6 +6,7 @@
  * is set and its last four characters. Nothing here logs a key.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { readServerPublicConfig } from "@/lib/public-config";
 import { open, type Sealed } from "./crypto.server";
 import {
   forgetIntegration,
@@ -13,6 +14,8 @@ import {
   type Provider,
   type ProviderSecrets,
 } from "./secrets.server";
+import { WEBHOOK_EVENTS, WEBHOOK_PATH } from "./stripe-events.server";
+import type { SyncOutcome } from "./youtube-sync.server";
 
 /** The providers the keys screen manages, and the secrets each one holds. */
 export const SECRET_FIELDS = {
@@ -64,6 +67,10 @@ export type ProviderState = {
   secrets: Record<string, SecretState>;
   config: Record<string, string>;
   updatedAt: string | null;
+  /** Stripe: the endpoint to add in Stripe and the events to send it. */
+  webhook?: { url: string; events: readonly string[] };
+  /** YouTube: the latest sync, and the latest one that worked. */
+  sync?: { last: SyncOutcome | null; syncedAt: string | null };
 };
 
 const last4 = (value: string | undefined) => (value && value.length >= 8 ? value.slice(-4) : "");
@@ -71,7 +78,7 @@ const last4 = (value: string | undefined) => (value && value.length >= 8 ? value
 async function sealed(provider: SettingsProvider) {
   const { data, error } = await supabaseAdmin
     .from("integration_secrets")
-    .select("ciphertext, iv, config, status, updated_at")
+    .select("ciphertext, iv, config, status, updated_at, synced_at, last_result")
     .eq("provider", provider)
     .maybeSingle();
   if (error) throw new Error(`Keys: ${error.message}`);
@@ -109,6 +116,22 @@ export async function readKeys(): Promise<ProviderState[]> {
       secrets: state,
       config: configStrings(row?.config),
       updatedAt: row?.updated_at ?? null,
+      ...(provider === "stripe"
+        ? {
+            webhook: {
+              url: `${readServerPublicConfig().siteUrl}${WEBHOOK_PATH}`,
+              events: WEBHOOK_EVENTS,
+            },
+          }
+        : {}),
+      ...(provider === "youtube"
+        ? {
+            sync: {
+              last: (row?.last_result as SyncOutcome | null) ?? null,
+              syncedAt: row?.synced_at ?? null,
+            },
+          }
+        : {}),
     });
   }
   return out;
