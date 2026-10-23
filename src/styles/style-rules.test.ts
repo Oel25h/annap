@@ -42,6 +42,7 @@ const STUDIO_TSX = [
   "src/routes/_authenticated/preview.page.$pageId.tsx",
   "src/routes/_authenticated/admin.media.tsx",
   "src/routes/_authenticated/admin.translations.tsx",
+  "src/routes/_authenticated/admin.settings.tsx",
 ];
 
 const PUBLIC_TSX = [

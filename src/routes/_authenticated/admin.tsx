@@ -32,6 +32,10 @@ const NAV: { group: string; items: { to: string; label: string; exact?: boolean 
     ],
   },
   {
+    group: "Settings",
+    items: [{ to: "/admin/settings", label: "Keys and links" }],
+  },
+  {
     group: "People",
     items: [
       { to: "/admin/messages", label: "Messages" },
