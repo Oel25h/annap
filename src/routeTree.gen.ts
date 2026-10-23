@@ -25,19 +25,21 @@ import { Route as EventsSlugRouteImport } from './routes/events/$slug'
 import { Route as MasterclassesSlugRouteImport } from './routes/masterclasses/$slug'
 import { Route as ShopSlugRouteImport } from './routes/shop/$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAudiobooksRouteImport } from './routes/_authenticated/admin.audiobooks'
 import { Route as AuthenticatedAdminBlogRouteImport } from './routes/_authenticated/admin.blog'
 import { Route as AuthenticatedAdminBooksRouteImport } from './routes/_authenticated/admin.books'
+import { Route as AuthenticatedAdminEventsRouteImport } from './routes/_authenticated/admin.events'
 import { Route as AuthenticatedAdminFoundationRouteImport } from './routes/_authenticated/admin.foundation'
 import { Route as AuthenticatedAdminGalleryRouteImport } from './routes/_authenticated/admin.gallery'
 import { Route as AuthenticatedAdminMasterclassRouteImport } from './routes/_authenticated/admin.masterclass'
 import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
 import { Route as AuthenticatedAdminMessagesRouteImport } from './routes/_authenticated/admin.messages'
 import { Route as AuthenticatedAdminNewsletterRouteImport } from './routes/_authenticated/admin.newsletter'
+import { Route as AuthenticatedAdminPressRouteImport } from './routes/_authenticated/admin.press'
 import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authenticated/admin.products'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
-import { Route as AuthenticatedAdminSocialsRouteImport } from './routes/_authenticated/admin.socials'
-import { Route as AuthenticatedAdminStartRouteImport } from './routes/_authenticated/admin.start'
 import { Route as AuthenticatedAdminSubscribersRouteImport } from './routes/_authenticated/admin.subscribers'
+import { Route as AuthenticatedAdminTestimonialsRouteImport } from './routes/_authenticated/admin.testimonials'
 import { Route as AuthenticatedAdminTranslationsRouteImport } from './routes/_authenticated/admin.translations'
 import { Route as ApiDownloadTokenRouteImport } from './routes/api/download/$token'
 import { Route as ApiNewsletterConfirmRouteImport } from './routes/api/newsletter/confirm'
@@ -127,6 +129,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminAudiobooksRoute =
+  AuthenticatedAdminAudiobooksRouteImport.update({
+    id: '/audiobooks',
+    path: '/audiobooks',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminBlogRoute = AuthenticatedAdminBlogRouteImport.update({
   id: '/blog',
   path: '/blog',
@@ -137,6 +145,12 @@ const AuthenticatedAdminBooksRoute = AuthenticatedAdminBooksRouteImport.update({
   path: '/books',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminEventsRoute =
+  AuthenticatedAdminEventsRouteImport.update({
+    id: '/events',
+    path: '/events',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminFoundationRoute =
   AuthenticatedAdminFoundationRouteImport.update({
     id: '/foundation',
@@ -172,6 +186,11 @@ const AuthenticatedAdminNewsletterRoute =
     path: '/newsletter',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPressRoute = AuthenticatedAdminPressRouteImport.update({
+  id: '/press',
+  path: '/press',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminProductsRoute =
   AuthenticatedAdminProductsRouteImport.update({
     id: '/products',
@@ -184,21 +203,16 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const AuthenticatedAdminSocialsRoute =
-  AuthenticatedAdminSocialsRouteImport.update({
-    id: '/socials',
-    path: '/socials',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminStartRoute = AuthenticatedAdminStartRouteImport.update({
-  id: '/start',
-  path: '/start',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
 const AuthenticatedAdminSubscribersRoute =
   AuthenticatedAdminSubscribersRouteImport.update({
     id: '/subscribers',
     path: '/subscribers',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminTestimonialsRoute =
+  AuthenticatedAdminTestimonialsRouteImport.update({
+    id: '/testimonials',
+    path: '/testimonials',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminTranslationsRoute =
@@ -267,19 +281,21 @@ export interface FileRoutesByFullPath {
   '/events/$slug': typeof EventsSlugRoute
   '/masterclasses/$slug': typeof MasterclassesSlugRoute
   '/shop/$slug': typeof ShopSlugRoute
+  '/admin/audiobooks': typeof AuthenticatedAdminAudiobooksRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
+  '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
   '/admin/gallery': typeof AuthenticatedAdminGalleryRoute
   '/admin/masterclass': typeof AuthenticatedAdminMasterclassRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
+  '/admin/press': typeof AuthenticatedAdminPressRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
-  '/admin/socials': typeof AuthenticatedAdminSocialsRoute
-  '/admin/start': typeof AuthenticatedAdminStartRoute
   '/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
+  '/admin/testimonials': typeof AuthenticatedAdminTestimonialsRoute
   '/admin/translations': typeof AuthenticatedAdminTranslationsRoute
   '/api/download/$token': typeof ApiDownloadTokenRoute
   '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
@@ -305,19 +321,21 @@ export interface FileRoutesByTo {
   '/events/$slug': typeof EventsSlugRoute
   '/masterclasses/$slug': typeof MasterclassesSlugRoute
   '/shop/$slug': typeof ShopSlugRoute
+  '/admin/audiobooks': typeof AuthenticatedAdminAudiobooksRoute
   '/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/admin/books': typeof AuthenticatedAdminBooksRoute
+  '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
   '/admin/gallery': typeof AuthenticatedAdminGalleryRoute
   '/admin/masterclass': typeof AuthenticatedAdminMasterclassRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
+  '/admin/press': typeof AuthenticatedAdminPressRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
-  '/admin/socials': typeof AuthenticatedAdminSocialsRoute
-  '/admin/start': typeof AuthenticatedAdminStartRoute
   '/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
+  '/admin/testimonials': typeof AuthenticatedAdminTestimonialsRoute
   '/admin/translations': typeof AuthenticatedAdminTranslationsRoute
   '/api/download/$token': typeof ApiDownloadTokenRoute
   '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
@@ -346,19 +364,21 @@ export interface FileRoutesById {
   '/events/$slug': typeof EventsSlugRoute
   '/masterclasses/$slug': typeof MasterclassesSlugRoute
   '/shop/$slug': typeof ShopSlugRoute
+  '/_authenticated/admin/audiobooks': typeof AuthenticatedAdminAudiobooksRoute
   '/_authenticated/admin/blog': typeof AuthenticatedAdminBlogRoute
   '/_authenticated/admin/books': typeof AuthenticatedAdminBooksRoute
+  '/_authenticated/admin/events': typeof AuthenticatedAdminEventsRoute
   '/_authenticated/admin/foundation': typeof AuthenticatedAdminFoundationRoute
   '/_authenticated/admin/gallery': typeof AuthenticatedAdminGalleryRoute
   '/_authenticated/admin/masterclass': typeof AuthenticatedAdminMasterclassRoute
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/_authenticated/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
+  '/_authenticated/admin/press': typeof AuthenticatedAdminPressRoute
   '/_authenticated/admin/products': typeof AuthenticatedAdminProductsRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
-  '/_authenticated/admin/socials': typeof AuthenticatedAdminSocialsRoute
-  '/_authenticated/admin/start': typeof AuthenticatedAdminStartRoute
   '/_authenticated/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
+  '/_authenticated/admin/testimonials': typeof AuthenticatedAdminTestimonialsRoute
   '/_authenticated/admin/translations': typeof AuthenticatedAdminTranslationsRoute
   '/api/download/$token': typeof ApiDownloadTokenRoute
   '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
@@ -387,19 +407,21 @@ export interface FileRouteTypes {
     | '/events/$slug'
     | '/masterclasses/$slug'
     | '/shop/$slug'
+    | '/admin/audiobooks'
     | '/admin/blog'
     | '/admin/books'
+    | '/admin/events'
     | '/admin/foundation'
     | '/admin/gallery'
     | '/admin/masterclass'
     | '/admin/media'
     | '/admin/messages'
     | '/admin/newsletter'
+    | '/admin/press'
     | '/admin/products'
     | '/admin/settings'
-    | '/admin/socials'
-    | '/admin/start'
     | '/admin/subscribers'
+    | '/admin/testimonials'
     | '/admin/translations'
     | '/api/download/$token'
     | '/api/newsletter/confirm'
@@ -425,19 +447,21 @@ export interface FileRouteTypes {
     | '/events/$slug'
     | '/masterclasses/$slug'
     | '/shop/$slug'
+    | '/admin/audiobooks'
     | '/admin/blog'
     | '/admin/books'
+    | '/admin/events'
     | '/admin/foundation'
     | '/admin/gallery'
     | '/admin/masterclass'
     | '/admin/media'
     | '/admin/messages'
     | '/admin/newsletter'
+    | '/admin/press'
     | '/admin/products'
     | '/admin/settings'
-    | '/admin/socials'
-    | '/admin/start'
     | '/admin/subscribers'
+    | '/admin/testimonials'
     | '/admin/translations'
     | '/api/download/$token'
     | '/api/newsletter/confirm'
@@ -465,19 +489,21 @@ export interface FileRouteTypes {
     | '/events/$slug'
     | '/masterclasses/$slug'
     | '/shop/$slug'
+    | '/_authenticated/admin/audiobooks'
     | '/_authenticated/admin/blog'
     | '/_authenticated/admin/books'
+    | '/_authenticated/admin/events'
     | '/_authenticated/admin/foundation'
     | '/_authenticated/admin/gallery'
     | '/_authenticated/admin/masterclass'
     | '/_authenticated/admin/media'
     | '/_authenticated/admin/messages'
     | '/_authenticated/admin/newsletter'
+    | '/_authenticated/admin/press'
     | '/_authenticated/admin/products'
     | '/_authenticated/admin/settings'
-    | '/_authenticated/admin/socials'
-    | '/_authenticated/admin/start'
     | '/_authenticated/admin/subscribers'
+    | '/_authenticated/admin/testimonials'
     | '/_authenticated/admin/translations'
     | '/api/download/$token'
     | '/api/newsletter/confirm'
@@ -626,6 +652,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/audiobooks': {
+      id: '/_authenticated/admin/audiobooks'
+      path: '/audiobooks'
+      fullPath: '/admin/audiobooks'
+      preLoaderRoute: typeof AuthenticatedAdminAudiobooksRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/blog': {
       id: '/_authenticated/admin/blog'
       path: '/blog'
@@ -638,6 +671,13 @@ declare module '@tanstack/react-router' {
       path: '/books'
       fullPath: '/admin/books'
       preLoaderRoute: typeof AuthenticatedAdminBooksRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/events': {
+      id: '/_authenticated/admin/events'
+      path: '/events'
+      fullPath: '/admin/events'
+      preLoaderRoute: typeof AuthenticatedAdminEventsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/foundation': {
@@ -682,6 +722,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNewsletterRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/press': {
+      id: '/_authenticated/admin/press'
+      path: '/press'
+      fullPath: '/admin/press'
+      preLoaderRoute: typeof AuthenticatedAdminPressRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/products': {
       id: '/_authenticated/admin/products'
       path: '/products'
@@ -696,25 +743,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/socials': {
-      id: '/_authenticated/admin/socials'
-      path: '/socials'
-      fullPath: '/admin/socials'
-      preLoaderRoute: typeof AuthenticatedAdminSocialsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/start': {
-      id: '/_authenticated/admin/start'
-      path: '/start'
-      fullPath: '/admin/start'
-      preLoaderRoute: typeof AuthenticatedAdminStartRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
     '/_authenticated/admin/subscribers': {
       id: '/_authenticated/admin/subscribers'
       path: '/subscribers'
       fullPath: '/admin/subscribers'
       preLoaderRoute: typeof AuthenticatedAdminSubscribersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/testimonials': {
+      id: '/_authenticated/admin/testimonials'
+      path: '/testimonials'
+      fullPath: '/admin/testimonials'
+      preLoaderRoute: typeof AuthenticatedAdminTestimonialsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/translations': {
@@ -784,19 +824,21 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAudiobooksRoute: typeof AuthenticatedAdminAudiobooksRoute
   AuthenticatedAdminBlogRoute: typeof AuthenticatedAdminBlogRoute
   AuthenticatedAdminBooksRoute: typeof AuthenticatedAdminBooksRoute
+  AuthenticatedAdminEventsRoute: typeof AuthenticatedAdminEventsRoute
   AuthenticatedAdminFoundationRoute: typeof AuthenticatedAdminFoundationRoute
   AuthenticatedAdminGalleryRoute: typeof AuthenticatedAdminGalleryRoute
   AuthenticatedAdminMasterclassRoute: typeof AuthenticatedAdminMasterclassRoute
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminMessagesRoute: typeof AuthenticatedAdminMessagesRoute
   AuthenticatedAdminNewsletterRoute: typeof AuthenticatedAdminNewsletterRoute
+  AuthenticatedAdminPressRoute: typeof AuthenticatedAdminPressRoute
   AuthenticatedAdminProductsRoute: typeof AuthenticatedAdminProductsRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
-  AuthenticatedAdminSocialsRoute: typeof AuthenticatedAdminSocialsRoute
-  AuthenticatedAdminStartRoute: typeof AuthenticatedAdminStartRoute
   AuthenticatedAdminSubscribersRoute: typeof AuthenticatedAdminSubscribersRoute
+  AuthenticatedAdminTestimonialsRoute: typeof AuthenticatedAdminTestimonialsRoute
   AuthenticatedAdminTranslationsRoute: typeof AuthenticatedAdminTranslationsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminPagesPageIdRoute: typeof AuthenticatedAdminPagesPageIdRoute
@@ -804,19 +846,21 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAudiobooksRoute: AuthenticatedAdminAudiobooksRoute,
   AuthenticatedAdminBlogRoute: AuthenticatedAdminBlogRoute,
   AuthenticatedAdminBooksRoute: AuthenticatedAdminBooksRoute,
+  AuthenticatedAdminEventsRoute: AuthenticatedAdminEventsRoute,
   AuthenticatedAdminFoundationRoute: AuthenticatedAdminFoundationRoute,
   AuthenticatedAdminGalleryRoute: AuthenticatedAdminGalleryRoute,
   AuthenticatedAdminMasterclassRoute: AuthenticatedAdminMasterclassRoute,
   AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminMessagesRoute: AuthenticatedAdminMessagesRoute,
   AuthenticatedAdminNewsletterRoute: AuthenticatedAdminNewsletterRoute,
+  AuthenticatedAdminPressRoute: AuthenticatedAdminPressRoute,
   AuthenticatedAdminProductsRoute: AuthenticatedAdminProductsRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
-  AuthenticatedAdminSocialsRoute: AuthenticatedAdminSocialsRoute,
-  AuthenticatedAdminStartRoute: AuthenticatedAdminStartRoute,
   AuthenticatedAdminSubscribersRoute: AuthenticatedAdminSubscribersRoute,
+  AuthenticatedAdminTestimonialsRoute: AuthenticatedAdminTestimonialsRoute,
   AuthenticatedAdminTranslationsRoute: AuthenticatedAdminTranslationsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminPagesPageIdRoute: AuthenticatedAdminPagesPageIdRoute,

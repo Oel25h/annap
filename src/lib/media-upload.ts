@@ -261,3 +261,37 @@ export async function loadMedia(ids: string[]): Promise<Record<string, MediaRow>
   const { data } = await supabase.from("media_assets").select("*").in("id", wanted);
   return Object.fromEntries((data ?? []).map((r) => [r.id, r as MediaRow]));
 }
+
+/**
+ * Move a file between the public audio bucket and the private downloads
+ * bucket (a chapter switched between free and paid). The copy lands first,
+ * then the row points at it, then the old copy goes.
+ */
+export async function moveToBucket(id: string, to: MediaBucket): Promise<void> {
+  const { data: row, error } = await supabase
+    .from("media_assets")
+    .select("id, bucket, path, mime")
+    .eq("id", id)
+    .single();
+  if (error || !row) throw new Error("That file is no longer in the library.");
+  if (row.bucket === to) return;
+  const { data: blob, error: readError } = await supabase.storage
+    .from(row.bucket)
+    .download(row.path);
+  if (readError || !blob) throw new Error("The file couldn't be read to move it. Try again.");
+  const { error: writeError } = await supabase.storage.from(to).upload(row.path, blob, {
+    contentType: row.mime,
+    upsert: true,
+    cacheControl: to === "downloads" ? "3600" : "31536000",
+  });
+  if (writeError) throw new Error(explain(writeError.message));
+  const { error: rowError } = await supabase
+    .from("media_assets")
+    .update({ bucket: to, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (rowError) {
+    await supabase.storage.from(to).remove([row.path]);
+    throw new Error(explain(rowError.message));
+  }
+  await supabase.storage.from(row.bucket).remove([row.path]);
+}

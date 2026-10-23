@@ -69,3 +69,14 @@ export function mediaMeta(row: MediaRow): string {
   parts.push(fileSize(row.bytes));
   return parts.join(" · ");
 }
+
+/** A web address part from a title: "Two Suitcases!" → "two-suitcases". */
+export function slugify(text: string): string {
+  return text
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}

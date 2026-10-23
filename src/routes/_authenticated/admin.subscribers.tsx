@@ -1,28 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { Icon } from "@/components/site/Icon";
+import { day, errorText } from "@/components/studio/format";
+import { useAnnounce } from "@/components/studio/hooks";
+import {
+  ConfirmDialog,
+  Empty,
+  FormAlert,
+  Loading,
+  Modal,
+  PageHead,
+  SelectField,
+  Switch,
+  TextField,
+} from "@/components/studio/kit";
 import { supabase } from "@/integrations/supabase/client";
-import { Download, Search, UserPlus } from "lucide-react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
-import {
-  PillButton,
-  Field,
-  inputCls,
-  cardCls,
-  ConfirmButton,
-  EmptyState,
-  Chip,
-} from "@/components/admin/ui";
 
+/**
+ * Everyone on the letters list: sign-ups over the last 90 days, where they
+ * came from, search, a CSV of what is shown, adding someone by hand (only
+ * with their consent), and removal.
+ */
 export const Route = createFileRoute("/_authenticated/admin/subscribers")({
-  component: Subs,
+  head: () => ({ meta: [{ title: "Subscribers — Studio" }] }),
+  component: Subscribers,
 });
 
 type Sub = {
@@ -31,246 +32,395 @@ type Sub = {
   name: string | null;
   source: string | null;
   status: string;
+  locale: string;
   created_at: string;
 };
 
-function Subs() {
-  const [subs, setSubs] = useState<Sub[]>([]);
-  const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<string>("all");
-  const [showAdd, setShowAdd] = useState(false);
-  const [addEmail, setAddEmail] = useState("");
-  const [addName, setAddName] = useState("");
-  const [addSource, setAddSource] = useState("manual");
+const STATUS_WORD: Record<string, string> = {
+  active: "Subscribed",
+  pending: "Awaiting confirmation",
+  unsubscribed: "Unsubscribed",
+};
 
-  async function load() {
-    const { data } = await supabase
+function Subscribers() {
+  const [subs, setSubs] = useState<Sub[] | null>(null);
+  const [q, setQ] = useState("");
+  const [source, setSource] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [removing, setRemoving] = useState<Sub | null>(null);
+  const [announce, say] = useAnnounce();
+  const searchId = useId();
+
+  const load = useCallback(async () => {
+    const { data, error: e } = await supabase
       .from("subscribers")
-      .select("*")
+      .select("id, email, name, source, status, locale, created_at")
       .order("created_at", { ascending: false });
-    setSubs((data ?? []) as Sub[]);
-  }
-  useEffect(() => {
-    load();
+    if (e) setError(errorText(e));
+    else setSubs((data ?? []) as Sub[]);
   }, []);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const sources = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const s of subs) m.set(s.source ?? "unknown", (m.get(s.source ?? "unknown") ?? 0) + 1);
-    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+    const counts = new Map<string, number>();
+    for (const s of subs ?? [])
+      counts.set(s.source ?? "unknown", (counts.get(s.source ?? "unknown") ?? 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [subs]);
 
-  const chartData = useMemo(() => {
-    const days: Record<string, number> = {};
-    const today = new Date();
-    for (let i = 89; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      days[d.toISOString().slice(0, 10)] = 0;
-    }
-    for (const s of subs) {
-      const key = s.created_at.slice(0, 10);
-      if (key in days) days[key]++;
-    }
-    return Object.entries(days).map(([date, count]) => ({ date, count }));
-  }, [subs]);
-
-  const filtered = useMemo(() => {
-    return subs.filter(
+  const shown = useMemo(() => {
+    const words = q.trim().toLowerCase();
+    return (subs ?? []).filter(
       (s) =>
-        (filter === "all" || (s.source ?? "unknown") === filter) &&
-        (q === "" ||
-          s.email.toLowerCase().includes(q.toLowerCase()) ||
-          (s.name ?? "").toLowerCase().includes(q.toLowerCase())),
+        (source === "all" || (s.source ?? "unknown") === source) &&
+        (status === "all" || s.status === status) &&
+        (!words || `${s.email} ${s.name ?? ""}`.toLowerCase().includes(words)),
     );
-  }, [subs, q, filter]);
-
-  async function del(id: string) {
-    await supabase.from("subscribers").delete().eq("id", id);
-    await load();
-  }
-
-  async function manualAdd() {
-    if (!addEmail) return;
-    await supabase
-      .from("subscribers")
-      .insert({ email: addEmail, name: addName || null, source: addSource || "manual" });
-    setAddEmail("");
-    setAddName("");
-    setShowAdd(false);
-    await load();
-  }
+  }, [subs, q, source, status]);
 
   function exportCsv() {
     const rows = [
-      ["email", "name", "source", "status", "signed_up"],
-      ...filtered.map((s) => [s.email, s.name ?? "", s.source ?? "", s.status, s.created_at]),
+      ["email", "name", "source", "status", "language", "signed_up"],
+      ...shown.map((s) => [
+        s.email,
+        s.name ?? "",
+        s.source ?? "",
+        s.status,
+        s.locale,
+        s.created_at,
+      ]),
     ];
-    const csv = rows
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    // A leading = + - @ would run as a formula in a spreadsheet; quote it out.
+    const cell = (c: string) => `"${(/^[=+\-@]/.test(c) ? `'${c}` : c).replace(/"/g, '""')}"`;
+    const csv = rows.map((r) => r.map(cell).join(",")).join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = url;
     a.download = `subscribers-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    URL.revokeObjectURL(url);
+    say(`Exported ${shown.length} subscribers.`);
+  }
+
+  const active = (subs ?? []).filter((s) => s.status === "active").length;
+
+  return (
+    <>
+      {announce}
+      <PageHead
+        title="Subscribers"
+        lead={
+          subs ? `${active} subscribed · ${subs.length} in all` : "Everyone on the letters list."
+        }
+        actions={
+          <>
+            <button className="btn btn-quiet" type="button" onClick={() => setAdding(true)}>
+              <Icon name="plus" />
+              Add by hand
+            </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={exportCsv}
+              disabled={!shown.length}
+            >
+              <Icon name="arrow-down" />
+              Export CSV
+            </button>
+          </>
+        }
+      />
+      {error && <FormAlert>{error}</FormAlert>}
+      {!subs ? (
+        <Loading>Loading subscribers…</Loading>
+      ) : (
+        <>
+          <section className="ov-section" aria-labelledby="signups">
+            <h2 className="title" id="signups">
+              Sign-ups over the last 90 days
+            </h2>
+            <SignupChart subs={subs} />
+          </section>
+
+          <section className="ov-section" aria-labelledby="where">
+            <h2 className="title" id="where">
+              Where they came from
+            </h2>
+            {sources.length === 0 ? (
+              <p className="meta">No sign-ups yet.</p>
+            ) : (
+              <ul className="ov-grid">
+                {sources.map(([name, n]) => (
+                  <li key={name}>
+                    <button
+                      className="ov-card sub-source"
+                      type="button"
+                      aria-pressed={source === name}
+                      onClick={() => setSource((s) => (s === name ? "all" : name))}
+                    >
+                      <span className="meta">{name}</span>
+                      <b>{n}</b>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="ov-section" aria-labelledby="people">
+            <h2 className="title" id="people">
+              People
+            </h2>
+            <div className="mgr-tools">
+              <SelectField
+                label="Source"
+                value={source}
+                onChange={setSource}
+                options={[
+                  { value: "all", label: "Every source" },
+                  ...sources.map(([name]) => ({ value: name, label: name })),
+                ]}
+              />
+              <SelectField
+                label="Status"
+                value={status}
+                onChange={setStatus}
+                options={[
+                  { value: "all", label: "Any status" },
+                  ...Object.entries(STATUS_WORD).map(([value, label]) => ({ value, label })),
+                ]}
+              />
+              <div className="field mgr-search">
+                <label htmlFor={searchId}>Search email or name</label>
+                <input
+                  id={searchId}
+                  type="search"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                />
+              </div>
+            </div>
+            {shown.length === 0 ? (
+              <Empty>No subscribers match.</Empty>
+            ) : (
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Email</th>
+                      <th scope="col">Name</th>
+                      <th scope="col">Source</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Joined</th>
+                      <th scope="col">
+                        <span className="sr-only">Remove</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shown.map((s) => (
+                      <tr key={s.id}>
+                        <td>{s.email}</td>
+                        <td>{s.name ?? "—"}</td>
+                        <td>{s.source ?? "unknown"}</td>
+                        <td>{STATUS_WORD[s.status] ?? s.status}</td>
+                        <td>{day(s.created_at)}</td>
+                        <td>
+                          <button
+                            className="icon-btn icon-btn--danger"
+                            type="button"
+                            aria-label={`Remove ${s.email}`}
+                            onClick={() => setRemoving(s)}
+                          >
+                            <Icon name="trash" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </>
+      )}
+
+      <AddSubscriber
+        open={adding}
+        onClose={() => setAdding(false)}
+        onAdded={(s) => {
+          setSubs((list) => [s, ...(list ?? [])]);
+          say(`${s.email} added.`);
+        }}
+      />
+      <ConfirmDialog
+        open={!!removing}
+        title={`Remove ${removing?.email ?? ""}?`}
+        body="They stop getting letters and their record is deleted. This can't be undone."
+        confirm="Remove subscriber"
+        onConfirm={async () => {
+          if (!removing) return;
+          const { error: e } = await supabase.from("subscribers").delete().eq("id", removing.id);
+          if (e) throw new Error(errorText(e));
+          setSubs((list) => list?.filter((x) => x.id !== removing.id) ?? null);
+          say(`${removing.email} removed.`);
+        }}
+        onClose={() => setRemoving(null)}
+      />
+    </>
+  );
+}
+
+/** One bar per day; the busiest day sets the height. */
+function SignupChart({ subs }: { subs: Sub[] }) {
+  const days = useMemo(() => {
+    const out: { date: string; count: number }[] = [];
+    const today = new Date();
+    const index = new Map<string, number>();
+    for (let i = 89; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      index.set(key, out.length);
+      out.push({ date: key, count: 0 });
+    }
+    for (const s of subs) {
+      const at = index.get(s.created_at.slice(0, 10));
+      if (at !== undefined) out[at].count++;
+    }
+    return out;
+  }, [subs]);
+  const total = days.reduce((n, d) => n + d.count, 0);
+  const peak = Math.max(1, ...days.map((d) => d.count));
+  const best = days.reduce((a, b) => (b.count > a.count ? b : a), days[0]);
+  const summary =
+    total === 0
+      ? "No sign-ups in the last 90 days."
+      : `${total} sign-ups in the last 90 days; the most in one day was ${best.count}, on ${day(best.date)}.`;
+  return (
+    <figure className="sub-chart">
+      <svg viewBox="0 0 900 160" preserveAspectRatio="none" role="img" aria-label={summary}>
+        <line className="sub-chart-base" x1="0" y1="159.5" x2="900" y2="159.5" />
+        {days.map((d, i) =>
+          d.count ? (
+            <rect
+              key={d.date}
+              x={i * 10 + 1}
+              width="8"
+              y={160 - (d.count / peak) * 150}
+              height={(d.count / peak) * 150}
+            >
+              <title>{`${day(d.date)}: ${d.count}`}</title>
+            </rect>
+          ) : null,
+        )}
+      </svg>
+      <figcaption className="meta">
+        <span>{day(days[0].date)}</span>
+        <span>{summary}</span>
+        <span>Today</span>
+      </figcaption>
+    </figure>
+  );
+}
+
+function AddSubscriber({
+  open,
+  onClose,
+  onAdded,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onAdded: (s: Sub) => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [source, setSource] = useState("manual");
+  const [locale, setLocale] = useState("en");
+  const [consent, setConsent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setEmail("");
+    setName("");
+    setSource("manual");
+    setConsent(false);
+    setError(null);
+  }, [open]);
+
+  async function add() {
+    setError(null);
+    const address = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return setError("Enter an email address.");
+    if (!consent) return setError("Only add someone who has asked to get the letters.");
+    setBusy(true);
+    const { data, error: e } = await supabase
+      .from("subscribers")
+      .insert({
+        email: address,
+        name: name.trim() || null,
+        source: source.trim() || "manual",
+        locale,
+        status: "active",
+        consent_source: "studio",
+        confirmed_at: new Date().toISOString(),
+      })
+      .select("id, email, name, source, status, locale, created_at")
+      .single();
+    setBusy(false);
+    if (e || !data)
+      return setError(
+        e?.code === "23505"
+          ? "That address is already on the list."
+          : errorText(e, "They weren't added."),
+      );
+    onAdded(data as Sub);
+    onClose();
   }
 
   return (
-    <div className="space-y-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-4xl text-plum md:text-5xl">Community</h1>
-          <p className="mt-2 text-sm text-ink">
-            {subs.filter((s) => s.status === "active").length} active · {subs.length} total
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <PillButton variant="outline" onClick={() => setShowAdd((v) => !v)}>
-            <UserPlus className="h-4 w-4" /> Add manually
-          </PillButton>
-          <PillButton onClick={exportCsv} disabled={!filtered.length}>
-            <Download className="h-4 w-4" /> Export CSV
-          </PillButton>
-        </div>
+    <Modal open={open} onClose={onClose} title="Add a subscriber">
+      <div className="mgr-form">
+        <TextField
+          label="Email"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          autoComplete="off"
+        />
+        <TextField label="Name" hint="Optional." value={name} onChange={setName} />
+        <TextField
+          label="Source"
+          hint="A word for where you met, such as a reading."
+          value={source}
+          onChange={setSource}
+        />
+        <SelectField
+          label="Letters in"
+          value={locale}
+          onChange={setLocale}
+          options={[
+            { value: "en", label: "English" },
+            { value: "el", label: "Greek" },
+          ]}
+        />
+        <Switch label="They asked to get the letters" checked={consent} onChange={setConsent} />
+        {error && <FormAlert>{error}</FormAlert>}
       </div>
-
-      {showAdd && (
-        <section className={cardCls + " grid gap-4 sm:grid-cols-4"}>
-          <Field label="Email">
-            <input
-              value={addEmail}
-              onChange={(e) => setAddEmail(e.target.value)}
-              className={inputCls}
-              type="email"
-            />
-          </Field>
-          <Field label="Name (optional)">
-            <input
-              value={addName}
-              onChange={(e) => setAddName(e.target.value)}
-              className={inputCls}
-            />
-          </Field>
-          <Field label="Source tag">
-            <input
-              value={addSource}
-              onChange={(e) => setAddSource(e.target.value)}
-              className={inputCls}
-            />
-          </Field>
-          <div className="flex items-end">
-            <PillButton onClick={manualAdd}>Add subscriber</PillButton>
-          </div>
-        </section>
-      )}
-
-      <section className={cardCls}>
-        <h2 className="font-display text-xl text-plum">Signups over the last 90 days</h2>
-        <div className="mt-4 h-56">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,26,26,0.08)" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 10, fill: "rgba(26,26,26,0.5)" }}
-                tickFormatter={(d) => d.slice(5)}
-                interval={14}
-              />
-              <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "rgba(26,26,26,0.5)" }} />
-              <Tooltip
-                contentStyle={{ borderRadius: 12, border: "1px solid rgba(26,26,26,0.1)" }}
-              />
-              <Line type="monotone" dataKey="count" stroke="#e85d3a" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="font-display text-xl text-plum">Where they came from</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {sources.map(([src, n]) => (
-            <button
-              key={src}
-              onClick={() => setFilter(src)}
-              className={`rounded-3xl border p-5 text-left transition ${filter === src ? "border-burgundy bg-burgundy/8" : "border-plum/10 bg-bone/50"}`}
-            >
-              <div className="text-[10px] uppercase tracking-[0.28em] text-plum/50">Source</div>
-              <div className="mt-1 truncate font-display text-lg text-plum">{src}</div>
-              <div className="mt-3 font-display text-3xl text-burgundy">{n}</div>
-            </button>
-          ))}
-          {sources.length === 0 && <p className="text-sm text-plum/50">No sign-ups yet.</p>}
-        </div>
-        {filter !== "all" && (
-          <div className="mt-3">
-            <button
-              onClick={() => setFilter("all")}
-              className="text-xs uppercase tracking-[0.22em] text-burgundy hover:underline"
-            >
-              ← Clear source filter
-            </button>
-          </div>
-        )}
-      </section>
-
-      <section className={cardCls}>
-        <div className="flex items-center gap-3">
-          <Search className="h-4 w-4 text-plum/40" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by email or name…"
-            className="flex-1 bg-transparent text-plum focus:outline-none"
-          />
-        </div>
-      </section>
-
-      <div className="overflow-x-auto rounded-3xl border border-plum/10 bg-bone/50">
-        <table className="w-full min-w-[44rem] text-left text-sm">
-          <thead className="bg-plum/5 text-[10px] uppercase tracking-[0.22em] text-plum/60">
-            <tr>
-              <th className="px-5 py-3">Email</th>
-              <th className="px-5 py-3">Name</th>
-              <th className="px-5 py-3">Source</th>
-              <th className="px-5 py-3">Status</th>
-              <th className="px-5 py-3">Joined</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((s) => (
-              <tr key={s.id} className="border-t border-plum/10">
-                <td className="px-5 py-3 text-plum">{s.email}</td>
-                <td className="px-5 py-3 text-plum/60">{s.name ?? "—"}</td>
-                <td className="px-5 py-3">
-                  <Chip>{s.source ?? "unknown"}</Chip>
-                </td>
-                <td className="px-5 py-3">
-                  <Chip tone={s.status === "active" ? "success" : "warn"}>{s.status}</Chip>
-                </td>
-                <td className="px-5 py-3 text-plum/60">
-                  {new Date(s.created_at).toLocaleDateString()}
-                </td>
-                <td className="px-5 py-3 text-right">
-                  <ConfirmButton onConfirm={() => del(s.id)} message="Remove this subscriber?">
-                    Remove
-                  </ConfirmButton>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-5 py-10 text-center text-plum/50">
-                  No subscribers match.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="confirm-actions">
+        <button className="btn btn-quiet" type="button" onClick={onClose}>
+          Cancel
+        </button>
+        <button className="btn btn-primary" type="button" onClick={add} disabled={busy}>
+          {busy ? "Adding…" : "Add subscriber"}
+        </button>
       </div>
-    </div>
+    </Modal>
   );
 }

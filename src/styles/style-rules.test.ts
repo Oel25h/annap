@@ -31,18 +31,11 @@ function css(path: string): string {
 const source = (path: string) => readFileSync(join(ROOT, path), "utf8");
 
 const STYLES = files("src/styles", /\.css$/);
-/** The studio (DESIGN.md §10–11): the shell, the page builder and sign-in. */
+/** The studio (DESIGN.md §10–11): every studio route, component and sign-in. */
 const STUDIO_TSX = [
   ...files("src/components/studio", /\.tsx?$/),
+  ...files("src/routes/_authenticated", /\.tsx?$/),
   "src/routes/auth.tsx",
-  "src/routes/_authenticated/route.tsx",
-  "src/routes/_authenticated/admin.tsx",
-  "src/routes/_authenticated/admin.pages.index.tsx",
-  "src/routes/_authenticated/admin.pages.$pageId.tsx",
-  "src/routes/_authenticated/preview.page.$pageId.tsx",
-  "src/routes/_authenticated/admin.media.tsx",
-  "src/routes/_authenticated/admin.translations.tsx",
-  "src/routes/_authenticated/admin.settings.tsx",
 ];
 
 const PUBLIC_TSX = [
@@ -148,5 +141,14 @@ describe("style rules", () => {
 
   test("the studio draws its icons from the site set, not lucide", () => {
     assert.deepEqual(offenders(STUDIO_TSX, /from\s+["']lucide-react["']/, source), []);
+  });
+
+  test("every studio route is covered and none uses the old admin kit", () => {
+    const routes = files("src/routes/_authenticated", /\.tsx?$/);
+    assert.ok(routes.length > 10);
+    assert.deepEqual(
+      offenders(STUDIO_TSX, /@\/components\/admin\/|translate\.functions/, source),
+      [],
+    );
   });
 });

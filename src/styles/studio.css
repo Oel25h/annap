@@ -1646,6 +1646,49 @@
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
+  @media (max-width: 719px) {
+    .mgr-row {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+    .mgr-row > .mgr-row-end {
+      grid-column: 2;
+      justify-content: flex-start;
+    }
+    .mgr-row--plain > .mgr-row-end {
+      grid-column: 1;
+    }
+    .mgr-row--plain {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .mgr-move {
+      flex-direction: column;
+    }
+  }
+  .mgr-li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .mgr-li > .mgr-row {
+    flex: 1;
+    min-width: 0;
+  }
+  .mgr-move {
+    display: flex;
+    flex: none;
+    gap: var(--space-1);
+  }
+  .mgr-extra {
+    margin-top: var(--space-8);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-hairline);
+  }
+  .kids-pick {
+    padding: var(--space-4);
+    border: 1px dashed var(--color-hairline);
+    border-radius: var(--radius);
+  }
+
   /* An editor: one column, groups split by hairlines; two columns from 1180 */
   .mgr-editor {
     display: grid;
@@ -2245,6 +2288,63 @@
   }
   .ov-section > h2 {
     margin-bottom: var(--space-4);
+  }
+
+  .sub-chart {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  .sub-chart svg {
+    display: block;
+    width: 100%;
+    height: 160px;
+  }
+  .sub-chart rect {
+    fill: var(--color-action);
+  }
+  .sub-chart-base {
+    stroke: var(--color-hairline);
+    stroke-width: 1;
+  }
+  .sub-chart figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-3);
+  }
+  .sub-source {
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sub-source[aria-pressed="true"] {
+    outline: 2px solid var(--color-selected);
+    outline-offset: -2px;
+  }
+
+  .news-header {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-2);
+  }
+  .news-header img {
+    display: block;
+    width: 100%;
+    max-height: 240px;
+    object-fit: cover;
+    border-radius: var(--radius);
+  }
+
+  .ov-recent {
+    display: grid;
+    gap: var(--space-7);
+  }
+  @media (min-width: 1000px) {
+    .ov-recent {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 
   /* ---------- Message and subscriber lists ---------- */

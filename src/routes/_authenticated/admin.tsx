@@ -16,24 +16,22 @@ const NAV: { group: string; items: { to: string; label: string; exact?: boolean 
       { to: "/admin/pages", label: "Pages" },
       { to: "/admin/media", label: "Media" },
       { to: "/admin/translations", label: "Greek translations" },
-      { to: "/admin/start", label: "Start page" },
-      { to: "/admin/socials", label: "Social links" },
     ],
   },
   {
     group: "Writing and work",
     items: [
       { to: "/admin/books", label: "Books" },
+      { to: "/admin/audiobooks", label: "Audiobooks" },
       { to: "/admin/blog", label: "Stories" },
       { to: "/admin/products", label: "Shop" },
       { to: "/admin/masterclass", label: "Masterclasses" },
+      { to: "/admin/events", label: "Events" },
+      { to: "/admin/press", label: "Press" },
       { to: "/admin/gallery", label: "Gallery" },
       { to: "/admin/foundation", label: "Foundation stories" },
+      { to: "/admin/testimonials", label: "Praise" },
     ],
-  },
-  {
-    group: "Settings",
-    items: [{ to: "/admin/settings", label: "Keys and links" }],
   },
   {
     group: "People",
@@ -42,6 +40,10 @@ const NAV: { group: string; items: { to: string; label: string; exact?: boolean 
       { to: "/admin/subscribers", label: "Subscribers" },
       { to: "/admin/newsletter", label: "Newsletter" },
     ],
+  },
+  {
+    group: "Settings",
+    items: [{ to: "/admin/settings", label: "Keys and links" }],
   },
 ];
 
