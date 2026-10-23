@@ -3,6 +3,7 @@ import { createCsrfMiddleware, createMiddleware, createStart } from "@tanstack/r
 import { renderErrorPage } from "./lib/error-page";
 import { readServerPublicConfig } from "./lib/public-config";
 import {
+  PREVIEW_PATHS,
   STATIC_SECURITY_HEADERS,
   contentSecurityPolicy,
   createNonce,
@@ -31,6 +32,8 @@ const securityMiddleware = createMiddleware().server(async ({ next, request, pat
       nonce,
       supabaseUrl: readServerPublicConfig().supabaseUrl,
       studio: pathname.startsWith("/admin"),
+      preview: PREVIEW_PATHS.some((path) => pathname.startsWith(path)),
+      origin: new URL(request.url).origin,
     });
   }
   if (request.method !== "GET" || PRIVATE_PATHS.test(pathname)) {

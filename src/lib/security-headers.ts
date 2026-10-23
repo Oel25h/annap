@@ -12,6 +12,8 @@ const EMBED_HOSTS = [
 ];
 const TURNSTILE = "https://challenges.cloudflare.com";
 const STRIPE_CHECKOUT = "https://checkout.stripe.com";
+/** The studio's preview frames: the only pages that may be framed, and only by the studio. */
+export const PREVIEW_PATHS = ["/preview/", "/el/preview/"];
 
 export const STATIC_SECURITY_HEADERS: Readonly<Record<string, string>> = {
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
@@ -48,12 +50,23 @@ export function supabaseOrigins(supabaseUrl: string): { http: string[]; ws: stri
 export function contentSecurityPolicy(opts: {
   nonce: string;
   supabaseUrl: string;
-  /** The studio encodes images with WebAssembly in a worker. */
+  /**
+   * The studio encodes images with WebAssembly in a worker, and frames its
+   * page previews (see PREVIEW_PATHS) from this origin.
+   */
   studio: boolean;
+  /** A page preview, which only the studio on this same origin may frame. */
+  preview?: boolean;
+  /** This site's origin, e.g. https://example.com. */
+  origin: string;
 }): string {
   const supabase = supabaseOrigins(opts.supabaseUrl);
   const scriptSrc = ["'self'", `'nonce-${opts.nonce}'`, TURNSTILE];
-  if (opts.studio) scriptSrc.push("'wasm-unsafe-eval'");
+  const frameSrc = [...EMBED_HOSTS, TURNSTILE];
+  if (opts.studio) {
+    scriptSrc.push("'wasm-unsafe-eval'");
+    frameSrc.push(...PREVIEW_PATHS.map((path) => `${opts.origin}${path}`));
+  }
 
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
@@ -63,12 +76,12 @@ export function contentSecurityPolicy(opts: {
     "media-src": ["'self'", "blob:", ...supabase.http],
     "font-src": ["'self'"],
     "connect-src": ["'self'", ...supabase.http, ...supabase.ws, TURNSTILE],
-    "frame-src": [...EMBED_HOSTS, TURNSTILE],
+    "frame-src": frameSrc,
     "worker-src": ["'self'", "blob:"],
     "manifest-src": ["'self'"],
     // Checkout forms go on to Stripe; download buttons go on to a signed storage link.
     "form-action": ["'self'", STRIPE_CHECKOUT, ...supabase.http],
-    "frame-ancestors": ["'none'"],
+    "frame-ancestors": [opts.preview ? "'self'" : "'none'"],
     "base-uri": ["'none'"],
     "object-src": ["'none'"],
   };
