@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { itemHead, langDeps, loadItem } from "@/lib/item-route";
-import { PageView } from "@/sections/PageView";
+import { ItemPageView } from "@/sections/ItemPageView";
 
 /** One masterclass: what it covers, when it runs, and how to enrol or join the waitlist. */
 export const Route = createFileRoute("/masterclasses/$slug")({
@@ -12,5 +12,5 @@ export const Route = createFileRoute("/masterclasses/$slug")({
 });
 
 function MasterclassPage() {
-  return <PageView page={Route.useLoaderData()} />;
+  return <ItemPageView page={Route.useLoaderData()} />;
 }

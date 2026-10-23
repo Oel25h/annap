@@ -6,8 +6,17 @@ import { PageView } from "@/sections/PageView";
 /**
  * A page's draft, rendered as the site will show it: the studio's live
  * preview frame and its Preview button. Admins only; never cached or indexed.
+ *
+ * The loader gets its own chunk: kept with the route config it would sit in
+ * the client entry and bring the studio's auth middleware (and supabase-js)
+ * to every visitor.
  */
 export const Route = createFileRoute("/_authenticated/preview/page/$pageId")({
+  codeSplitGroupings: [
+    ["loader"],
+    ["component"],
+    ["pendingComponent", "errorComponent", "notFoundComponent"],
+  ],
   loaderDeps: ({ search }) => ({
     lang: (search as { lang?: string }).lang === "el" ? ("el" as const) : ("en" as const),
   }),

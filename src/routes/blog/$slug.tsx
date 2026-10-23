@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { itemHead, langDeps, loadItem } from "@/lib/item-route";
-import { PageView } from "@/sections/PageView";
+import { ItemPageView } from "@/sections/ItemPageView";
 
 /** One journal post, with a few more to read after it. */
 export const Route = createFileRoute("/blog/$slug")({
@@ -12,5 +12,5 @@ export const Route = createFileRoute("/blog/$slug")({
 });
 
 function PostPage() {
-  return <PageView page={Route.useLoaderData()} />;
+  return <ItemPageView page={Route.useLoaderData()} />;
 }

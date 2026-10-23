@@ -6,6 +6,9 @@
  *   footer is the second), and two peach bands never touch. The rules apply to
  *   the sections a reader actually sees, after empty lists drop out (except
  *   the page's own list, which shows its empty state: see visibility.ts).
+ *
+ * Collection items render through ItemPageView, which supplies the intro, so
+ * the item renderers stay out of the home page's JavaScript.
  */
 import { useMemo, type ReactNode } from "react";
 import { sectionBooks } from "@/components/audio/playable";
@@ -28,8 +31,6 @@ import {
   Testimonials,
 } from "./components/CollectionSections";
 import { ContactForm, Donation, Newsletter } from "./components/FormSections";
-import { ItemIntro } from "./items/ItemIntro";
-import { BuyBar } from "./items/BuyBar";
 import { Hero } from "./components/Hero";
 import { Embed, Gallery, Video } from "./components/MediaSections";
 import {
@@ -84,6 +85,9 @@ const SIMPLE: Simple = {
   link_list: LinkList,
   embed: Embed,
 };
+
+/** Draws an item page's intro above its sections (see ItemPageView). */
+export type IntroView = (props: { page: PageData; listenAnchor: string | null }) => ReactNode;
 
 /** The page's audiobook player, where it sits and what it offers, when it has something to play. */
 type PageListen = Listen & { index: number };
@@ -146,7 +150,7 @@ function SectionView({
   }
 }
 
-export function PageView({ page }: { page: PageData }) {
+export function PageView({ page, Intro }: { page: PageData; Intro?: IntroView }) {
   const t = useT();
   const path = page.locale === "el" ? (page.path === "/" ? "/el" : `/el${page.path}`) : page.path;
   const visible = useMemo(() => {
@@ -170,15 +174,7 @@ export function PageView({ page }: { page: PageData }) {
           </p>
         </div>
       )}
-      {page.intro && (
-        <ItemIntro
-          intro={page.intro}
-          media={page.media}
-          locale={page.locale}
-          listenAnchor={listen?.anchor ?? null}
-          indexed={page.indexed ?? false}
-        />
-      )}
+      {page.intro && Intro && <Intro page={page} listenAnchor={listen?.anchor ?? null} />}
       {titleBand && (
         <header className="title-band band-ivory">
           <div className="wrap">
@@ -212,7 +208,6 @@ export function PageView({ page }: { page: PageData }) {
           />
         );
       })}
-      {page.intro?.kind === "book" && <BuyBar book={page.intro.book} media={page.media} />}
     </>
   );
 }

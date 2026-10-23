@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { itemHead, langDeps, loadItem } from "@/lib/item-route";
-import { PageView } from "@/sections/PageView";
+import { ItemPageView } from "@/sections/ItemPageView";
 
 /** One book: its editions, its audiobook, praise for it and, when it has one, the free ebook. */
 export const Route = createFileRoute("/books/$slug")({
@@ -12,5 +12,5 @@ export const Route = createFileRoute("/books/$slug")({
 });
 
 function BookPage() {
-  return <PageView page={Route.useLoaderData()} />;
+  return <ItemPageView page={Route.useLoaderData()} />;
 }

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { itemHead, langDeps, loadItem } from "@/lib/item-route";
-import { PageView } from "@/sections/PageView";
+import { ItemPageView } from "@/sections/ItemPageView";
 
 /** One event: when, where and how to come. */
 export const Route = createFileRoute("/events/$slug")({
@@ -12,5 +12,5 @@ export const Route = createFileRoute("/events/$slug")({
 });
 
 function EventPage() {
-  return <PageView page={Route.useLoaderData()} />;
+  return <ItemPageView page={Route.useLoaderData()} />;
 }
