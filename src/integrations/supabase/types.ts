@@ -1637,6 +1637,8 @@ export type Database = {
           sent_at: string | null;
           status: string;
           subject: string;
+          test_hash: string | null;
+          test_sent_at: string | null;
           updated_at: string;
         };
         ComputedFields: never;
@@ -1652,6 +1654,8 @@ export type Database = {
           sent_at?: string | null;
           status?: string;
           subject: string;
+          test_hash?: string | null;
+          test_sent_at?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -1666,6 +1670,8 @@ export type Database = {
           sent_at?: string | null;
           status?: string;
           subject?: string;
+          test_hash?: string | null;
+          test_sent_at?: string | null;
           updated_at?: string;
         };
         Relationships: [];

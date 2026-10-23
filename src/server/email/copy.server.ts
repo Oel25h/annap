@@ -25,6 +25,8 @@ export type EmailCopy = {
   replyNote: string;
   footer: string;
   unsubscribe: string;
+  /** Under a letter to subscribers: why it came. */
+  newsletterWhy: string;
 };
 
 const en: EmailCopy = {
@@ -77,6 +79,7 @@ const en: EmailCopy = {
   replyNote: "Reply to this email to answer them directly.",
   footer: "Anastasia Patience, Cyprus",
   unsubscribe: "Unsubscribe",
+  newsletterWhy: "You are receiving this because you signed up for my letters.",
 };
 
 const el: EmailCopy = {
@@ -129,6 +132,7 @@ const el: EmailCopy = {
   replyNote: "Απάντησε σε αυτό το email για να τους απαντήσεις απευθείας.",
   footer: "Anastasia Patience, Κύπρος",
   unsubscribe: "Διαγραφή",
+  newsletterWhy: "Λαμβάνεις αυτό το γράμμα επειδή γράφτηκες για να παίρνεις τα γράμματά μου.",
 };
 
 export const EMAIL_COPY: Record<Locale, EmailCopy> = { en, el };

@@ -18,11 +18,14 @@ import { MediaField } from "@/components/studio/MediaPicker";
 import { RichText } from "@/components/studio/RichText";
 import { supabase } from "@/integrations/supabase/client";
 import { variantUrl } from "@/lib/media-upload";
+import { sendNewsletter, sendNewsletterTest } from "@/lib/newsletter.functions";
 
 /**
  * Letters to subscribers: write a draft (subject, header image, body), choose
- * who it is for, and record it as sent. Sending email itself waits on the
- * Resend key (Settings); until then "Record as sent" only keeps the history.
+ * who it is for, send yourself a test, then send it. Only confirmed
+ * subscribers (double opt-in) get it, each with an unsubscribe link; the
+ * outbox delivers it over the next minutes. Any change after the test needs
+ * a new test.
  */
 export const Route = createFileRoute("/_authenticated/admin/newsletter")({
   head: () => ({ meta: [{ title: "Newsletter — Studio" }] }),
@@ -42,10 +45,15 @@ type Letter = {
   status: string;
   recipient_count: number;
   sent_at: string | null;
+  test_sent_at: string | null;
   created_at: string;
   updated_at: string;
 };
-type Sub = { source: string | null; status: string };
+type Sub = { source: string | null; status: string; confirmed_at: string | null };
+type Delivery = { sent: number; waiting: number; failed: number };
+
+/** Double opt-in: only people who confirmed their address get letters. */
+const confirmed = (s: Sub) => s.status === "active" && !!s.confirmed_at;
 
 function Newsletter() {
   const { item } = Route.useSearch();
@@ -57,7 +65,7 @@ function Newsletter() {
   const load = useCallback(async () => {
     const [n, s] = await Promise.all([
       supabase.from("newsletters").select("*").order("created_at", { ascending: false }),
-      supabase.from("subscribers").select("source, status"),
+      supabase.from("subscribers").select("source, status, confirmed_at"),
     ]);
     if (n.error || s.error) return setError(errorText(n.error ?? s.error));
     setLetters((n.data ?? []) as Letter[]);
@@ -138,7 +146,9 @@ function Newsletter() {
                   <span className="mgr-row-meta meta">
                     {l.status === "sent"
                       ? `Sent ${day(l.sent_at)} to ${l.recipient_count}`
-                      : `Edited ${day(l.updated_at)}`}
+                      : l.status === "sending"
+                        ? "Sending"
+                        : `Edited ${day(l.updated_at)}`}
                     {l.filter_source ? ` · ${l.filter_source} only` : ""}
                   </span>
                 </span>
@@ -176,27 +186,49 @@ function Editor({
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [confirmSend, setConfirmSend] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [testNote, setTestNote] = useState<string | null>(null);
+  const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [announce, say] = useAnnounce();
   const now = useNow();
-  const sent = letter.status === "sent";
+  const sent = letter.status !== "draft";
   const dirty = JSON.stringify(draft) !== JSON.stringify(letter);
+  const tested = !!letter.test_sent_at && !dirty;
 
   const sources = useMemo(() => {
     const set = new Set<string>();
-    for (const s of subs) if (s.status === "active") set.add(s.source ?? "unknown");
+    for (const s of subs) if (confirmed(s)) set.add(s.source ?? "unknown");
     return [...set].sort();
   }, [subs]);
   const recipients = subs.filter(
     (s) =>
-      s.status === "active" &&
-      (!draft.filter_source || (s.source ?? "unknown") === draft.filter_source),
+      confirmed(s) && (!draft.filter_source || (s.source ?? "unknown") === draft.filter_source),
   ).length;
 
-  async function save(extra: Partial<Letter> = {}) {
+  const loadDelivery = useCallback(async () => {
+    const { data, error: e } = await supabase
+      .from("email_outbox")
+      .select("status")
+      .eq("newsletter_id", letter.id);
+    if (e) return;
+    const rows = data ?? [];
+    setDelivery({
+      sent: rows.filter((r) => r.status === "sent").length,
+      failed: rows.filter((r) => r.status === "failed").length,
+      waiting: rows.filter((r) => r.status === "queued" || r.status === "sending").length,
+    });
+  }, [letter.id]);
+  useEffect(() => {
+    if (sent) void loadDelivery();
+  }, [sent, loadDelivery]);
+
+  async function save(): Promise<Letter | null> {
     setError(null);
-    if (extra.status === "sent" && !draft.subject.trim())
-      return setError("Add a subject line first.");
     setBusy(true);
+    // A change to what readers see needs a new test before sending.
+    const changed =
+      draft.subject.trim() !== letter.subject ||
+      draft.body !== letter.body ||
+      draft.header_image !== letter.header_image;
     const { data, error: e } = await supabase
       .from("newsletters")
       .update({
@@ -205,18 +237,71 @@ function Editor({
         header_image: draft.header_image,
         filter_source: draft.filter_source,
         locale_mode: draft.locale_mode,
-        ...extra,
+        ...(changed ? { test_sent_at: null, test_hash: null } : {}),
       })
       .eq("id", letter.id)
       .select("*")
       .single();
     setBusy(false);
-    if (e || !data) return setError(errorText(e, "The letter wasn't saved."));
+    if (e || !data) {
+      setError(errorText(e, "The letter wasn't saved."));
+      return null;
+    }
     setDraft(data as Letter);
     onSaved(data as Letter);
     setSavedAt(Date.now());
-    say(extra.status === "sent" ? `Recorded as sent to ${recipients}.` : "Draft saved.");
+    say("Draft saved.");
+    return data as Letter;
   }
+
+  async function reload() {
+    const { data } = await supabase.from("newsletters").select("*").eq("id", letter.id).single();
+    if (data) {
+      setDraft(data as Letter);
+      onSaved(data as Letter);
+    }
+  }
+
+  async function test() {
+    if (dirty && !(await save())) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const result = await sendNewsletterTest({ data: { id: letter.id } });
+      await reload();
+      setTestNote(`Test sent to ${result.sentTo}. Check it, then send.`);
+      say(`Test sent to ${result.sentTo}.`);
+    } catch (e) {
+      setError(errorText(e, "The test didn't send. Try again."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function send() {
+    setError(null);
+    setBusy(true);
+    try {
+      const result = await sendNewsletter({ data: { id: letter.id } });
+      await reload();
+      await loadDelivery();
+      say(`Sending to ${result.queued} ${result.queued === 1 ? "person" : "people"}.`);
+    } catch (e) {
+      setError(errorText(e, "The letter wasn't sent. Try again."));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const deliveryWords = delivery
+    ? [
+        `${delivery.sent} delivered`,
+        delivery.waiting ? `${delivery.waiting} on the way` : "",
+        delivery.failed ? `${delivery.failed} failed` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
 
   return (
     <>
@@ -225,12 +310,14 @@ function Editor({
         back={<BackLink onClick={onBack}>All letters</BackLink>}
         title={draft.subject || "Untitled letter"}
         lead={
-          sent
-            ? `Recorded as sent on ${day(letter.sent_at)} to ${letter.recipient_count} subscribers.`
-            : "A draft. Nothing is emailed from here until the Resend key is set in Settings."
+          letter.status === "sent"
+            ? `Sent on ${day(letter.sent_at)} to ${letter.recipient_count} confirmed subscribers.${deliveryWords ? ` ${deliveryWords}.` : ""}`
+            : letter.status === "sending"
+              ? "Being queued for your subscribers. Open it again in a moment."
+              : "A draft. Send yourself a test, then send it to everyone who confirmed their subscription."
         }
       />
-      <div className="mgr-form">
+      <fieldset className="mgr-form" disabled={sent}>
         <fieldset className="mgr-group">
           <legend>Letter</legend>
           <TextField
@@ -288,11 +375,23 @@ function Editor({
             ]}
           />
         </fieldset>
-      </div>
+      </fieldset>
       {error && <FormAlert>{error}</FormAlert>}
       <div className="mgr-savebar">
         <p className="meta" aria-live="polite">
-          {busy ? "Saving…" : dirty ? "Unsaved changes" : savedAt ? savedWords(savedAt, now) : ""}
+          {busy
+            ? "Working…"
+            : sent
+              ? ""
+              : dirty
+                ? "Unsaved changes"
+                : testNote && tested
+                  ? testNote
+                  : tested
+                    ? `Test sent ${day(letter.test_sent_at)}. Ready to send.`
+                    : savedAt
+                      ? `${savedWords(savedAt, now)}. Send yourself a test before sending.`
+                      : "Send yourself a test before sending."}
         </p>
         <button
           className="btn btn-quiet btn-danger"
@@ -302,34 +401,63 @@ function Editor({
           <Icon name="trash" />
           Delete
         </button>
-        <button
-          className="btn btn-quiet"
-          type="button"
-          onClick={() => save()}
-          disabled={busy || !dirty}
-        >
-          Save draft
-        </button>
         {!sent && (
+          <>
+            <button
+              className="btn btn-quiet"
+              type="button"
+              onClick={() => save()}
+              disabled={busy || !dirty}
+            >
+              Save draft
+            </button>
+            <button
+              className="btn btn-quiet"
+              type="button"
+              onClick={() => void test()}
+              disabled={busy}
+              aria-busy={busy || undefined}
+            >
+              Send a test to me
+            </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => setConfirmSend(true)}
+              disabled={busy || !tested || recipients === 0}
+            >
+              <Icon name="check" />
+              Send to {recipients}
+              <span className="sr-only"> {recipients === 1 ? "person" : "people"}</span>
+            </button>
+          </>
+        )}
+        {letter.status === "sending" && (
           <button
-            className="btn btn-primary"
+            className="btn btn-quiet"
             type="button"
-            onClick={() => setConfirmSend(true)}
+            onClick={() => void send()}
             disabled={busy}
           >
-            <Icon name="check" />
-            Record as sent
+            Finish sending
+          </button>
+        )}
+        {letter.status === "sent" && (
+          <button className="btn btn-quiet" type="button" onClick={() => void loadDelivery()}>
+            Refresh delivery
           </button>
         )}
       </div>
       <Modal
         open={confirmSend}
         onClose={() => setConfirmSend(false)}
-        title="Record this letter as sent?"
+        title={`Send this letter to ${recipients} ${recipients === 1 ? "person" : "people"}?`}
       >
         <p>
-          It's saved in the history as sent to {recipients} {recipients === 1 ? "person" : "people"}
-          . No email goes out from the studio yet; send it from your mail tool.
+          “{letter.subject}” goes to everyone who confirmed their subscription
+          {draft.filter_source ? ` and came from ${draft.filter_source}` : ""}, each with their own
+          unsubscribe link. It goes out over the next few minutes and can't be called back.
         </p>
         <div className="confirm-actions">
           <button className="btn btn-quiet" type="button" onClick={() => setConfirmSend(false)}>
@@ -340,14 +468,10 @@ function Editor({
             type="button"
             onClick={async () => {
               setConfirmSend(false);
-              await save({
-                status: "sent",
-                sent_at: new Date().toISOString(),
-                recipient_count: recipients,
-              });
+              await send();
             }}
           >
-            Record as sent
+            Send letter
           </button>
         </div>
       </Modal>

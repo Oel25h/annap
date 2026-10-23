@@ -280,6 +280,25 @@ function blocks(input: RenderInput): { html: string; text: string } {
   return { html: html.join(""), text: text.join("\n\n") };
 }
 
+/** The page around every email: her name at the top, the card, then the footer. */
+function layout(
+  locale: Locale,
+  subject: string,
+  inner: string,
+  footer: { lines: string[]; unsubscribe: string | null },
+): string {
+  const t = EMAIL_COPY[locale];
+  const footerHtml = [
+    ...footer.lines.map(escapeHtml),
+    ...(footer.unsubscribe
+      ? [
+          `<a href="${escapeHtml(footer.unsubscribe)}" style="color:${COLOR.secondary}">${escapeHtml(t.unsubscribe)}</a>`,
+        ]
+      : []),
+  ].join("<br>");
+  return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:0;background:${COLOR.page}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLOR.page}"><tr><td align="center" style="padding:32px 16px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${COLOR.card};border:1px solid ${COLOR.hairline};border-radius:12px"><tr><td style="padding:32px 32px 8px;font:600 20px/1.3 ${SERIF};color:${COLOR.text}">Anastasia Patience</td></tr><tr><td style="padding:16px 32px 16px">${inner}</td></tr></table><p style="margin:24px 0 0;font:13px/1.6 ${SANS};color:${COLOR.secondary}">${footerHtml}</p></td></tr></table></body></html>`;
+}
+
 export function renderEmail(input: RenderInput): Rendered {
   const t = EMAIL_COPY[input.locale];
   const values = placeholderValues(input.params);
@@ -287,18 +306,12 @@ export function renderEmail(input: RenderInput): Rendered {
   const body = fillBody(input.copy.body, values);
   const extra = blocks(input);
   const unsubscribe = safeUrl(input.unsubscribeUrl);
-
   const footerParts = [t.footer, input.footer.legal].filter(Boolean);
-  const footerHtml = [
-    ...footerParts.map(escapeHtml),
-    ...(unsubscribe
-      ? [
-          `<a href="${escapeHtml(unsubscribe)}" style="color:${COLOR.secondary}">${escapeHtml(t.unsubscribe)}</a>`,
-        ]
-      : []),
-  ].join("<br>");
 
-  const html = `<!doctype html><html lang="${input.locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${escapeHtml(subject)}</title></head><body style="margin:0;padding:0;background:${COLOR.page}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${COLOR.page}"><tr><td align="center" style="padding:32px 16px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${COLOR.card};border:1px solid ${COLOR.hairline};border-radius:12px"><tr><td style="padding:32px 32px 8px;font:600 20px/1.3 ${SERIF};color:${COLOR.text}">Anastasia Patience</td></tr><tr><td style="padding:16px 32px 16px">${paragraphsHtml(body)}${extra.html}</td></tr></table><p style="margin:24px 0 0;font:13px/1.6 ${SANS};color:${COLOR.secondary}">${footerHtml}</p></td></tr></table></body></html>`;
+  const html = layout(input.locale, subject, `${paragraphsHtml(body)}${extra.html}`, {
+    lines: footerParts,
+    unsubscribe,
+  });
 
   const text = [
     body.trim(),
@@ -310,5 +323,100 @@ export function renderEmail(input: RenderInput): Rendered {
     .filter(Boolean)
     .join("\n\n");
 
+  return { subject, html, text };
+}
+
+// ---------------------------------------------------------------------------
+// Letters to subscribers
+// ---------------------------------------------------------------------------
+
+const TAG_STYLE: Record<string, string> = {
+  p: `margin:0 0 16px;font:17px/1.6 ${SERIF};color:${COLOR.text}`,
+  h2: `margin:24px 0 12px;font:600 22px/1.3 ${SERIF};color:${COLOR.text}`,
+  h3: `margin:20px 0 8px;font:600 18px/1.35 ${SERIF};color:${COLOR.text}`,
+  ul: `margin:0 0 16px;padding-left:24px;font:17px/1.6 ${SERIF};color:${COLOR.text}`,
+  ol: `margin:0 0 16px;padding-left:24px;font:17px/1.6 ${SERIF};color:${COLOR.text}`,
+  li: "margin:0 0 6px",
+  blockquote: `margin:0 0 16px;padding:0 0 0 16px;border-left:3px solid ${COLOR.hairline};color:${COLOR.secondary}`,
+};
+
+const ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  "#39": "'",
+  nbsp: " ",
+};
+const decode = (value: string) =>
+  value.replace(/&(amp|lt|gt|quot|#39|nbsp);/g, (_m, name: string) => ENTITIES[name]);
+
+/**
+ * A letter's body, already through the rich-text sanitiser (so it holds only
+ * p, h2, h3, lists, quotes, strong, em, br and links with checked hrefs), with
+ * the site's look inlined for mail apps and site paths made absolute.
+ */
+export function letterHtml(sanitized: string, siteUrl: string): string {
+  return sanitized
+    .replace(
+      /<(p|h2|h3|ul|ol|li|blockquote)>/g,
+      (_m, tag: string) => `<${tag} style="${TAG_STYLE[tag]}">`,
+    )
+    .replace(/<a href="([^"]*)"/g, (_m, href: string) => {
+      const absolute = href.startsWith("/") ? `${siteUrl}${href}` : href;
+      return `<a style="color:${COLOR.link}" href="${absolute}"`;
+    });
+}
+
+/** The same letter as plain text: paragraphs, list items and links written out. */
+export function letterText(sanitized: string, siteUrl: string): string {
+  return decode(
+    sanitized
+      .replace(
+        /<a [^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g,
+        (_m, href: string, label: string) => {
+          const url = href.startsWith("/") ? `${siteUrl}${href}` : href;
+          const words = label.replace(/<[^>]+>/g, "");
+          return words.trim() === url ? url : `${words} (${url})`;
+        },
+      )
+      .replace(/<br\s*\/?>/g, "\n")
+      .replace(/<li[^>]*>/g, "- ")
+      .replace(/<\/(p|h2|h3|li|blockquote|ul|ol)>/g, "\n\n")
+      .replace(/<[^>]+>/g, ""),
+  )
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/(^|\n)- ([^\n]*)\n\n(?=- )/g, "$1- $2\n")
+    .trim();
+}
+
+export type LetterInput = {
+  locale: Locale;
+  subject: string;
+  /** The body through sanitizeRichText. */
+  sanitizedBody: string;
+  headerImage: string | null;
+  siteUrl: string;
+  legal: string;
+  unsubscribeUrl: string | null;
+};
+
+export function renderLetter(input: LetterInput): Rendered {
+  const t = EMAIL_COPY[input.locale];
+  const subject = input.subject.replace(/\s+/g, " ").trim().slice(0, 200);
+  const image = safeUrl(input.headerImage);
+  const unsubscribe = safeUrl(input.unsubscribeUrl);
+  const inner =
+    (image
+      ? `<img src="${escapeHtml(image)}" alt="" width="496" style="display:block;width:100%;height:auto;margin:0 0 24px;border-radius:12px">`
+      : "") + letterHtml(input.sanitizedBody, input.siteUrl);
+  const lines = [t.newsletterWhy, t.footer, input.legal].filter(Boolean);
+  const html = layout(input.locale, subject, inner, { lines, unsubscribe });
+  const text = [
+    letterText(input.sanitizedBody, input.siteUrl),
+    "--",
+    ...lines,
+    ...(unsubscribe ? [`${t.unsubscribe}: ${unsubscribe}`] : []),
+  ].join("\n\n");
   return { subject, html, text };
 }

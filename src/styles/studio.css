@@ -1699,6 +1699,11 @@
     gap: var(--space-6);
     min-width: 0;
   }
+  fieldset.mgr-form {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
   .mgr-group {
     display: grid;
     gap: var(--space-5);
