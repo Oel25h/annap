@@ -14,6 +14,7 @@ const NAV: { group: string; items: { to: string; label: string; exact?: boolean 
     items: [
       { to: "/admin", label: "Overview", exact: true },
       { to: "/admin/pages", label: "Pages" },
+      { to: "/admin/media", label: "Media" },
       { to: "/admin/start", label: "Start page" },
       { to: "/admin/socials", label: "Social links" },
     ],
@@ -21,19 +22,19 @@ const NAV: { group: string; items: { to: string; label: string; exact?: boolean 
   {
     group: "Writing and work",
     items: [
-      { to: "/admin/blog", label: "Stories" },
       { to: "/admin/books", label: "Books" },
-      { to: "/admin/gallery", label: "Gallery" },
-      { to: "/admin/foundation", label: "Foundation" },
+      { to: "/admin/blog", label: "Stories" },
       { to: "/admin/products", label: "Shop" },
-      { to: "/admin/masterclass", label: "Masterclass" },
+      { to: "/admin/masterclass", label: "Masterclasses" },
+      { to: "/admin/gallery", label: "Gallery" },
+      { to: "/admin/foundation", label: "Foundation stories" },
     ],
   },
   {
     group: "People",
     items: [
       { to: "/admin/messages", label: "Messages" },
-      { to: "/admin/subscribers", label: "Community" },
+      { to: "/admin/subscribers", label: "Subscribers" },
       { to: "/admin/newsletter", label: "Newsletter" },
     ],
   },

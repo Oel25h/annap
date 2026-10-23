@@ -2669,8 +2669,29 @@ export type Database = {
     Functions: {
       claim_outbox: {
         Args: { p_limit?: number };
-        Returns: Database["public"]["Tables"]["email_outbox"]["Row"][];
-        SetofOptions: { from: "*"; to: "email_outbox"; isOneToOne: false; isSetofReturn: true };
+        Returns: {
+          attempts: number;
+          created_at: string;
+          id: string;
+          last_error: string | null;
+          locale: string;
+          newsletter_id: string | null;
+          params: Json | null;
+          provider_id: string | null;
+          send_after: string;
+          sent_at: string | null;
+          status: string;
+          subject: string;
+          template: string;
+          to_email: string;
+          updated_at: string;
+        }[];
+        SetofOptions: {
+          from: "*";
+          to: "email_outbox";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
       };
       draft_protected_columns: { Args: Record<PropertyKey, never>; Returns: string[] };
       entity_table: { Args: { _entity_type: string }; Returns: string };
@@ -2691,6 +2712,16 @@ export type Database = {
       };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_translator: { Args: Record<PropertyKey, never>; Returns: boolean };
+      media_usage: {
+        Args: { _ids: string[] };
+        Returns: {
+          field: string;
+          item_id: string;
+          kind: string;
+          label: string;
+          media_id: string;
+        }[];
+      };
       public_integrations: { Args: Record<PropertyKey, never>; Returns: Json };
       publish_draft: {
         Args: {

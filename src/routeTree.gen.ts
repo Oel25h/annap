@@ -30,6 +30,7 @@ import { Route as AuthenticatedAdminBooksRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminFoundationRouteImport } from './routes/_authenticated/admin.foundation'
 import { Route as AuthenticatedAdminGalleryRouteImport } from './routes/_authenticated/admin.gallery'
 import { Route as AuthenticatedAdminMasterclassRouteImport } from './routes/_authenticated/admin.masterclass'
+import { Route as AuthenticatedAdminMediaRouteImport } from './routes/_authenticated/admin.media'
 import { Route as AuthenticatedAdminMessagesRouteImport } from './routes/_authenticated/admin.messages'
 import { Route as AuthenticatedAdminNewsletterRouteImport } from './routes/_authenticated/admin.newsletter'
 import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authenticated/admin.products'
@@ -152,6 +153,11 @@ const AuthenticatedAdminMasterclassRoute =
     path: '/masterclass',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminMediaRoute = AuthenticatedAdminMediaRouteImport.update({
+  id: '/media',
+  path: '/media',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminMessagesRoute =
   AuthenticatedAdminMessagesRouteImport.update({
     id: '/messages',
@@ -252,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
   '/admin/gallery': typeof AuthenticatedAdminGalleryRoute
   '/admin/masterclass': typeof AuthenticatedAdminMasterclassRoute
+  '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/admin/foundation': typeof AuthenticatedAdminFoundationRoute
   '/admin/gallery': typeof AuthenticatedAdminGalleryRoute
   '/admin/masterclass': typeof AuthenticatedAdminMasterclassRoute
+  '/admin/media': typeof AuthenticatedAdminMediaRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
@@ -325,6 +333,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/foundation': typeof AuthenticatedAdminFoundationRoute
   '/_authenticated/admin/gallery': typeof AuthenticatedAdminGalleryRoute
   '/_authenticated/admin/masterclass': typeof AuthenticatedAdminMasterclassRoute
+  '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
   '/_authenticated/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/_authenticated/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
   '/_authenticated/admin/products': typeof AuthenticatedAdminProductsRoute
@@ -363,6 +372,7 @@ export interface FileRouteTypes {
     | '/admin/foundation'
     | '/admin/gallery'
     | '/admin/masterclass'
+    | '/admin/media'
     | '/admin/messages'
     | '/admin/newsletter'
     | '/admin/products'
@@ -398,6 +408,7 @@ export interface FileRouteTypes {
     | '/admin/foundation'
     | '/admin/gallery'
     | '/admin/masterclass'
+    | '/admin/media'
     | '/admin/messages'
     | '/admin/newsletter'
     | '/admin/products'
@@ -435,6 +446,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/foundation'
     | '/_authenticated/admin/gallery'
     | '/_authenticated/admin/masterclass'
+    | '/_authenticated/admin/media'
     | '/_authenticated/admin/messages'
     | '/_authenticated/admin/newsletter'
     | '/_authenticated/admin/products'
@@ -623,6 +635,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminMasterclassRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/media': {
+      id: '/_authenticated/admin/media'
+      path: '/media'
+      fullPath: '/admin/media'
+      preLoaderRoute: typeof AuthenticatedAdminMediaRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/messages': {
       id: '/_authenticated/admin/messages'
       path: '/messages'
@@ -730,6 +749,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminFoundationRoute: typeof AuthenticatedAdminFoundationRoute
   AuthenticatedAdminGalleryRoute: typeof AuthenticatedAdminGalleryRoute
   AuthenticatedAdminMasterclassRoute: typeof AuthenticatedAdminMasterclassRoute
+  AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
   AuthenticatedAdminMessagesRoute: typeof AuthenticatedAdminMessagesRoute
   AuthenticatedAdminNewsletterRoute: typeof AuthenticatedAdminNewsletterRoute
   AuthenticatedAdminProductsRoute: typeof AuthenticatedAdminProductsRoute
@@ -747,6 +767,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminFoundationRoute: AuthenticatedAdminFoundationRoute,
   AuthenticatedAdminGalleryRoute: AuthenticatedAdminGalleryRoute,
   AuthenticatedAdminMasterclassRoute: AuthenticatedAdminMasterclassRoute,
+  AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
   AuthenticatedAdminMessagesRoute: AuthenticatedAdminMessagesRoute,
   AuthenticatedAdminNewsletterRoute: AuthenticatedAdminNewsletterRoute,
   AuthenticatedAdminProductsRoute: AuthenticatedAdminProductsRoute,
