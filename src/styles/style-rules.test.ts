@@ -31,11 +31,23 @@ function css(path: string): string {
 const source = (path: string) => readFileSync(join(ROOT, path), "utf8");
 
 const STYLES = files("src/styles", /\.css$/);
+/** The studio (DESIGN.md §10–11): the shell, the page builder and sign-in. */
+const STUDIO_TSX = [
+  ...files("src/components/studio", /\.tsx?$/),
+  "src/routes/auth.tsx",
+  "src/routes/_authenticated/route.tsx",
+  "src/routes/_authenticated/admin.tsx",
+  "src/routes/_authenticated/admin.pages.index.tsx",
+  "src/routes/_authenticated/admin.pages.$pageId.tsx",
+  "src/routes/_authenticated/preview.page.$pageId.tsx",
+];
+
 const PUBLIC_TSX = [
   ...files("src/sections", /\.tsx$/),
   ...files("src/components/site", /\.tsx$/),
   ...files("src/components/audio", /\.tsx?$/),
   ...files("src/components/forms", /\.tsx$/),
+  ...STUDIO_TSX,
 ];
 
 function offenders(paths: string[], pattern: RegExp, read = css): string[] {
@@ -129,5 +141,9 @@ describe("style rules", () => {
       ),
       [],
     );
+  });
+
+  test("the studio draws its icons from the site set, not lucide", () => {
+    assert.deepEqual(offenders(STUDIO_TSX, /from\s+["']lucide-react["']/, source), []);
   });
 });

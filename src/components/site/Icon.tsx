@@ -157,6 +157,86 @@ const PATHS = {
       <path d="M14 4.5h5.5V10M10 19.5H4.5V14M19.5 4.5 13.5 10.5M4.5 19.5l6-6" />
     </>
   ),
+  // The studio's tools
+  grip: (
+    <>
+      <path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" strokeWidth="2.4" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  "eye-off": (
+    <>
+      <path d="M4 4l16 16" />
+      <path d="M9.9 5.8A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.4 7.4A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.6 9.6 0 0 0 4.3-1" />
+      <path d="M10 10a3 3 0 0 0 4 4" />
+    </>
+  ),
+  plus: (
+    <>
+      <path d="M12 5v14M5 12h14" />
+    </>
+  ),
+  minus: (
+    <>
+      <path d="M5 12h14" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </>
+  ),
+  redo: (
+    <>
+      <path d="m15 14 5-5-5-5" />
+      <path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+    </>
+  ),
+  more: (
+    <>
+      <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth="2.6" />
+    </>
+  ),
+  desktop: (
+    <>
+      <rect x="3" y="4" width="18" height="12" rx="2" />
+      <path d="M8 20h8M12 16v4" />
+    </>
+  ),
+  tablet: (
+    <>
+      <rect x="5" y="3" width="14" height="18" rx="2" />
+      <path d="M11 18h2" />
+    </>
+  ),
+  phone: (
+    <>
+      <rect x="7" y="3" width="10" height="18" rx="2" />
+      <path d="M11 18h2" />
+    </>
+  ),
+  pencil: (
+    <>
+      <path d="M4 20h4L19 9l-4-4L4 16z" />
+      <path d="M13.5 6.5l4 4" />
+    </>
+  ),
+  missing: (
+    <>
+      <circle cx="12" cy="12" r="8.5" strokeDasharray="3 2.6" />
+    </>
+  ),
 } as const;
 
 export type IconName = keyof typeof PATHS;

@@ -157,6 +157,7 @@ export function SectionShell({
       className={classes}
       id={settings.anchor || defaultAnchor || undefined}
       aria-labelledby={labelled || title ? ctx.headingId : undefined}
+      data-section-id={section.id}
     >
       <div className={["wrap", wrapClassName].filter(Boolean).join(" ")}>
         {title && (

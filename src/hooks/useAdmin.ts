@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 export type AdminState = {
   loading: boolean;
   userId: string | null;
+  /** An admin, signed in with two factors, on a live session (public.is_admin). */
   isAdmin: boolean;
   email: string | null;
 };
 
+/** Who is signed in to the studio, re-checked whenever the session changes. */
 export function useAdmin(): AdminState {
   const [state, setState] = useState<AdminState>({
     loading: true,
@@ -26,24 +28,21 @@ export function useAdmin(): AdminState {
         if (!cancelled) setState({ loading: false, userId: null, isAdmin: false, email: null });
         return;
       }
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .limit(1);
+      // The database's own check: the admin role, a two-factor (aal2) session, still live.
+      const { data: allowed } = await supabase.rpc("is_admin");
       if (cancelled) return;
       setState({
         loading: false,
         userId: user.id,
         email: user.email ?? null,
-        isAdmin: (roles?.length ?? 0) > 0,
+        isAdmin: allowed === true,
       });
     }
 
-    refresh();
+    void refresh();
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      refresh();
+      // Supabase asks that no other call awaits inside this callback.
+      setTimeout(() => void refresh(), 0);
     });
     return () => {
       cancelled = true;

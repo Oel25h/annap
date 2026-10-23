@@ -620,6 +620,7 @@ export type Database = {
           locale: string;
           origin: string;
           show_english: boolean;
+          source_fields: Json | null;
           source_hash: string | null;
           status: string;
           updated_at: string;
@@ -641,6 +642,7 @@ export type Database = {
           locale?: string;
           origin?: string;
           show_english?: boolean;
+          source_fields?: Json | null;
           source_hash?: string | null;
           status?: string;
           updated_at?: string;
@@ -661,6 +663,7 @@ export type Database = {
           locale?: string;
           origin?: string;
           show_english?: boolean;
+          source_fields?: Json | null;
           source_hash?: string | null;
           status?: string;
           updated_at?: string;

@@ -32,7 +32,6 @@ import { Route as AuthenticatedAdminGalleryRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminMasterclassRouteImport } from './routes/_authenticated/admin.masterclass'
 import { Route as AuthenticatedAdminMessagesRouteImport } from './routes/_authenticated/admin.messages'
 import { Route as AuthenticatedAdminNewsletterRouteImport } from './routes/_authenticated/admin.newsletter'
-import { Route as AuthenticatedAdminPagesRouteImport } from './routes/_authenticated/admin.pages'
 import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authenticated/admin.products'
 import { Route as AuthenticatedAdminSocialsRouteImport } from './routes/_authenticated/admin.socials'
 import { Route as AuthenticatedAdminStartRouteImport } from './routes/_authenticated/admin.start'
@@ -42,6 +41,9 @@ import { Route as ApiNewsletterConfirmRouteImport } from './routes/api/newslette
 import { Route as ApiNewsletterUnsubscribeRouteImport } from './routes/api/newsletter/unsubscribe'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api/stripe/webhook'
 import { Route as FoundationStoriesSlugRouteImport } from './routes/foundation/stories/$slug'
+import { Route as AuthenticatedAdminPagesIndexRouteImport } from './routes/_authenticated/admin.pages.index'
+import { Route as AuthenticatedAdminPagesPageIdRouteImport } from './routes/_authenticated/admin.pages.$pageId'
+import { Route as AuthenticatedPreviewPagePageIdRouteImport } from './routes/_authenticated/preview.page.$pageId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -162,11 +164,6 @@ const AuthenticatedAdminNewsletterRoute =
     path: '/newsletter',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const AuthenticatedAdminPagesRoute = AuthenticatedAdminPagesRouteImport.update({
-  id: '/pages',
-  path: '/pages',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
 const AuthenticatedAdminProductsRoute =
   AuthenticatedAdminProductsRouteImport.update({
     id: '/products',
@@ -216,6 +213,24 @@ const FoundationStoriesSlugRoute = FoundationStoriesSlugRouteImport.update({
   path: '/foundation/stories/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminPagesIndexRoute =
+  AuthenticatedAdminPagesIndexRouteImport.update({
+    id: '/pages/',
+    path: '/pages/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminPagesPageIdRoute =
+  AuthenticatedAdminPagesPageIdRouteImport.update({
+    id: '/pages/$pageId',
+    path: '/pages/$pageId',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedPreviewPagePageIdRoute =
+  AuthenticatedPreviewPagePageIdRouteImport.update({
+    id: '/preview/page/$pageId',
+    path: '/preview/page/$pageId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -239,7 +254,6 @@ export interface FileRoutesByFullPath {
   '/admin/masterclass': typeof AuthenticatedAdminMasterclassRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
-  '/admin/pages': typeof AuthenticatedAdminPagesRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/socials': typeof AuthenticatedAdminSocialsRoute
   '/admin/start': typeof AuthenticatedAdminStartRoute
@@ -250,6 +264,9 @@ export interface FileRoutesByFullPath {
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/foundation/stories/$slug': typeof FoundationStoriesSlugRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/pages/$pageId': typeof AuthenticatedAdminPagesPageIdRoute
+  '/preview/page/$pageId': typeof AuthenticatedPreviewPagePageIdRoute
+  '/admin/pages/': typeof AuthenticatedAdminPagesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -272,7 +289,6 @@ export interface FileRoutesByTo {
   '/admin/masterclass': typeof AuthenticatedAdminMasterclassRoute
   '/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
-  '/admin/pages': typeof AuthenticatedAdminPagesRoute
   '/admin/products': typeof AuthenticatedAdminProductsRoute
   '/admin/socials': typeof AuthenticatedAdminSocialsRoute
   '/admin/start': typeof AuthenticatedAdminStartRoute
@@ -283,6 +299,9 @@ export interface FileRoutesByTo {
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/foundation/stories/$slug': typeof FoundationStoriesSlugRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/pages/$pageId': typeof AuthenticatedAdminPagesPageIdRoute
+  '/preview/page/$pageId': typeof AuthenticatedPreviewPagePageIdRoute
+  '/admin/pages': typeof AuthenticatedAdminPagesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -308,7 +327,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/masterclass': typeof AuthenticatedAdminMasterclassRoute
   '/_authenticated/admin/messages': typeof AuthenticatedAdminMessagesRoute
   '/_authenticated/admin/newsletter': typeof AuthenticatedAdminNewsletterRoute
-  '/_authenticated/admin/pages': typeof AuthenticatedAdminPagesRoute
   '/_authenticated/admin/products': typeof AuthenticatedAdminProductsRoute
   '/_authenticated/admin/socials': typeof AuthenticatedAdminSocialsRoute
   '/_authenticated/admin/start': typeof AuthenticatedAdminStartRoute
@@ -319,6 +337,9 @@ export interface FileRoutesById {
   '/api/stripe/webhook': typeof ApiStripeWebhookRoute
   '/foundation/stories/$slug': typeof FoundationStoriesSlugRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/pages/$pageId': typeof AuthenticatedAdminPagesPageIdRoute
+  '/_authenticated/preview/page/$pageId': typeof AuthenticatedPreviewPagePageIdRoute
+  '/_authenticated/admin/pages/': typeof AuthenticatedAdminPagesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -344,7 +365,6 @@ export interface FileRouteTypes {
     | '/admin/masterclass'
     | '/admin/messages'
     | '/admin/newsletter'
-    | '/admin/pages'
     | '/admin/products'
     | '/admin/socials'
     | '/admin/start'
@@ -355,6 +375,9 @@ export interface FileRouteTypes {
     | '/api/stripe/webhook'
     | '/foundation/stories/$slug'
     | '/admin/'
+    | '/admin/pages/$pageId'
+    | '/preview/page/$pageId'
+    | '/admin/pages/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -377,7 +400,6 @@ export interface FileRouteTypes {
     | '/admin/masterclass'
     | '/admin/messages'
     | '/admin/newsletter'
-    | '/admin/pages'
     | '/admin/products'
     | '/admin/socials'
     | '/admin/start'
@@ -388,6 +410,9 @@ export interface FileRouteTypes {
     | '/api/stripe/webhook'
     | '/foundation/stories/$slug'
     | '/admin'
+    | '/admin/pages/$pageId'
+    | '/preview/page/$pageId'
+    | '/admin/pages'
   id:
     | '__root__'
     | '/'
@@ -412,7 +437,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/masterclass'
     | '/_authenticated/admin/messages'
     | '/_authenticated/admin/newsletter'
-    | '/_authenticated/admin/pages'
     | '/_authenticated/admin/products'
     | '/_authenticated/admin/socials'
     | '/_authenticated/admin/start'
@@ -423,6 +447,9 @@ export interface FileRouteTypes {
     | '/api/stripe/webhook'
     | '/foundation/stories/$slug'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/pages/$pageId'
+    | '/_authenticated/preview/page/$pageId'
+    | '/_authenticated/admin/pages/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -610,13 +637,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminNewsletterRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/pages': {
-      id: '/_authenticated/admin/pages'
-      path: '/pages'
-      fullPath: '/admin/pages'
-      preLoaderRoute: typeof AuthenticatedAdminPagesRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
     '/_authenticated/admin/products': {
       id: '/_authenticated/admin/products'
       path: '/products'
@@ -680,6 +700,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FoundationStoriesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/pages/': {
+      id: '/_authenticated/admin/pages/'
+      path: '/pages'
+      fullPath: '/admin/pages/'
+      preLoaderRoute: typeof AuthenticatedAdminPagesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/pages/$pageId': {
+      id: '/_authenticated/admin/pages/$pageId'
+      path: '/pages/$pageId'
+      fullPath: '/admin/pages/$pageId'
+      preLoaderRoute: typeof AuthenticatedAdminPagesPageIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/preview/page/$pageId': {
+      id: '/_authenticated/preview/page/$pageId'
+      path: '/preview/page/$pageId'
+      fullPath: '/preview/page/$pageId'
+      preLoaderRoute: typeof AuthenticatedPreviewPagePageIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -691,12 +732,13 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminMasterclassRoute: typeof AuthenticatedAdminMasterclassRoute
   AuthenticatedAdminMessagesRoute: typeof AuthenticatedAdminMessagesRoute
   AuthenticatedAdminNewsletterRoute: typeof AuthenticatedAdminNewsletterRoute
-  AuthenticatedAdminPagesRoute: typeof AuthenticatedAdminPagesRoute
   AuthenticatedAdminProductsRoute: typeof AuthenticatedAdminProductsRoute
   AuthenticatedAdminSocialsRoute: typeof AuthenticatedAdminSocialsRoute
   AuthenticatedAdminStartRoute: typeof AuthenticatedAdminStartRoute
   AuthenticatedAdminSubscribersRoute: typeof AuthenticatedAdminSubscribersRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminPagesPageIdRoute: typeof AuthenticatedAdminPagesPageIdRoute
+  AuthenticatedAdminPagesIndexRoute: typeof AuthenticatedAdminPagesIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -707,12 +749,13 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminMasterclassRoute: AuthenticatedAdminMasterclassRoute,
   AuthenticatedAdminMessagesRoute: AuthenticatedAdminMessagesRoute,
   AuthenticatedAdminNewsletterRoute: AuthenticatedAdminNewsletterRoute,
-  AuthenticatedAdminPagesRoute: AuthenticatedAdminPagesRoute,
   AuthenticatedAdminProductsRoute: AuthenticatedAdminProductsRoute,
   AuthenticatedAdminSocialsRoute: AuthenticatedAdminSocialsRoute,
   AuthenticatedAdminStartRoute: AuthenticatedAdminStartRoute,
   AuthenticatedAdminSubscribersRoute: AuthenticatedAdminSubscribersRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminPagesPageIdRoute: AuthenticatedAdminPagesPageIdRoute,
+  AuthenticatedAdminPagesIndexRoute: AuthenticatedAdminPagesIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -720,10 +763,12 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedPreviewPagePageIdRoute: typeof AuthenticatedPreviewPagePageIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedPreviewPagePageIdRoute: AuthenticatedPreviewPagePageIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

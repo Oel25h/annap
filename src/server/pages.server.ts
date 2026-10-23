@@ -103,12 +103,14 @@ export async function prepareSections(
   db: PublicDb,
   parsed: AnySection[],
   locale: Locale,
-  options: { extra?: OverlayRequest; query?: PageQuery } = {},
+  options: { extra?: OverlayRequest; query?: PageQuery; overlays?: OverlayMap } = {},
 ): Promise<{ sections: RenderedSection[]; overlays: OverlayMap; mediaIds: Set<string> }> {
   const [overlays, sectionData] = await Promise.all([
     fetchOverlays(db, { page_section: parsed.map((s) => s.id), ...options.extra }),
     loadSectionData(db, parsed, locale, options.query),
   ]);
+  // The studio preview lays its Greek drafts over the approved Greek.
+  for (const [key, overlay] of options.overlays ?? []) overlays.set(key, overlay);
   const sections = parsed.map((section) => {
     const localized = localizeSection(section, locale, overlays);
     return {
@@ -157,6 +159,21 @@ function queryExists(sections: RenderedSection[], query: PageQuery): boolean {
   return true;
 }
 
+export const PAGE_COLUMNS =
+  "id, path, kind, title, seo_title, seo_description, noindex, og_image_id, sections";
+
+export type PageRow = {
+  id: string;
+  path: string;
+  kind: string;
+  title: string;
+  seo_title: string;
+  seo_description: string;
+  noindex: boolean;
+  og_image_id: string | null;
+  sections: unknown;
+};
+
 export async function loadPage(
   rawPath: string,
   locale: Locale,
@@ -168,15 +185,33 @@ export async function loadPage(
 
   const { data: row, error } = await db
     .from("pages")
-    .select("id, path, kind, title, seo_title, seo_description, noindex, og_image_id, sections")
+    .select(PAGE_COLUMNS)
     .eq("path", path)
     .maybeSingle();
   if (error) throw new Error(`Page ${path}: ${error.message}`);
   if (!row) return null;
+  return buildPage(db, row, locale, query);
+}
 
+/**
+ * A page row made ready to render. The studio preview passes the draft's
+ * sections in the row and its Greek drafts as `overlays`.
+ */
+export async function buildPage(
+  db: PublicDb,
+  row: PageRow,
+  locale: Locale,
+  query: PageQuery = {},
+  overlayDrafts?: OverlayMap,
+): Promise<PageData | null> {
+  const path = row.path;
   const parsed = parseSections(row.sections, path);
   const [{ sections, overlays, mediaIds }, site] = await Promise.all([
-    prepareSections(db, parsed, locale, { extra: { page_meta: [row.id] }, query }),
+    prepareSections(db, parsed, locale, {
+      extra: { page_meta: [row.id] },
+      query,
+      overlays: overlayDrafts,
+    }),
     getSiteSettings(db),
   ]);
   if (!queryExists(sections, query)) return null;

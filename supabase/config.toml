@@ -7,7 +7,9 @@ additional_redirect_urls = ["http://localhost:3000", "http://127.0.0.1:3000"]
 enable_signup = false
 
 [auth.email]
-enable_signup = false
+# The CLI reads this as "email and password sign-in is on" (GOTRUE_EXTERNAL_EMAIL_ENABLED).
+# Sign-up stays closed through [auth] enable_signup above; false here turned off sign-in too.
+enable_signup = true
 
 [auth.mfa]
 max_enrolled_factors = 10
