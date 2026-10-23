@@ -139,6 +139,13 @@ async function seedImage(image: SeedImage) {
       .eq("slug", image.postSlug)
       .is("cover_media_id", null);
   }
+  if (image.masterclassSlug) {
+    await db
+      .from("masterclasses")
+      .update({ cover_media_id: image.id })
+      .eq("slug", image.masterclassSlug)
+      .is("cover_media_id", null);
+  }
   console.log(`✓ ${image.key} (${variants.map((v) => v.w).join(", ")})`);
 }
 

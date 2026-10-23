@@ -1,7 +1,7 @@
 /*
  * Design tokens (DESIGN.md 3.0, "The Open Book"). The palette holds the only
- * hex values in the system; components use the semantic tokens, which dark
- * mode and the cocoa band re-point. Tailwind's stock colours, radii, shadows,
+ * hex values in the system; components use the semantic tokens, which the
+ * opt-in dark mode re-points. Tailwind's stock colours, radii, shadows,
  * blurs and animations are reset, so only what the system defines generates.
  */
 
@@ -241,7 +241,7 @@
   }
 }
 
-/* ---------- 5. Dark: warm cocoa, never black. Follows the system unless forced. ---------- */
+/* ---------- 5. Dark: warm cocoa, never black. Opt-in only (<html class="dark">): the site is bright by default, whatever the system. ---------- */
 :root.dark {
   color-scheme: dark;
   --color-bg: var(--color-cocoa-night);
@@ -264,29 +264,4 @@
   --color-header-bg: var(--color-cocoa-night-88);
   --color-error: var(--color-blush);
   --color-on-error: var(--color-cocoa-ink);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    color-scheme: dark;
-    --color-bg: var(--color-cocoa-night);
-    --color-bg-alt: var(--color-cocoa-night);
-    --color-surface: var(--color-cocoa-ink);
-    --color-surface-alt: var(--color-cocoa-ink);
-    --color-text: var(--color-peach-cream);
-    --color-text-secondary: var(--color-peach-cream-76);
-    --color-text-tertiary: var(--color-peach-cream-68);
-    --color-accent-text: var(--color-apricot);
-    --color-hairline: var(--color-apricot-32);
-    --color-leader: var(--color-apricot-48);
-    --color-field-border: var(--color-peach-cream-52);
-    --color-track: var(--color-peach-cream-52);
-    --color-action-hover: var(--color-apricot);
-    --color-on-action-hover: var(--color-cocoa-ink);
-    --color-selected: var(--color-peach-cream);
-    --color-on-selected: var(--color-cocoa-night);
-    --color-focus: var(--color-apricot);
-    --color-header-bg: var(--color-cocoa-night-88);
-    --color-error: var(--color-blush);
-    --color-on-error: var(--color-cocoa-ink);
-  }
 }

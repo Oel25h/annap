@@ -32,7 +32,7 @@ export function SiteFooter({ shell }: { shell: SiteShell }) {
   const socials = shell.socials.filter((social) => social.url.startsWith("https://"));
 
   return (
-    <footer className="back band-cocoa">
+    <footer className="back band-peach">
       <div className="wrap">
         <div className="signup grid-12">
           <div className="signup-copy">

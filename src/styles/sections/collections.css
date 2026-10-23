@@ -498,7 +498,7 @@
     aspect-ratio: 16 / 9;
     overflow: hidden;
     border-radius: var(--radius);
-    background: var(--color-cocoa-night);
+    background: var(--color-bg-alt);
   }
   .frame img,
   .frame iframe,
@@ -786,7 +786,7 @@
     gap: var(--space-4);
   }
   .lightbox::backdrop {
-    background: var(--color-cocoa-night);
+    background: var(--color-warm-ivory);
   }
   @media (prefers-reduced-motion: no-preference) {
     .lightbox[open],

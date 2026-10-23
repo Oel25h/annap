@@ -25,7 +25,6 @@ export type SectionContext = {
 const BANDS: Record<Band, string> = {
   ivory: "band-ivory",
   cream: "band-peach",
-  cocoa: "band-cocoa",
 };
 
 /** A standalone link: in-site with a right arrow, or out of the site with an up-right one. */

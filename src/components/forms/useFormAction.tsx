@@ -64,12 +64,9 @@ function loadTurnstile(): Promise<TurnstileApi> {
 
 const root = getRouteApi("__root__");
 
-/** The theme the page shows: the reader's choice, else the system's. */
+/** The theme the page shows: bright, unless dark mode was opted into. */
 function pageTheme(): "light" | "dark" {
-  const html = document.documentElement.classList;
-  if (html.contains("dark")) return "dark";
-  if (html.contains("light")) return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
 function useTurnstile() {

@@ -1,7 +1,7 @@
 /**
  * The page the worker returns when rendering itself failed. It stands alone
  * (no app CSS, no fonts loaded), so the palette values from tokens.css are
- * written out here: ivory and cocoa, night in dark mode, one Tangerine action.
+ * written out here: ivory and cocoa ink, one Tangerine action, always bright.
  * No script: "Try again" is a link to the same address, so any CSP allows it.
  */
 export function renderErrorPage(): string {
@@ -11,11 +11,10 @@ export function renderErrorPage(): string {
     <meta charset="utf-8" />
     <title>This page didn’t load</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#fffaf5" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1f120c" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fffaf5" />
     <style>
       :root {
-        color-scheme: light dark;
+        color-scheme: light;
         --bg: #fffaf5;
         --text: #3b1f14;
         --text-secondary: rgb(59 31 20 / 0.76);
@@ -24,18 +23,6 @@ export function renderErrorPage(): string {
         --hover: #c2410c;
         --on-hover: #fffaf5;
         --focus: #c2410c;
-      }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #1f120c;
-          --text: #fff1e6;
-          --text-secondary: rgb(255 241 230 / 0.76);
-          --field-border: rgb(255 241 230 / 0.52);
-          --alt: #3b1f14;
-          --hover: #ffb27a;
-          --on-hover: #3b1f14;
-          --focus: #ffb27a;
-        }
       }
       body { margin: 0; min-height: 100vh; display: grid; align-items: center; padding: 64px 16px; box-sizing: border-box; background: var(--bg); color: var(--text); font: 400 17px/1.65 "Source Serif 4", Georgia, serif; -webkit-font-smoothing: antialiased; }
       main { width: 100%; max-width: 720px; margin: 0 auto; }

@@ -2,8 +2,8 @@
  * Renders a page's sections in order, under the page's band rules:
  * - the page's one h1 is the hero's, the item intro's, or else the first
  *   section's own heading; a title band appears only when that section has none;
- * - a page never opens on cocoa, the body has at most one cocoa band (the
- *   footer is the second), and two peach bands never touch. The rules apply to
+ * - every band is bright (ivory or peach, as on the original site), and two
+ *   peach bands never touch. The rules apply to
  *   the sections a reader actually sees, after empty lists drop out (except
  *   the page's own list, which shows its empty state: see visibility.ts).
  *
@@ -101,19 +101,12 @@ function findListen(sections: RenderedSection[], media: MediaMap, path: string):
   return { anchor: section.settings.anchor || "listen", books, index };
 }
 
-/**
- * The band each visible section is drawn on. `opened` is true when something
- * ivory (an intro or the title band) already sits above the first section.
- */
-function effectiveBands(sections: RenderedSection[], opened: boolean): Band[] {
+/** The band each visible section is drawn on: a hero is always ivory, and two peach bands never touch. */
+function effectiveBands(sections: RenderedSection[]): Band[] {
   const bands: Band[] = [];
-  let cocoaUsed = false;
   sections.forEach((section, index) => {
     let band: Band = section.type === "hero" ? "ivory" : section.settings.background;
-    const first = index === 0 && !opened;
-    if (band === "cocoa" && (first || cocoaUsed)) band = "ivory";
     if (band === "cream" && bands[index - 1] === "cream") band = "ivory";
-    if (band === "cocoa") cocoaUsed = true;
     bands.push(band);
   });
   return bands;
@@ -162,7 +155,7 @@ export function PageView({ page, Intro }: { page: PageData; Intro?: IntroView })
   // The first section holds the page's h1 unless an item intro does, or it has no heading.
   const firstHolds = !page.intro && !!first && hasHeading(first);
   const titleBand = !page.intro && !firstHolds;
-  const bands = effectiveBands(visible, !!page.intro || titleBand);
+  const bands = effectiveBands(visible);
 
   return (
     <>

@@ -333,6 +333,7 @@
   /* ---------- Footer: Letters, links, legal ---------- */
   .back {
     padding-block: var(--space-8) var(--space-5);
+    border-top: 1px solid var(--color-hairline);
   }
   .back .signup,
   .back .foot {
