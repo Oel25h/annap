@@ -17,7 +17,6 @@ const LOCAL = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/?$/.test(url);
 
 const ADMIN = { email: "studio-test@example.test", password: "local-studio-test-1" };
 const TOTP_SECRET = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
-const ABOUT = "f491b501-013f-41f7-93d1-75c683419166";
 const CTA = "c0de0030-0000-4000-8000-000000000030";
 
 /** RFC 6238 code for the local test admin's factor. */
@@ -111,9 +110,12 @@ test("the admin signs in with a password and a six-digit code", async () => {
 
 test("an edit to a page waits as a draft, then goes live on Publish", async ({ request }) => {
   const api = db(request);
-  const [before] = await api.get<{ sections: { id: string; props: { title: string } }[] }>(
-    `pages?id=eq.${ABOUT}&select=sections`,
-  );
+  // Page ids are generated when the migrations run, so look the page up by its path.
+  const [before] = await api.get<{
+    id: string;
+    sections: { id: string; props: { title: string } }[];
+  }>(`pages?path=eq./about&select=id,sections`);
+  const ABOUT = before.id;
   const original = before.sections.find((s) => s.id === CTA)!.props.title;
   const edited = `Start with chapter one, today ${Date.now() % 10_000}.`;
 

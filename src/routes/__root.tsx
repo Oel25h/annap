@@ -15,6 +15,7 @@ import displayGreek from "../assets/fonts/noto-serif-display-greek-normal-360-40
 import { reportClientError } from "../lib/error-reporting";
 import { getSiteShell } from "../lib/content.functions";
 import { getPublicConfig, publicConfigScript } from "../lib/public-config";
+import { STRIP_HOST_MARKUP_SCRIPT } from "../lib/host-markup";
 import { LocaleProvider, localeFromSearch, useT } from "../lib/i18n/context";
 import { loadMessages } from "../lib/i18n/messages";
 import { SiteHeader } from "../components/site/SiteHeader";
@@ -82,7 +83,9 @@ function RootShell({ children }: { children: ReactNode }) {
         <script
           nonce={nonce}
           suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: publicConfigScript(getPublicConfig()) }}
+          dangerouslySetInnerHTML={{
+            __html: STRIP_HOST_MARKUP_SCRIPT + publicConfigScript(getPublicConfig()),
+          }}
         />
         <HeadContent />
       </head>
