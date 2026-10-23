@@ -14,7 +14,7 @@
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
-import { Readable } from "node:stream";
+import { Readable, Transform } from "node:stream";
 import { pathToFileURL } from "node:url";
 
 const ROOT = process.cwd();
@@ -95,6 +95,30 @@ function staticFile(pathname) {
 
 const { default: handler } = await import(pathToFileURL(FUNCTION).href);
 
+/**
+ * Netlify's CDN adds an HTML comment and a line break after the charset meta
+ * of every production page. Do the same here, so the gate sees what visitors
+ * get (the app strips them before hydrating: src/lib/host-markup.ts).
+ */
+function netlifyHeadComment() {
+  let head = "";
+  let done = false;
+  return new Transform({
+    transform(chunk, _encoding, callback) {
+      if (done) return callback(null, chunk);
+      head += chunk.toString("utf8");
+      const charset = head.match(/<meta charSet="utf-8"[^>]*>/i);
+      if (!charset) return callback();
+      done = true;
+      const at = charset.index + charset[0].length;
+      callback(null, `${head.slice(0, at)}\n<!-- This site is hosted on Netlify. -->${head.slice(at)}`);
+    },
+    flush(callback) {
+      callback(null, done ? undefined : head);
+    },
+  });
+}
+
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", `http://${req.headers.host ?? `127.0.0.1:${PORT}`}`);
   const file = req.method === "GET" || req.method === "HEAD" ? staticFile(url.pathname) : null;
@@ -128,9 +152,12 @@ const server = createServer(async (req, res) => {
     });
     const cookies = response.headers.getSetCookie();
     if (cookies.length) out["set-cookie"] = cookies;
+    const html = (out["content-type"] ?? "").startsWith("text/html");
+    if (html) delete out["content-length"];
     res.writeHead(response.status, out);
     if (!response.body || req.method === "HEAD") return res.end();
-    Readable.fromWeb(response.body).pipe(res);
+    const body = Readable.fromWeb(response.body);
+    (html ? body.pipe(netlifyHeadComment()) : body).pipe(res);
   } catch (error) {
     console.error(error);
     if (!res.headersSent) res.writeHead(500);
