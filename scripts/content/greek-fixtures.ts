@@ -1,8 +1,12 @@
 /**
  * Greek sample content for the LOCAL database only, so /el can be checked
  * end to end while Anastasia's reviewed Greek is still on its way: page
- * sections, page titles, menus, site settings and the memoir.
+ * sections and titles (the videos page among them), menus, site settings, the
+ * memoir, image alt text, the one reader review with given Greek, and the
+ * story categories and sample video (both from local-fixtures.sql, applied
+ * only when those rows exist).
  *
+ *   psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f scripts/content/local-fixtures.sql
  *   bun scripts/content/greek-fixtures.ts
  *
  * Rows are written as approved with origin "fixture", which the database
@@ -12,6 +16,7 @@
  * and is a draft for review, not approved copy.
  */
 import { $ } from "bun";
+import { MEDIA } from "./media";
 
 const LOCAL_DB = "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
 
@@ -67,7 +72,7 @@ const ABOUT: SectionGreek[] = [
   {
     title: "Κάθε πληγή είναι μάθημα.",
     body: [
-      "Η ιστορία μου είναι ραμμένη από πένθος, πίστη και πεισματάρικη ελπίδα — και κάθε βιβλίο, masterclass και ανάρτηση που φτιάχνω είναι ένα χέρι τεντωμένο πίσω σε σένα.",
+      "Η ιστορία μου είναι ραμμένη από πένθος, πίστη και πεισματάρικη ελπίδα — και κάθε βιβλίο, masterclass και ιστορία που μοιράζομαι είναι ένα χέρι τεντωμένο πίσω σε σένα.",
       "Κάθε μητέρα είναι μύστης. Κάθε συνηθισμένη γυναίκα κουβαλά κάτι που ο κόσμος χρειάζεται απεγνωσμένα — συχνά ακριβώς αυτό που νομίζει ότι την αποκλείει.",
       "Γράφω για τη γυναίκα που ξαναχτίζει μετά την απώλεια, τη μητέρα που ψιθυρίζει προσευχές πάνω από ένα άρρωστο παιδί, την επιχειρηματία με ένα όνειρο που φοβάται να ονομάσει.",
     ]
@@ -333,9 +338,23 @@ const PAGES: Record<string, { meta: Fields; sections: SectionGreek[] }> = {
             label: "Ανθρωπιστικό Ίδρυμα Patience",
             description: "Όπου κανείς δεν μένει πίσω",
           },
+          "/contact": {
+            label: "Επικοινώνησε μαζί μου",
+            description: "Ομιλίες · Μέσα ενημέρωσης · Συνεργασίες",
+          },
         },
       },
     ],
+  },
+  "/videos": {
+    meta: {
+      title: "Βίντεο",
+      seo_title: "Βίντεο: Anastasia Patience",
+      seo_description:
+        "Ομιλίες, αναγνώσεις και συζητήσεις από το κανάλι της Αναστασίας στο YouTube.",
+    },
+    // The channel link's label comes from the catalog.
+    sections: [{ title: "Στη σκηνή, στην κάμερα." }],
   },
   "/cookies": {
     meta: {
@@ -400,6 +419,64 @@ const BOOKS: Record<string, Fields> = {
     tagline: "Ένας σύντροφος για τις μέρες που σχεδόν τα παράτησες.",
     description:
       "Μισό απομνημόνευμα, μισό ήπιος οδηγός — ένα βιβλίο για το να επιλέγεις τη χαρά με πρόθεση. Η Αναστασία μοιράζεται τις απώλειες που την άνοιξαν και τις μικρές καθημερινές πρακτικές που την έφεραν πίσω στον εαυτό της. Αν ξέχασες πώς να χαμογελάς, αυτό το βιβλίο θα σου το θυμίσει.",
+    whoFor:
+      "Για κάθε γυναίκα που ξαναχτίζει τη ζωή της μετά την απώλεια, που ξαναβρίσκει τον εαυτό της μετά τη μητρότητα ή που ψάχνει την ελπίδα μέσα στην καθημερινότητα.",
+  },
+};
+
+/**
+ * Reader reviews, by English "name, role". Only Ama's has Greek given in
+ * DESIGN.md §9; the other quotes are never paraphrased, so they stay English.
+ */
+const TESTIMONIALS: Record<string, Fields> = {
+  "Ama, Accra": {
+    quote:
+      "Το διάβασα μονορούφι και έκλαψα — από εκείνα τα καλά δάκρυα. Ήταν σαν ένα μακρύ γράμμα από μια σοφή μεγαλύτερη αδελφή.",
+    name: "Άμα",
+    role: "Άκρα",
+  },
+};
+
+/** Image alt text (and captions), by the library's key. The second cover waits for its Greek title. */
+const MEDIA_GREEK: Partial<Record<keyof typeof MEDIA, Fields>> = {
+  heroPortrait: {
+    alt: "Η Αναστασία Patience με κρεμ σακάκι χαμογελά, με το πηγούνι ακουμπισμένο στο χέρι της",
+  },
+  portraitBurgundy: { alt: "Η Αναστασία Patience με μπορντό μπλούζα, χαμογελά ζεστά" },
+  portraitRust: { alt: "Η Αναστασία Patience με κεραμιδί μπλούζα, χαμογελά" },
+  bookDesk: {
+    alt: "Η Αναστασία στο γραφείο της, δίπλα σε ένα αντίτυπο του «Βρες τον λόγο σου να χαμογελάς»",
+  },
+  authorTable: {
+    alt: "Η Αναστασία σε ένα τραπέζι με λουλούδια και το βιβλίο της, «Βρες τον λόγο σου να χαμογελάς»",
+  },
+  coverFyrts: {
+    alt: "Το εξώφυλλο του «Βρες τον λόγο σου να χαμογελάς»: ανατολή πάνω από τη θάλασσα",
+  },
+  cyprus: {
+    alt: "Παστέλ σπίτια πάνω από τη θάλασσα στις ακτές της Κύπρου, την ώρα του δειλινού",
+    caption: "Η Κύπρος, το νησί που έγινε σπίτι μου.",
+  },
+  sunset: { alt: "Η σιλουέτα μιας γυναίκας μπροστά σε ένα πορτοκαλί ηλιοβασίλεμα" },
+  hands: { alt: "Δύο χέρια σε σχήμα χούφτας κρατούν το φως του ήλιου που δύει" },
+  windowPrayer: { alt: "Μια σιλουέτα με υψωμένα χέρια μπροστά σε ένα ηλιόλουστο παράθυρο" },
+  socialCard: { alt: "Η Αναστασία Patience, συγγραφέας του «Βρες τον λόγο σου να χαμογελάς»" },
+};
+
+/** Story categories, by slug. */
+const CATEGORIES: Record<string, string> = {
+  "purpose-and-faith": "Σκοπός & Πίστη",
+  "women-and-business": "Γυναίκες & Επιχειρήσεις",
+  "digital-skills": "Ψηφιακές δεξιότητες",
+  "wellness-and-lifestyle": "Ευεξία & Τρόπος ζωής",
+  "personal-stories": "Προσωπικές ιστορίες",
+};
+
+/** Videos, by YouTube id. */
+const VIDEOS: Record<string, Fields> = {
+  fixtureVid1: {
+    title: "Μέσα στο «Βρες τον λόγο σου να χαμογελάς»",
+    description: "Γιατί το έγραψα, και το κεφάλαιο που κόντεψα να αφήσω έξω.",
   },
 };
 
@@ -472,6 +549,38 @@ const books = await query<{ id: string; slug: string }[]>(
 for (const [slug, fields] of Object.entries(BOOKS)) {
   const book = books.find((b) => b.slug === slug);
   if (book) rows.push({ type: "book", id: book.id, fields });
+}
+
+const testimonials = await query<{ id: string; name: string; role: string | null }[]>(
+  "select coalesce(json_agg(json_build_object('id', id, 'name', name, 'role', role)), '[]') from public.testimonials",
+);
+for (const row of testimonials) {
+  const fields = TESTIMONIALS[[row.name, row.role].filter(Boolean).join(", ")];
+  if (fields) rows.push({ type: "testimonial", id: row.id, fields });
+}
+
+const assets = await query<string[]>(
+  "select coalesce(json_agg(id), '[]') from public.media_assets",
+);
+for (const [key, fields] of Object.entries(MEDIA_GREEK)) {
+  const { id } = MEDIA[key as keyof typeof MEDIA];
+  if (fields && assets.includes(id)) rows.push({ type: "media_asset", id, fields });
+}
+
+const categories = await query<{ id: string; slug: string }[]>(
+  "select coalesce(json_agg(json_build_object('id', id, 'slug', slug)), '[]') from public.blog_categories",
+);
+for (const category of categories) {
+  const name = CATEGORIES[category.slug];
+  if (name) rows.push({ type: "blog_category", id: category.id, fields: { name } });
+}
+
+const videos = await query<{ id: string; youtube_id: string }[]>(
+  "select coalesce(json_agg(json_build_object('id', id, 'youtube_id', youtube_id)), '[]') from public.videos",
+);
+for (const video of videos) {
+  const fields = VIDEOS[video.youtube_id];
+  if (fields) rows.push({ type: "video", id: video.id, fields });
 }
 
 const lit = (value: string) => `'${value.replace(/'/g, "''")}'`;

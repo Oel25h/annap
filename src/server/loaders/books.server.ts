@@ -13,6 +13,9 @@ import {
 
 const FORMAT_ORDER: BookFormat[] = ["paperback", "hardcover", "ebook", "audiobook"];
 
+/** The fields whose approved Greek makes a book Greek. */
+export const BOOK_TEXT = ["title", "subtitle", "tagline", "description"] as const;
+
 type FormatRow = {
   id: string;
   format: string;
@@ -92,7 +95,7 @@ export async function loadBooks(ctx: LoaderContext, ids?: string[]): Promise<Boo
       overlays,
       "book",
       row.id,
-      ["title", "subtitle", "tagline", "description"],
+      BOOK_TEXT,
     );
     const free = freeLocales.get(row.id);
     return {

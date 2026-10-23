@@ -15,6 +15,18 @@ export function localizePath(path: string, locale: Locale): string {
   return bare === "/" ? "/el" : `/el${bare}`;
 }
 
+/**
+ * A site path written in rich text, moved to the locale's edition. Leaves
+ * alone: other links, paths already under /el, the studio, sign-in and API
+ * paths, and files such as /og.jpg.
+ */
+export function localizeHref(href: string, locale: Locale): string {
+  if (locale === "en" || !href.startsWith("/") || href.startsWith("//")) return href;
+  const [, path = "/", rest = ""] = /^([^?#]*)(.*)$/.exec(href) ?? [];
+  if (/^\/(el|admin|auth|api)(\/|$)/.test(path) || /\.\w+$/.test(path)) return href;
+  return localizePath(path || "/", locale) + rest;
+}
+
 export function readLocaleCookie(): Locale | null {
   if (typeof document === "undefined") return null;
   const match = document.cookie.match(new RegExp(`(?:^|; )${LOCALE_COOKIE}=([^;]*)`));

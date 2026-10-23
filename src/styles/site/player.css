@@ -439,7 +439,7 @@
     margin-right: var(--space-1);
     vertical-align: -3px;
   }
-  .toc-row:hover .t {
+  :is(button, a).toc-row:hover .t {
     color: var(--color-accent-text);
   }
   .toc-row[aria-current="true"] .t {
@@ -453,6 +453,10 @@
   }
   .toc-row--locked .t {
     color: var(--color-text-secondary);
+  }
+  /* A locked chapter that nowhere sells is plain text: nothing to click */
+  span.toc-row {
+    cursor: default;
   }
   /* The ribbon: one short bookmark tab beside the current row, never a bar */
   .ribbon-tab {

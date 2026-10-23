@@ -3,7 +3,9 @@
  * validated, hidden ones dropped, approved Greek applied, rich text
  * sanitised, media resolved and the SEO rules worked out.
  */
+import { fmt } from "@/lib/i18n/format";
 import { localizePath, type Locale } from "@/lib/i18n/locale";
+import { getMessages } from "@/lib/i18n/messages/all";
 import { readServerPublicConfig } from "@/lib/public-config";
 import {
   isSectionType,
@@ -53,8 +55,11 @@ export function parseSections(raw: unknown, pagePath: string): AnySection[] {
   return sections;
 }
 
-/** Sanitise every rich-text prop of a section, whatever language it is in. */
-function sanitizeSection<S extends AnySection>(section: S): S {
+/**
+ * Sanitise every rich-text prop of a section, whatever language it is in. On
+ * a Greek page its site links point to the Greek pages.
+ */
+function sanitizeSection<S extends AnySection>(section: S, locale: Locale): S {
   const spec = TRANSLATABLE[section.type as SectionType];
   const props = { ...(section.props as Record<string, unknown>) };
   let changed = false;
@@ -62,7 +67,7 @@ function sanitizeSection<S extends AnySection>(section: S): S {
     if (kind !== "rich" || field.includes(".")) continue;
     const value = props[field];
     if (typeof value === "string") {
-      props[field] = sanitizeRichText(value);
+      props[field] = sanitizeRichText(value, locale);
       changed = true;
     }
   }
@@ -81,7 +86,8 @@ function localizeSection(
     // Nothing to translate (an image, a book list): it belongs to the page's language.
     return { ...section, lang: "el", englishKeys: [] } as never;
   }
-  if (!overlay) return { ...section, lang: "en", englishKeys: [] } as never;
+  // No approved Greek yet: every key is English, and each says so on its own.
+  if (!overlay) return { ...section, lang: "en", englishKeys: Object.keys(english) } as never;
   const { section: greek } = applyOverlay(section, overlay.fields);
   const englishKeys = Object.keys(english).filter((key) => !overlay.fields[key]?.trim());
   return { ...greek, lang: "el", englishKeys } as never;
@@ -90,6 +96,8 @@ function localizeSection(
 /**
  * Sections ready to render: approved Greek applied, rich text sanitised and
  * each section's data loaded. `extra` asks for more Greek in the same query.
+ * The Greek is fetched for English pages too, which only use it to know
+ * whether a Greek edition exists.
  */
 export async function prepareSections(
   db: PublicDb,
@@ -98,15 +106,13 @@ export async function prepareSections(
   options: { extra?: OverlayRequest; query?: PageQuery } = {},
 ): Promise<{ sections: RenderedSection[]; overlays: OverlayMap; mediaIds: Set<string> }> {
   const [overlays, sectionData] = await Promise.all([
-    locale === "el"
-      ? fetchOverlays(db, { page_section: parsed.map((s) => s.id), ...options.extra })
-      : Promise.resolve<OverlayMap>(new Map()),
+    fetchOverlays(db, { page_section: parsed.map((s) => s.id), ...options.extra }),
     loadSectionData(db, parsed, locale, options.query),
   ]);
   const sections = parsed.map((section) => {
     const localized = localizeSection(section, locale, overlays);
     return {
-      ...sanitizeSection(localized as unknown as AnySection),
+      ...sanitizeSection(localized as unknown as AnySection, locale),
       lang: localized.lang,
       englishKeys: localized.englishKeys,
       data: sectionData.get(section.id) ?? null,
@@ -117,11 +123,19 @@ export async function prepareSections(
   return { sections, overlays, mediaIds };
 }
 
-/** Whether a Greek page counts as translated: some of its section text is approved Greek. */
-export function sectionsInGreek(sections: RenderedSection[]): boolean {
-  return sections.some(
-    (s) => s.lang === "el" && Object.keys(extractTranslatable(s as AnySection)).length > 0,
-  );
+/**
+ * Whether a page has a Greek edition: an approved Greek title, and approved
+ * text in some section (or nothing to translate). The same on either
+ * language's URL, and the sitemap's rule too.
+ */
+export function pageHasGreek(
+  pageId: string,
+  sections: AnySection[],
+  overlays: OverlayMap,
+): boolean {
+  if (!overlays.get(overlayKey("page_meta", pageId))?.fields.title?.trim()) return false;
+  const text = sections.filter((s) => Object.keys(extractTranslatable(s)).length > 0);
+  return text.length === 0 || text.some((s) => overlays.has(overlayKey("page_section", s.id)));
 }
 
 /**
@@ -178,8 +192,7 @@ export async function loadPage(
   const titleLang: Locale = greekTitle ? "el" : "en";
 
   // A Greek URL counts as translated once its title and some of its text are approved.
-  const hasTranslatableText = parsed.some((s) => Object.keys(extractTranslatable(s)).length > 0);
-  const greekReady = !!greekTitle && (sectionsInGreek(sections) || !hasTranslatableText);
+  const greekReady = pageHasGreek(row.id, parsed, overlays);
 
   const { siteUrl } = readServerPublicConfig();
   // The journal index's pages and categories are pages of their own.
@@ -203,8 +216,18 @@ export async function loadPage(
       .map((text) => text?.trim() ?? "")
       .find(Boolean) ?? "";
 
+  // A theme of the journal index is a page of its own: its name leads the title and
+  // description, and an empty theme still answers (with its empty state) but stays out of search.
+  const index = sections.find(
+    (s): s is RenderedSection<"latest_posts"> =>
+      s.type === "latest_posts" && !!(s as RenderedSection<"latest_posts">).data?.pagination,
+  );
+  const theme = query.category ? (index?.data?.pagination?.categoryName ?? null) : null;
+  const noindex = row.noindex || (!!theme && (index?.data?.posts.length ?? 0) === 0);
+  const t = getMessages(locale).seo;
+
   const image = ogImageId ? (media[ogImageId] ?? null) : null;
-  const jsonLd = row.noindex
+  const jsonLd = noindex
     ? undefined
     : await pageJsonLd(db, { path, title, locale, canonical, image: image?.src ?? null });
 
@@ -221,9 +244,11 @@ export async function loadPage(
     sections,
     media,
     seo: {
-      title: seoTitle,
-      description: seoDescription,
-      noindex: row.noindex,
+      title: theme ? fmt(t.themeTitle, { category: theme, title: seoTitle }) : seoTitle,
+      description: theme
+        ? fmt(t.themeDescription, { category: theme, site: site.siteName })
+        : seoDescription,
+      noindex,
       canonical,
       alternates: greekReady ? { en: englishUrl, el: greekUrl } : null,
       image,

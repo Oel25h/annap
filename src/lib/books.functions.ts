@@ -35,7 +35,7 @@ async function assertAdmin(context: { supabase: SupabaseClient<Database>; userId
 
 export const updateBook = createServerFn({ method: "POST" })
   .middleware([requireAdmin])
-  .inputValidator((d: unknown) => BookPatch.parse(d))
+  .validator((d: unknown) => BookPatch.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase.from("books").update(data.patch).eq("id", data.id);
@@ -83,7 +83,7 @@ export const createBook = createServerFn({ method: "POST" })
 
 export const deleteBook = createServerFn({ method: "POST" })
   .middleware([requireAdmin])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase.from("books").delete().eq("id", data.id);

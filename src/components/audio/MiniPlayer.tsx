@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type MouseEvent } from "react";
+import { useRouter } from "@tanstack/react-router";
 import { useLocale, useT } from "@/lib/i18n/context";
 import { fmt } from "@/lib/i18n/format";
 import { Icon } from "@/components/site/Icon";
@@ -12,12 +13,15 @@ import { miniPlayerShown } from "./store";
  * this session and the spread is off screen. It sits after the footer, so at
  * the end of the page it comes to rest below the legal row instead of
  * covering it. While it holds focus it stays, so a keyboard user is never
- * dropped onto the page.
+ * dropped onto the page. "Open the player" puts focus on Play wherever it is
+ * pressed: at once on the page that shows the playing edition, else once the
+ * link has taken the reader to the page it was started on.
  */
 export function MiniPlayer() {
   const t = useT();
   const locale = useLocale();
   const actions = useAudioActions();
+  const router = useRouter();
   const [focused, setFocused] = useState(false);
   const s = useAudioState((state) => ({
     shown: miniPlayerShown(state),
@@ -35,9 +39,19 @@ export function MiniPlayer() {
   const percent = s.duration ? Math.min(100, (s.position / s.duration) * 100) : 0;
   const anchor = book.playerHref.split("#")[1] ?? "listen";
 
-  // On the player's own page, go to it and put focus on Play; elsewhere, follow the link.
+  // Where this page's spread shows the edition that is playing, go to it and put focus on
+  // Play; elsewhere, follow the link to the page it was started on, and Play takes focus
+  // once it has rendered there, after the router's own jump to the anchor, so on phones
+  // Play still ends up centred above this bar.
   const open = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (openPlayer(anchor)) event.preventDefault();
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    if (openPlayer(anchor, book.id)) return event.preventDefault();
+    const done = router.subscribe("onRendered", ({ toLocation }) => {
+      done();
+      if (toLocation.hash === anchor) requestAnimationFrame(() => openPlayer(anchor, book.id));
+    });
   };
 
   return (

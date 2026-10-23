@@ -33,9 +33,6 @@
     border-radius: var(--radius);
     background: var(--color-bg-alt);
   }
-  .two-col--portrait .two-col-media img {
-    aspect-ratio: 4 / 5;
-  }
   .two-col-media figcaption {
     margin-top: var(--space-3);
   }
@@ -46,12 +43,6 @@
   .two-col-body {
     margin-top: var(--space-4);
     max-width: 30em;
-  }
-  @media (min-width: 720px) {
-    /* One column until 1024: a portrait keeps to half the width */
-    .two-col--portrait .two-col-media {
-      max-width: 50%;
-    }
   }
   @media (min-width: 1024px) {
     .two-col {
@@ -68,16 +59,6 @@
     .two-col--left .two-col-text,
     .two-col--right .two-col-media {
       grid-column: 7 / 13;
-    }
-    /* A portrait takes five columns, like the hero's: 1–5, or 8–12 on the right */
-    .two-col--portrait .two-col-media {
-      max-width: none;
-    }
-    .two-col--portrait.two-col--left .two-col-media {
-      grid-column: 1 / 6;
-    }
-    .two-col--portrait.two-col--right .two-col-media {
-      grid-column: 8 / 13;
     }
     .two-col--text .two-col-text {
       grid-column: 1 / 9;

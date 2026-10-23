@@ -1,9 +1,10 @@
 /**
  * Uploads the starting photo library (scripts/content/media.ts) to a Supabase
- * project: WebP variants at 480, 960, 1600 and 2400 px (never wider than the
- * original, which is added as the largest variant), the original itself, the dominant colour, and one media_assets
- * row per image with its fixed id. Then points books, posts and the site's
- * social card at them where nothing is set yet.
+ * project: WebP variants at 160, 480, 960, 1600 and 2400 px (160 for the 32 and 36px
+ * thumbnails; never wider than the original, which is added as the largest
+ * variant), the original itself, the dominant colour, and one media_assets
+ * row per image with its fixed id. Then points books, products, posts and the
+ * site's social card at them where nothing is set yet.
  *
  *   SUPABASE_URL=… SUPABASE_SECRET_KEY=… bun scripts/seed-media.ts
  *   bun scripts/seed-media.ts --local             (reads `supabase status`)
@@ -19,7 +20,7 @@ import sharp from "sharp";
 import { createClient } from "@supabase/supabase-js";
 import { MEDIA, MEDIA_LIST, type SeedImage } from "./content/media";
 
-const WIDTHS = [480, 960, 1600, 2400];
+const WIDTHS = [160, 480, 960, 1600, 2400];
 const args = new Set(process.argv.slice(2));
 
 function localCredentials() {
@@ -118,6 +119,11 @@ async function seedImage(image: SeedImage) {
       .update({ cover_media_id: image.id })
       .eq("cover_url", image.coverUrl)
       .is("cover_media_id", null);
+    await db
+      .from("products")
+      .update({ cover_media_id: image.id })
+      .eq("image_url", image.coverUrl)
+      .is("cover_media_id", null);
   }
   if (image.postCoverUrl) {
     await db
@@ -180,7 +186,7 @@ async function fixtures() {
       .maybeSingle();
     const { data: secondBook } = await db
       .from("books")
-      .select("id")
+      .select("id, title")
       .eq("slug", "turning-pain-into-purpose")
       .maybeSingle();
     // Chapter titles and opening lines in her words (the About page and the
@@ -264,7 +270,8 @@ async function fixtures() {
         id: FIXTURE(300),
         bookId: secondBook?.id ?? null,
         locale: "en",
-        title: "Turning Pain into Purpose",
+        // The book's own title, so the edition can never spell it differently.
+        title: secondBook?.title ?? "Turning Pain Into Purpose",
         subtitle: "Sample recording",
         cover: MEDIA.coverTpip.id,
         chapters: [
@@ -300,11 +307,18 @@ async function fixtures() {
         const mediaId = FIXTURE(base + 10 + i);
         const path = `fixtures/${base}/chapter-${i + 1}.mp3`;
         const body = tone(dir, `${base}-${i}`, seconds, 196 + i * 22);
-        await upload("audio", path, body, "audio/mpeg");
+        // The last chapter is "in the full audiobook" so the locked state shows.
+        // A paid chapter's file lives in the private downloads bucket (the
+        // database refuses it in the public audio bucket); drop any copy an
+        // earlier seed left there.
+        const free = i < edition.chapters.length - 1;
+        const bucket = free ? "audio" : "downloads";
+        await upload(bucket, path, body, "audio/mpeg");
+        if (!free) await db.storage.from("audio").remove([path]);
         const media = await db.from("media_assets").upsert({
           id: mediaId,
           kind: "audio",
-          bucket: "audio",
+          bucket,
           path,
           mime: "audio/mpeg",
           bytes: body.length,
@@ -324,8 +338,7 @@ async function fixtures() {
           opening_line: openingLine,
           audio_media_id: mediaId,
           duration_seconds: seconds,
-          // The last chapter is "in the full audiobook" so the locked state shows.
-          free_to_stream: i < edition.chapters.length - 1,
+          free_to_stream: free,
           position: i,
         });
         if (track.error) throw new Error(`tracks: ${track.error.message}`);

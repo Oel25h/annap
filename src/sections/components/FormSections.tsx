@@ -58,7 +58,7 @@ export function Newsletter({ section, ctx }: Props<"newsletter">) {
   );
 }
 
-const TOPICS: ContactTopic[] = ["general", "speaking", "media", "partnerships"];
+const TOPICS: ContactTopic[] = ["general", "speaking", "media", "partnerships", "volunteering"];
 
 /**
  * Write to Anastasia: the heading and line on 1–5, the form on 7–12. The
@@ -71,6 +71,11 @@ export function ContactForm({ section, ctx }: Props<"contact_form">) {
   const id = useId();
   const p = section.props;
   const c = t.sections.contact;
+  // `?topic=volunteering` (the home page's Volunteer link) opens with that topic chosen.
+  const linked = useRouterState({
+    select: (s) => String((s.location.search as Record<string, unknown>).topic ?? ""),
+  });
+  const initial = TOPICS.find((topic) => topic === linked) ?? "general";
   const [sender, setSender] = useState("");
   const form = useFormAction(
     (data, turnstile) => {
@@ -163,10 +168,15 @@ export function ContactForm({ section, ctx }: Props<"contact_form">) {
               </div>
               <fieldset className="field-set">
                 <legend className="field-label">{c.topic}</legend>
-                <div className="chips">
-                  {TOPICS.map((topic, index) => (
+                <div className="chips" key={initial}>
+                  {TOPICS.map((topic) => (
                     <label key={topic} className="chip">
-                      <input type="radio" name="topic" value={topic} defaultChecked={index === 0} />
+                      <input
+                        type="radio"
+                        name="topic"
+                        value={topic}
+                        defaultChecked={topic === initial}
+                      />
                       <span>{c.topics[topic]}</span>
                     </label>
                   ))}
@@ -263,9 +273,10 @@ export function Donation({ section, ctx }: Props<"donation">) {
       },
       // Never on to Stripe unasked.
       retryOnReconnect: false,
+      leavesPage: true,
     },
   );
-  // On its way to Stripe: the button keeps waiting until the page changes.
+  // On its way to Stripe: the button keeps waiting until the page changes, and is ready again if the reader comes Back.
   const busy = form.sending || form.state.step === "done";
   const label = amountText
     ? fmt(frequency === "month" ? d.donateMonthly : d.donateAmount, { amount: amountText })

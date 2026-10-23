@@ -2,9 +2,8 @@ import { defineConfig, loadEnv } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import tsConfigPaths from "vite-tsconfig-paths";
 import { nitro } from "nitro/vite";
-import { clientChunkGraph } from "./scripts/vite/client-chunk-graph";
+import { clientChunkGraph } from "./scripts/vite/client-chunk-graph.ts";
 
 const fromRoot = (path: string) => new URL(path, import.meta.url).pathname;
 
@@ -27,9 +26,10 @@ export default defineConfig(({ mode }) => {
         "@": fromRoot("./src"),
       },
       dedupe: ["react", "react-dom", "@tanstack/react-query", "@tanstack/react-router"],
+      // tsconfig.json's paths, resolved by Vite itself.
+      tsconfigPaths: true,
     },
     plugins: [
-      tsConfigPaths({ projects: ["./tsconfig.json"] }),
       tailwindcss(),
       tanstackStart({
         server: { entry: "server" },

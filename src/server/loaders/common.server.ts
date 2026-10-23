@@ -15,26 +15,28 @@ export async function itemOverlays(
   return fetchOverlays(ctx.db, { [entityType]: ids });
 }
 
-/** Apply an item's approved Greek to the listed fields. Returns the language the item is now in. */
+/**
+ * Apply an item's approved Greek to the listed fields. Returns the language the
+ * item is now in, and the listed fields still in English (all of them without Greek).
+ */
 export function overlayFields<T extends Record<string, unknown>>(
   item: T,
   overlays: OverlayMap,
   entityType: string,
   id: string,
-  fields: (keyof T & string)[],
-): { item: T; lang: Locale } {
+  fields: readonly (keyof T & string)[],
+): { item: T; lang: Locale; english: (keyof T & string)[] } {
   const greek = overlays.get(overlayKey(entityType, id))?.fields;
-  if (!greek) return { item, lang: "en" };
+  if (!greek) return { item, lang: "en", english: [...fields] };
   const out: Record<string, unknown> = { ...item };
-  let any = false;
+  const english: (keyof T & string)[] = [];
   for (const field of fields) {
-    const text = greek[field];
-    if (typeof text === "string" && text.trim()) {
-      out[field] = text;
-      any = true;
-    }
+    // The studio saves some fields under their column's name (who_for).
+    const text = greek[field] ?? greek[field.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`)];
+    if (typeof text === "string" && text.trim()) out[field] = text;
+    else english.push(field);
   }
-  return { item: out as T, lang: any ? "el" : "en" };
+  return { item: out as T, lang: english.length < fields.length ? "el" : "en", english };
 }
 
 /** Whether readers can pay here, and the Turnstile site key. One call per page at most. */

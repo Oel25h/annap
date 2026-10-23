@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { nb } from "./rag";
+import { keepCapSpace, nb } from "./rag";
 
 const NB = " ";
 
@@ -26,4 +26,11 @@ test("leaves longer words and a short last word alone", () => {
 test("works after opening quotes and dashes", () => {
   assert.equal(nb("«Σε ένα ταξίδι»"), `«Σε${NB}ένα ταξίδι»`);
   assert.equal(nb("faith — a way"), `faith — a${NB}way`);
+});
+
+test("keeps the space after a one-letter word under the drop cap", () => {
+  assert.equal(keepCapSpace("<p>Η ιστορία μου</p>"), `<p>Η${NB}ιστορία μου</p>`);
+  assert.equal(keepCapSpace("<p>I learned</p><p>A b</p>"), `<p>I${NB}learned</p><p>A b</p>`);
+  assert.equal(keepCapSpace("<p>My story</p>"), "<p>My story</p>");
+  assert.equal(keepCapSpace("<p>«Η αρχή»</p>"), `<p>«Η${NB}αρχή»</p>`);
 });

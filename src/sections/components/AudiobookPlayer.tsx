@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useAudioActions, useAudioState, useSelectedBook } from "@/components/audio/AudioProvider";
 import {
   formatTime,
@@ -83,8 +83,7 @@ function OpenBook({
   const props = section.props;
   const title = props.title.trim();
   // The section's text may be English on a Greek page; the player's own words never are.
-  const textLang = (key: string) =>
-    section.lang !== locale ? section.lang : keyLang(section, key);
+  const textLang = (key: string) => keyLang(section, key);
 
   // The docked player steps aside while the spread is on screen.
   const spreadRef = useRef<HTMLDivElement>(null);
@@ -384,6 +383,7 @@ function Verso({ book, anchor, locale }: { book: PlayableBook; anchor: string; l
           type="button"
           id={`${anchor}-play`}
           data-play=""
+          data-book-id={book.id}
           aria-label={v.playing ? p.pause : p.play}
           disabled={!track.src}
           onClick={play}
@@ -434,6 +434,18 @@ function Recto({ book, id, locale }: { book: PlayableBook; id: string; locale: L
   });
   const count = book.tracks.length;
   const start = Math.min(Math.max(v.index - 1, 0), Math.max(0, count - WINDOW));
+  // When the next chapter moves the window past the row that has focus, focus goes to
+  // the current row instead of being lost. From 1024 every row shows, so check whether
+  // the focused row still renders, not its class. No scroll: the reader may be elsewhere.
+  // A layout effect, because Chrome only drops focus from a hidden element in a later task.
+  const listRef = useRef<HTMLOListElement>(null);
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const active = document.activeElement;
+    if (!list || !(active instanceof HTMLElement) || !list.contains(active)) return;
+    if (active.getClientRects().length > 0) return;
+    list.querySelector<HTMLElement>("li.is-current .toc-row")?.focus({ preventScroll: true });
+  }, [start]);
   const titleLang = langOf(book, locale);
   const byAuthor = !book.narrator || /anastasia patience/i.test(book.narrator);
 
@@ -447,7 +459,7 @@ function Recto({ book, id, locale }: { book: PlayableBook; id: string; locale: L
           {byAuthor ? p.readByAuthor : fmt(p.readByName, { narrator: book.narrator })}
         </p>
       </div>
-      <ol id={`${id}-chapters`}>
+      <ol id={`${id}-chapters`} ref={listRef}>
         {book.tracks.map((track, i) => {
           const current = i === v.index;
           const hidden = !expanded && (i < start || i >= start + WINDOW);
@@ -495,8 +507,9 @@ function Recto({ book, id, locale }: { book: PlayableBook; id: string; locale: L
                     {played ? p.rowPlayed : ""}
                   </span>
                 </button>
-              ) : (
-                // Not free to stream: the row leads to where the full audiobook is sold.
+              ) : book.bookHref ? (
+                // Not free to stream: the row leads to where the full audiobook is sold,
+                // or is plain text when nowhere sells it.
                 <SiteLink className="toc-row toc-row--locked" href={book.bookHref}>
                   <span className="sr-only">{fmt(p.rowLocked, { n: i + 1 })}</span>
                   {inner}
@@ -505,6 +518,15 @@ function Recto({ book, id, locale }: { book: PlayableBook; id: string; locale: L
                     {p.rowLockedNote}
                   </span>
                 </SiteLink>
+              ) : (
+                <span className="toc-row toc-row--locked">
+                  <span className="sr-only">{fmt(p.rowLocked, { n: i + 1 })}</span>
+                  {inner}
+                  <span className="sr-only">
+                    {spoken}
+                    {p.rowLockedNote}
+                  </span>
+                </span>
               )}
             </li>
           );

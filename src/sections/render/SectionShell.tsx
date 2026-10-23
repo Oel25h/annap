@@ -28,8 +28,6 @@ const BANDS: Record<Band, string> = {
   cocoa: "band-cocoa",
 };
 
-export const bandClass = (band: Band) => BANDS[band];
-
 /** A standalone link: in-site with a right arrow, or out of the site with an up-right one. */
 export type HeadLink = {
   label: string;
@@ -114,7 +112,7 @@ export function SectionHeading({
 }
 
 /**
- * Band, width, spacing, anchor and language for any section, and its heading
+ * Band, width, spacing and anchor for any section, and its heading
  * row. A section with a heading is labelled by it; one without is a plain
  * section, never an unnamed landmark.
  *
@@ -158,7 +156,6 @@ export function SectionShell({
     <section
       className={classes}
       id={settings.anchor || defaultAnchor || undefined}
-      lang={section.lang !== ctx.locale ? section.lang : undefined}
       aria-labelledby={labelled || title ? ctx.headingId : undefined}
     >
       <div className={["wrap", wrapClassName].filter(Boolean).join(" ")}>
@@ -188,7 +185,11 @@ export function SectionShell({
   );
 }
 
-/** `lang` for one flattened key: English inside an otherwise Greek section. */
+/**
+ * `lang` for one flattened key: English on a Greek page, in a section with no
+ * approved Greek or with some keys still untranslated. A section never
+ * carries `lang` itself: its own UI and data are in the page's language.
+ */
 export function keyLang(section: RenderedSection, key: string): "en" | undefined {
-  return section.lang === "el" && section.englishKeys.includes(key) ? "en" : undefined;
+  return section.englishKeys.includes(key) ? "en" : undefined;
 }

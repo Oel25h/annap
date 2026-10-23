@@ -81,6 +81,8 @@ export type AudiobookItem = {
   /** The book it records: a page offers one edition per book, in its own language first. */
   bookId: string | null;
   bookSlug: string | null;
+  /** Where the whole recording is sold (the audiobook format's retailer link), or null. */
+  fullUrl: string | null;
   tracks: AudiobookTrack[];
 };
 
@@ -195,6 +197,8 @@ export type PostPagination = {
   pages: number;
   /** The category slug being shown, or null for all. */
   category: string | null;
+  /** The shown theme's name in the page's language (approved Greek on /el), or null for all. */
+  categoryName: string | null;
 };
 
 /** Query parameters a page's sections may read (the journal index's page and category). */
@@ -238,7 +242,7 @@ export type RenderedSection<T extends SectionType = SectionType> = T extends Sec
   ? SectionOf<T> & {
       /** The language the section's text is in. */
       lang: Locale;
-      /** Flattened keys still in English on a Greek page (a partly updated translation). */
+      /** Flattened keys still in English on a Greek page: every key until a translation is approved, then the ones it leaves out. */
       englishKeys: string[];
       data: SectionDataMap[T] | null;
     }
@@ -259,11 +263,19 @@ export type PageSeo = {
  * item itself, set above its sections in place of the title band.
  */
 export type ItemIntro =
-  | { kind: "book"; book: BookSummary; whoFor: string }
+  | {
+      kind: "book";
+      book: BookSummary;
+      whoFor: string;
+      /** "Who it's for" may still be in English when the book is in Greek. */
+      whoForLang: Locale;
+    }
   | { kind: "post"; post: PostCard; bodyHtml: string; related: PostCard[] }
   | {
       kind: "product";
       product: ProductCard;
+      /** The intro's fields still in English (description, whoFor, included, stockNote). */
+      english: string[];
       description: string;
       whoFor: string;
       included: string[];
@@ -308,6 +320,8 @@ export type PageData = {
   seo: PageSeo;
   /** Collection items only. */
   intro?: ItemIntro;
+  /** Collection items only: their collection page is published, so the way back to it has somewhere to go. */
+  indexed?: boolean;
   /** schema.org data for search engines (Book, BlogPosting, Product, Event), as JSON text. */
   jsonLd?: string;
 };

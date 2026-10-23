@@ -8,3 +8,15 @@ const SHORT_WORD = /(?<=^|[\s(«"“‘—–-])([\p{L}\p{N}&]{1,2})[ \t]+(?=\S)
 export function nb(text: string): string {
   return text.replace(SHORT_WORD, "$1 ");
 }
+
+/**
+ * The drop cap swallows a one-letter first word ("Η ιστορία", "I learned"):
+ * the space after it opens the line beside the cap and collapses, so the cap
+ * reads as part of the next word. Keep that one space as a no-break space.
+ * Sanitised HTML in, HTML out; only the opening paragraph is touched.
+ */
+const CAP_WORD = /^(\s*<p\b[^>]*>\s*[«"“‘(]?[\p{L}\p{N}])[ \t\r\n]+(?=[^\s<])/u;
+
+export function keepCapSpace(html: string): string {
+  return html.replace(CAP_WORD, "$1 ");
+}

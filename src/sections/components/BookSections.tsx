@@ -29,7 +29,7 @@ import {
   TextLink,
   type SectionContext,
 } from "../render/SectionShell";
-import { Lines } from "../render/text";
+import { InEnglish, Lines } from "../render/text";
 
 type Props<T extends RenderedSection["type"]> = {
   section: RenderedSection<T>;
@@ -252,7 +252,9 @@ export function FeaturedBook({
   const book = section.data?.book;
   if (!book) return null;
   const p = section.props;
-  const lang = langIf(book.textLang, section.lang);
+  const lang = langIf(book.textLang, ctx.locale);
+  // The language of the page the title opens, against the reader's.
+  const target = langIf(book.textLang, ctx.locale);
   const listen = listenAnchor ? { anchor: listenAnchor, above: listenAbove } : null;
   return (
     <SectionShell section={section} ctx={ctx} labelled defaultAnchor="book">
@@ -264,7 +266,10 @@ export function FeaturedBook({
         </div>
         <div className="book-body">
           <SectionHeading ctx={ctx} lang={lang}>
-            <SiteLink href={`/books/${book.slug}`}>{nb(book.title)}</SiteLink>
+            <SiteLink href={`/books/${book.slug}`} hrefLang={target}>
+              {nb(book.title)}
+            </SiteLink>
+            <InEnglish target={target} />
           </SectionHeading>
           {book.subtitle && (
             <p className="book-sub" lang={lang}>
@@ -536,7 +541,9 @@ export function BookList({ section, media, ctx }: Props<"book_list">) {
     >
       <ul className={rows ? "shelf shelf--rows" : "shelf shelf--grid grid-12"}>
         {books.map((book, index) => {
-          const lang = langIf(book.textLang, section.lang);
+          const lang = langIf(book.textLang, ctx.locale);
+          // The language of the page the links open, against the reader's.
+          const target = langIf(book.textLang, ctx.locale);
           const href = `/books/${book.slug}`;
           return (
             <li key={book.id} className={rows ? "grid-12" : undefined}>
@@ -550,7 +557,10 @@ export function BookList({ section, media, ctx }: Props<"book_list">) {
               </div>
               <div className="shelf-text">
                 <Item className={rows ? "display-l" : "display-m"} lang={lang}>
-                  <SiteLink href={href}>{nb(book.title)}</SiteLink>
+                  <SiteLink href={href} hrefLang={target}>
+                    {nb(book.title)}
+                  </SiteLink>
+                  <InEnglish target={target} />
                 </Item>
                 {book.subtitle && (
                   <p className="book-sub" lang={lang}>
@@ -565,7 +575,9 @@ export function BookList({ section, media, ctx }: Props<"book_list">) {
                 )}
                 {rows && <Offers book={book} listen={null} />}
                 <p className="book-links">
-                  <TextLink link={{ label: t.sections.books.more, href }} />
+                  <SiteLink className="link" href={href} hrefLang={target} arrow>
+                    {t.sections.books.more}
+                  </SiteLink>
                 </p>
               </div>
             </li>

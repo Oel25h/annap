@@ -1,5 +1,26 @@
 import { Fragment } from "react";
+import { useLocale, useT } from "@/lib/i18n/context";
+import type { Locale } from "@/lib/i18n/locale";
 import { nb } from "@/lib/i18n/rag";
+
+/**
+ * «(στα Αγγλικά)» after a link whose page is in English, on /el (DESIGN.md §9).
+ * It sits outside the English words and carries the page's language, so it
+ * reads as Greek even inside a `lang="en"` heading.
+ */
+export function InEnglish({ target }: { target?: Locale | null }) {
+  const t = useT();
+  const locale = useLocale();
+  if (target !== "en" || locale === "en") return null;
+  return (
+    <>
+      {" "}
+      <span className="meta" lang={locale}>
+        {t.sections.inEnglish}
+      </span>
+    </>
+  );
+}
 
 /**
  * The home h1 with its hope word in the one italic accent on the site. The

@@ -23,7 +23,7 @@ import {
   type HeadLink,
   type SectionContext,
 } from "../render/SectionShell";
-import { Lines, RichHtml } from "../render/text";
+import { InEnglish, Lines, RichHtml } from "../render/text";
 
 type Props<T extends RenderedSection["type"]> = {
   section: RenderedSection<T>;
@@ -34,7 +34,7 @@ type Props<T extends RenderedSection["type"]> = {
 type Level = "h2" | "h3";
 
 const langIf = (lang: Locale, page: Locale) => (lang !== page ? lang : undefined);
-/** Text that is only ever stored in English (foundation story categories). */
+/** Text that is only ever stored in English (foundation story categories, names and places, price labels). */
 const englishOn = (page: Locale) => langIf("en", page);
 
 /**
@@ -95,7 +95,7 @@ function Tile({
   Item: Level;
   href: string;
   title: string;
-  /** The language of the item's own words, set on the title; its text sets its own. */
+  /** The language of the item's own words, set on the title's link; its text sets its own. */
   lang?: Locale;
   /** The language of the page the link opens, when it isn't the item's own (null: unknown). */
   linkLang?: Locale | null;
@@ -111,10 +111,11 @@ function Tile({
       <article className={upright ? "tile tile--cover" : "tile"}>
         <Picture media={cover} sizes={TILE_SIZES} decorative />
         {label}
-        <Item className="title" lang={lang}>
-          <SiteLink className="tile-link" href={href} hrefLang={linkLang ?? undefined}>
+        <Item className="title">
+          <SiteLink className="tile-link" href={href} lang={lang} hrefLang={linkLang ?? undefined}>
             {title}
           </SiteLink>
+          <InEnglish target={linkLang} />
         </Item>
         {children}
       </article>
@@ -142,13 +143,13 @@ function Row({
 }
 
 /** "March 12, 2026 · 7 min read": the dot hangs at the end of each item. */
-function Dots({ items }: { items: ReactNode[] }) {
+function Dots({ items, lang }: { items: ReactNode[]; lang?: Locale }) {
   const shown = items.filter(
     (item) => item !== null && item !== undefined && item !== false && item !== "",
   );
   if (shown.length === 0) return null;
   return (
-    <span className="dots meta">
+    <span className="dots meta" lang={lang}>
       {shown.map((item, index) => (
         <span key={index}>{item}</span>
       ))}
@@ -191,19 +192,13 @@ function StoryTitle({
   locale: Locale;
   className?: string;
 }) {
-  const t = useT();
   const lang = langIf(post.textLang, locale);
   return (
     <Item className={className}>
       <SiteLink href={`/blog/${post.slug}`} lang={lang} hrefLang={lang}>
         {className === "title" ? post.title : nb(post.title)}
       </SiteLink>
-      {lang && (
-        <>
-          {" "}
-          <span className="meta">{t.sections.inEnglish}</span>
-        </>
-      )}
+      <InEnglish target={lang} />
     </Item>
   );
 }
@@ -510,7 +505,8 @@ export function Testimonials({ section, ctx }: Props<"testimonials">) {
   const move = (direction: 1 | -1) => {
     const el = track.current;
     const step = (el?.firstElementChild as HTMLElement | null)?.offsetWidth ?? 0;
-    el?.scrollBy({ left: direction * step, behavior: "smooth" });
+    // The stylesheet decides the glide, so reduced motion makes the jump instant.
+    el?.scrollBy({ left: direction * step });
   };
 
   return (
@@ -542,12 +538,13 @@ export function Testimonials({ section, ctx }: Props<"testimonials">) {
       </ul>
       {!single && edges.overflow && (
         <div className="track-ctl">
+          {/* aria-disabled, not disabled: focus stays put when the first or last review is reached */}
           <button
             type="button"
             className="btn btn-quiet btn-sm icon-btn"
             aria-label={t.sections.testimonials.previous}
-            disabled={edges.start}
-            onClick={() => move(-1)}
+            aria-disabled={edges.start || undefined}
+            onClick={() => !edges.start && move(-1)}
           >
             <Icon name="chev-left" />
           </button>
@@ -555,8 +552,8 @@ export function Testimonials({ section, ctx }: Props<"testimonials">) {
             type="button"
             className="btn btn-quiet btn-sm icon-btn"
             aria-label={t.sections.testimonials.next}
-            disabled={edges.end}
-            onClick={() => move(1)}
+            aria-disabled={edges.end || undefined}
+            onClick={() => !edges.end && move(1)}
           >
             <Icon name="chev-right" />
           </button>
@@ -614,7 +611,15 @@ export function Products({ section, media, ctx }: Props<"products">) {
                     {product.summary}
                   </p>
                 )}
-                {price && <p className="meta">{price}</p>}
+                {price && (
+                  // The free-text price label is only ever stored in English.
+                  <p
+                    className="meta"
+                    lang={product.priceCents === null ? englishOn(ctx.locale) : undefined}
+                  >
+                    {price}
+                  </p>
+                )}
               </Tile>
             );
           })}
@@ -705,14 +710,24 @@ export function Masterclasses({ section, media, ctx }: Props<"masterclasses">) {
   } else {
     list = (
       <ul className="rows">
-        {items.map((item) => (
-          <Row key={item.id} meta={facts(item)} aside={<Status availability={item.availability} />}>
-            <Item className="title" lang={langIf(item.textLang, ctx.locale)}>
-              <SiteLink href={`/masterclasses/${item.slug}`}>{item.title}</SiteLink>
-            </Item>
-            {summary(item)}
-          </Row>
-        ))}
+        {items.map((item) => {
+          const lang = langIf(item.textLang, ctx.locale);
+          return (
+            <Row
+              key={item.id}
+              meta={facts(item)}
+              aside={<Status availability={item.availability} />}
+            >
+              <Item className="title">
+                <SiteLink href={`/masterclasses/${item.slug}`} lang={lang} hrefLang={lang}>
+                  {item.title}
+                </SiteLink>
+                <InEnglish target={lang} />
+              </Item>
+              {summary(item)}
+            </Row>
+          );
+        })}
       </ul>
     );
   }
@@ -745,26 +760,32 @@ export function FoundationStories({ section, media, ctx }: Props<"foundation_sto
   } else if (section.variant === "list") {
     list = (
       <ul className="rows">
-        {stories.map((story) => (
-          <Row
-            key={story.id}
-            meta={
-              <>
-                {category(story.category)}
-                <Dots items={[story.personName, story.location]} />
-              </>
-            }
-          >
-            <Item className="title" lang={langIf(story.textLang, ctx.locale)}>
-              <SiteLink href={`/foundation/stories/${story.slug}`}>{story.title}</SiteLink>
-            </Item>
-            {story.summary && (
-              <p className="body" lang={langIf(story.textLang, ctx.locale)}>
-                {story.summary}
-              </p>
-            )}
-          </Row>
-        ))}
+        {stories.map((story) => {
+          const lang = langIf(story.textLang, ctx.locale);
+          return (
+            <Row
+              key={story.id}
+              meta={
+                <>
+                  {category(story.category)}
+                  <Dots items={[story.personName, story.location]} lang={englishOn(ctx.locale)} />
+                </>
+              }
+            >
+              <Item className="title">
+                <SiteLink href={`/foundation/stories/${story.slug}`} lang={lang} hrefLang={lang}>
+                  {story.title}
+                </SiteLink>
+                <InEnglish target={lang} />
+              </Item>
+              {story.summary && (
+                <p className="body" lang={lang}>
+                  {story.summary}
+                </p>
+              )}
+            </Row>
+          );
+        })}
       </ul>
     );
   } else {
@@ -786,7 +807,8 @@ export function FoundationStories({ section, media, ctx }: Props<"foundation_sto
               </p>
             )}
             <p className="tile-meta">
-              <Dots items={[story.personName, story.location]} />
+              {/* Name and place are only ever served from the English row, like the category */}
+              <Dots items={[story.personName, story.location]} lang={englishOn(ctx.locale)} />
             </p>
           </Tile>
         ))}
@@ -858,6 +880,7 @@ export function Events({ section, media, ctx }: Props<"events">) {
       <ul className="rows">
         {events.map((event) => {
           const { day, when, place } = eventFacts(event, ctx.locale, t.sections.events.online);
+          const lang = langIf(event.textLang, ctx.locale);
           return (
             <Row
               key={event.id}
@@ -877,11 +900,14 @@ export function Events({ section, media, ctx }: Props<"events">) {
                 )
               }
             >
-              <Item className="title" lang={langIf(event.textLang, ctx.locale)}>
-                <SiteLink href={`/events/${event.slug}`}>{event.title}</SiteLink>
+              <Item className="title">
+                <SiteLink href={`/events/${event.slug}`} lang={lang} hrefLang={lang}>
+                  {event.title}
+                </SiteLink>
+                <InEnglish target={lang} />
               </Item>
               {event.summary && (
-                <p className="body" lang={langIf(event.textLang, ctx.locale)}>
+                <p className="body" lang={lang}>
                   {event.summary}
                 </p>
               )}

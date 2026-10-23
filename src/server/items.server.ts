@@ -6,14 +6,14 @@
  * book its audiobook, praise for it and the free ebook; for a story, a way
  * to give.
  */
-import { getMessages } from "@/lib/i18n/messages";
+import { getMessages } from "@/lib/i18n/messages/all";
 import { localizePath, type Locale } from "@/lib/i18n/locale";
 import { fmt } from "@/lib/i18n/format";
 import { readServerPublicConfig } from "@/lib/public-config";
 import { SECTION_SCHEMAS, type AnySection, type SectionType } from "@/sections/schemas";
 import type { ItemIntro, PageData, PostCard, RenderedSection } from "@/sections/types";
-import { loadBooks } from "./loaders/books.server";
-import { postCards, postCategories } from "./loaders/collections.server";
+import { BOOK_TEXT, loadBooks } from "./loaders/books.server";
+import { POST_TEXT, postCards, postCategories } from "./loaders/collections.server";
 import {
   itemOverlays,
   overlayFields,
@@ -21,6 +21,7 @@ import {
   type LoaderContext,
 } from "./loaders/common.server";
 import { resolveMedia } from "./media.server";
+import type { OverlayMap } from "./overlays.server";
 import { parseSections, prepareSections } from "./pages.server";
 import { sanitizeRichText } from "./rich-text.server";
 import { itemJsonLd, personId } from "./structured-data.server";
@@ -38,6 +39,51 @@ export const ITEM_BASE: Record<ItemKind, string> = {
   event: "/events",
   story: "/foundation/stories",
 };
+
+const PRODUCT_TEXT = [
+  "name",
+  "description",
+  "whoFor",
+  "included",
+  "stockNote",
+  "seoTitle",
+  "seoDescription",
+] as const;
+const MASTERCLASS_TEXT = [
+  "title",
+  "summary",
+  "description",
+  "included",
+  "scheduleNote",
+  "seoTitle",
+  "seoDescription",
+] as const;
+const EVENT_TEXT = ["title", "summary", "seoTitle", "seoDescription"] as const;
+const STORY_TEXT = ["title", "summary", "body", "seoTitle", "seoDescription"] as const;
+
+/**
+ * Each kind's Greek: its content_translations entity, and the fields whose
+ * approved Greek makes the item Greek on /el (the fields its loader applies).
+ */
+const ITEM_GREEK: Record<ItemKind, { entity: string; fields: readonly string[] }> = {
+  book: { entity: "book", fields: BOOK_TEXT },
+  post: { entity: "blog_post", fields: POST_TEXT },
+  product: { entity: "product", fields: PRODUCT_TEXT },
+  masterclass: { entity: "masterclass", fields: MASTERCLASS_TEXT },
+  event: { entity: "event", fields: EVENT_TEXT },
+  story: { entity: "foundation_story", fields: STORY_TEXT },
+};
+
+/**
+ * Whether an item has a Greek edition: approved Greek in one of the fields
+ * that make its /el page Greek. The same on either language's URL, and the
+ * sitemap's rule too.
+ */
+export function itemHasGreek(kind: ItemKind, id: string, overlays: OverlayMap): boolean {
+  const { entity, fields } = ITEM_GREEK[kind];
+  const blank = Object.fromEntries(fields.map((field) => [field, ""]));
+  return overlayFields(blank, overlays, entity, id, fields).lang === "el";
+}
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -100,18 +146,26 @@ type Shell = {
   imageId: string | null;
   mediaIds: (string | null)[];
   intro: ItemIntro;
-  jsonLd?: (url: string, image: string | null) => Record<string, unknown>;
+  /** Parts of the intro still in English on /el. */
+  englishParts?: boolean;
+  /** The item's schema.org node, or null for none (its breadcrumb is always sent). */
+  jsonLd?: (url: string, image: string | null) => Record<string, unknown> | null;
 };
 
 /** Sections, media, SEO and the Greek rules, the same for every kind of item. */
 async function finish(ctx: LoaderContext, shell: Shell): Promise<PageData> {
   const path = `${ITEM_BASE[shell.kind]}/${shell.slug}`;
+  const parent = shell.kind === "story" ? "/foundation" : ITEM_BASE[shell.kind];
   const own = parseSections(shell.rawSections, path);
   const made = own.length === 0 ? madeSections(shell.id, shell.defaults()) : [];
   const madeIds = new Set(made.map((s) => s.id));
-  const [{ sections: prepared, mediaIds }, site] = await Promise.all([
-    prepareSections(ctx.db, own.length ? own : made, ctx.locale),
+  const [{ sections: prepared, overlays, mediaIds }, site, indexRow] = await Promise.all([
+    prepareSections(ctx.db, own.length ? own : made, ctx.locale, {
+      extra: { [ITEM_GREEK[shell.kind].entity]: [shell.id] },
+    }),
     getSiteSettings(ctx.db),
+    // Row-level security returns published pages only: a draft collection page is null.
+    ctx.db.from("pages").select("id").eq("path", parent).maybeSingle(),
   ]);
   // Made sections are written in the page's language already.
   const sections = prepared.map((s) =>
@@ -129,6 +183,8 @@ async function finish(ctx: LoaderContext, shell: Shell): Promise<PageData> {
   const canonical = ctx.locale === "el" && shell.greek ? greekUrl : englishUrl;
   const image = imageId ? (media[imageId] ?? null) : null;
   const titleLang: Locale = ctx.locale === "el" && !shell.greek ? "en" : ctx.locale;
+  // Whether a Greek edition exists, decided the same way on either language's URL.
+  const hasGreek = ctx.locale === "el" ? shell.greek : itemHasGreek(shell.kind, shell.id, overlays);
 
   return {
     id: shell.id,
@@ -139,7 +195,9 @@ async function finish(ctx: LoaderContext, shell: Shell): Promise<PageData> {
     titleLang,
     hasEnglishParts:
       ctx.locale === "el" &&
-      (!shell.greek || sections.some((s) => s.lang === "en" || s.englishKeys.length > 0)),
+      (!shell.greek ||
+        !!shell.englishParts ||
+        sections.some((s) => s.lang === "en" || s.englishKeys.length > 0)),
     sections,
     media,
     seo: {
@@ -150,18 +208,16 @@ async function finish(ctx: LoaderContext, shell: Shell): Promise<PageData> {
         site.defaultSeoDescription,
       noindex: false,
       canonical,
-      alternates: shell.greek ? { en: englishUrl, el: greekUrl } : null,
+      alternates: hasGreek ? { en: englishUrl, el: greekUrl } : null,
       image,
     },
     intro: shell.intro,
-    jsonLd: shell.jsonLd
-      ? await itemJsonLd(ctx.db, shell.jsonLd(canonical, image ? image.src : null), {
-          locale: ctx.locale,
-          parent: shell.kind === "story" ? "/foundation" : ITEM_BASE[shell.kind],
-          path,
-          name: shell.title,
-        })
-      : undefined,
+    indexed: !!indexRow.data,
+    jsonLd: await itemJsonLd(
+      ctx.db,
+      shell.jsonLd ? shell.jsonLd(canonical, image ? image.src : null) : null,
+      { locale: ctx.locale, parent, path, name: shell.title },
+    ),
   };
 }
 
@@ -190,7 +246,7 @@ async function bookPage(ctx: LoaderContext, slug: string): Promise<PageData | nu
     "book",
     row.id,
     ["whoFor", "seoTitle", "seoDescription"],
-  ).item;
+  );
   const { data: audiobooks } = await ctx.db
     .from("audiobooks")
     .select("id")
@@ -235,11 +291,17 @@ async function bookPage(ctx: LoaderContext, slug: string): Promise<PageData | nu
           ]
         : []),
     ],
-    seoTitle: extra.seoTitle,
-    seoDescription: extra.seoDescription || book.tagline || summary(book.description),
+    seoTitle: extra.item.seoTitle,
+    seoDescription: extra.item.seoDescription || book.tagline || summary(book.description),
     imageId: book.coverMediaId,
     mediaIds: [book.coverMediaId],
-    intro: { kind: "book", book, whoFor: extra.whoFor },
+    intro: {
+      kind: "book",
+      book,
+      whoFor: extra.item.whoFor,
+      whoForLang: extra.english.includes("whoFor") ? "en" : "el",
+    },
+    englishParts: !!extra.item.whoFor && extra.english.includes("whoFor"),
     jsonLd: (url, image) => ({
       "@context": "https://schema.org",
       "@type": "Book",
@@ -283,7 +345,7 @@ async function postPage(ctx: LoaderContext, slug: string): Promise<PageData | nu
   );
   // Greek body only together with a Greek title, so a page never mixes them.
   const greek = card.textLang === "el";
-  const bodyHtml = sanitizeRichText(greek ? text.body : (row.body ?? ""));
+  const bodyHtml = sanitizeRichText(greek ? text.body : (row.body ?? ""), ctx.locale);
 
   // Keep reading: the newest in the same category, then the newest overall.
   const { data: nearby } = await ctx.db
@@ -355,7 +417,11 @@ async function productPage(ctx: LoaderContext, slug: string): Promise<PageData |
     itemOverlays(ctx, "product", [row.id]),
     publicIntegrations(ctx),
   ]);
-  const { item: text, lang } = overlayFields(
+  const {
+    item: text,
+    lang,
+    english,
+  } = overlayFields(
     {
       name: row.name,
       description: row.description ?? "",
@@ -368,7 +434,10 @@ async function productPage(ctx: LoaderContext, slug: string): Promise<PageData |
     overlays,
     "product",
     row.id,
-    ["name", "description", "whoFor", "included", "stockNote", "seoTitle", "seoDescription"],
+    PRODUCT_TEXT,
+  );
+  const introEnglish = english.filter((k) =>
+    ["description", "whoFor", "included", "stockNote"].includes(k),
   );
   const currency = row.currency || "EUR";
   const buyHere = integrations.payments && row.price_cents !== null && row.price_cents > 0;
@@ -398,9 +467,11 @@ async function productPage(ctx: LoaderContext, slug: string): Promise<PageData |
     seoDescription: text.seoDescription || product.summary,
     imageId: row.cover_media_id,
     mediaIds: [row.cover_media_id],
+    englishParts: introEnglish.some((k) => !!text[k]),
     intro: {
       kind: "product",
       product,
+      english: introEnglish,
       description: text.description,
       whoFor: text.whoFor,
       included: lines(text.included),
@@ -409,15 +480,17 @@ async function productPage(ctx: LoaderContext, slug: string): Promise<PageData |
       buyHere,
       externalUrl: buyHere ? null : safeHref(row.checkout_url),
     },
-    jsonLd: (url, image) => ({
-      "@context": "https://schema.org",
-      "@type": "Product",
-      name: product.name,
-      description: summary(text.description, 500),
-      ...(image ? { image } : {}),
-      brand: { "@type": "Brand", name: "Patience Media House" },
-      ...(row.price_cents !== null
-        ? {
+    // A Product without offers is not eligible for rich results: the breadcrumb alone then.
+    jsonLd: (url, image) =>
+      row.price_cents === null
+        ? null
+        : {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.name,
+            description: summary(text.description, 500),
+            ...(image ? { image } : {}),
+            brand: { "@type": "Brand", name: "Patience Media House" },
             offers: {
               "@type": "Offer",
               price: (row.price_cents / 100).toFixed(2),
@@ -425,9 +498,7 @@ async function productPage(ctx: LoaderContext, slug: string): Promise<PageData |
               availability: "https://schema.org/InStock",
               url,
             },
-          }
-        : {}),
-    }),
+          },
   });
 }
 
@@ -461,7 +532,7 @@ async function masterclassPage(ctx: LoaderContext, slug: string): Promise<PageDa
     overlays,
     "masterclass",
     row.id,
-    ["title", "summary", "description", "included", "scheduleNote", "seoTitle", "seoDescription"],
+    MASTERCLASS_TEXT,
   );
   const masterclass = {
     id: row.id,
@@ -502,6 +573,32 @@ async function masterclassPage(ctx: LoaderContext, slug: string): Promise<PageDa
       enrolProductId: integrations.payments ? row.enrol_product_id : null,
       payments: integrations.payments,
     },
+    // No offers: the price is free text ("€297"), not a number.
+    jsonLd: (url, image) => ({
+      "@context": "https://schema.org",
+      "@type": "Course",
+      name: masterclass.title,
+      description: summary(text.summary || text.description, 500),
+      provider: { "@type": "Person", "@id": personId(), name: "Anastasia Patience" },
+      ...(image ? { image } : {}),
+      url,
+      inLanguage: masterclass.textLang,
+      ...(row.starts_at
+        ? {
+            hasCourseInstance: {
+              "@type": "CourseInstance",
+              courseMode:
+                row.format === "in_person"
+                  ? "onsite"
+                  : row.format === "hybrid"
+                    ? "blended"
+                    : "online",
+              startDate: row.starts_at,
+              ...(row.ends_at ? { endDate: row.ends_at } : {}),
+            },
+          }
+        : {}),
+    }),
   });
 }
 
@@ -529,7 +626,7 @@ async function eventPage(ctx: LoaderContext, slug: string): Promise<PageData | n
     overlays,
     "event",
     row.id,
-    ["title", "summary", "seoTitle", "seoDescription"],
+    EVENT_TEXT,
   );
   const event = {
     id: row.id,
@@ -616,7 +713,7 @@ async function storyPage(ctx: LoaderContext, slug: string): Promise<PageData | n
     overlays,
     "foundation_story",
     row.id,
-    ["title", "summary", "body", "seoTitle", "seoDescription"],
+    STORY_TEXT,
   );
   const greek = lang === "el";
   const story = {
@@ -651,8 +748,21 @@ async function storyPage(ctx: LoaderContext, slug: string): Promise<PageData | n
     intro: {
       kind: "story",
       story,
-      bodyHtml: sanitizeRichText(greek ? text.body : (row.body ?? "")),
+      bodyHtml: sanitizeRichText(greek ? text.body : (row.body ?? ""), ctx.locale),
     },
+    // Never the person's name or place: an anonymised story stays anonymous.
+    jsonLd: (url, image) => ({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: text.title,
+      description: summary(text.summary || text.body, 300),
+      ...(image ? { image } : {}),
+      url,
+      inLanguage: lang,
+      author: { "@type": "NGO", name: "Patience Humanitarian Foundation" },
+      publisher: { "@type": "NGO", name: "Patience Humanitarian Foundation" },
+      about: { "@id": personId() },
+    }),
   });
 }
 

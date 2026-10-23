@@ -20,7 +20,9 @@
     letter-spacing: -0.005em;
     color: var(--color-text);
     text-decoration: none;
-    white-space: nowrap;
+    /* One line at every width; it wraps between its words only when enlarged
+       text spacing leaves the row short. */
+    text-wrap: balance;
   }
   .nav {
     display: none;
@@ -59,6 +61,8 @@
     align-items: center;
     gap: var(--space-2);
     margin-left: auto;
+    /* The actions never give way; the wordmark does. */
+    flex: none;
   }
 
   /* Language: EN / ΕΛ in the header from 640; below that it is a row in the menu */

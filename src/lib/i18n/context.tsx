@@ -8,14 +8,16 @@ type LocaleContextValue = {
   t: Messages;
 };
 
-const LocaleContext = createContext<LocaleContextValue>({
-  locale: DEFAULT_LOCALE,
-  t: getMessages(DEFAULT_LOCALE),
-});
+// Outside the provider (the root error and not-found pages), `t` is read when used.
+const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   // The locale rewrite (./rewrite.ts) turns the /el prefix into the `lang` search param.
-  const locale = useRouterState({ select: (s) => localeFromSearch(s.location.search) });
+  // The language follows the page on screen: while a move to the other language is pending
+  // the old page stays in its own language, and the new catalog is loaded once it resolves.
+  const locale = useRouterState({
+    select: (s) => localeFromSearch((s.resolvedLocation ?? s.location).search),
+  });
   const value = useMemo(() => ({ locale, t: getMessages(locale) }), [locale]);
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
 }
@@ -25,9 +27,9 @@ export function localeFromSearch(search: unknown): Locale {
 }
 
 export function useLocale(): Locale {
-  return useContext(LocaleContext).locale;
+  return useContext(LocaleContext)?.locale ?? DEFAULT_LOCALE;
 }
 
 export function useT(): Messages {
-  return useContext(LocaleContext).t;
+  return useContext(LocaleContext)?.t ?? getMessages(DEFAULT_LOCALE);
 }

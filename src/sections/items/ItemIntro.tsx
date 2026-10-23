@@ -2,7 +2,8 @@
  * The opening of a collection item's page, in place of the title band: the
  * book with its formats, the post with its text, the product with its buy
  * button, and so on. The page's one h1 is here, on the 12-column grid, and
- * the intro ends with the way back to its collection as a plain link.
+ * the intro ends with the way back to its collection as a plain link, when
+ * that page is published.
  */
 import { useId, type ReactNode } from "react";
 import { EMAIL, field, Honeypot, useFormAction } from "@/components/forms/useFormAction";
@@ -18,13 +19,15 @@ import { BookIntro } from "./BookIntro";
 import type { ItemIntro as Intro, MediaMap, PostCard, ResolvedMedia } from "@/sections/types";
 import { Picture } from "../render/Picture";
 import { TextLink } from "../render/SectionShell";
-import { Lines, RichHtml } from "../render/text";
+import { InEnglish, Lines, RichHtml } from "../render/text";
 
 type IntroProps<K extends Intro["kind"]> = {
   intro: Extract<Intro, { kind: K }>;
   media: MediaMap;
   locale: Locale;
   listenAnchor: string | null;
+  /** The collection page is published: the way back to it has somewhere to go. */
+  indexed: boolean;
 };
 
 const langIf = (lang: Locale, page: Locale) => (lang !== page ? lang : undefined);
@@ -190,14 +193,18 @@ function Media({
 }
 
 // ---------------------------------------------------------------------------
-// Posts and impact stories: meta 1–3, title 4–11, the cover full width, text 4–10
+// Posts and impact stories: meta 1–3, title 4–11, the cover and text 4–10
 // ---------------------------------------------------------------------------
 
 function Cover({ media, locale }: { media: ResolvedMedia | undefined; locale: Locale }) {
   if (!media) return null;
   return (
     <figure className="article-cover">
-      <Picture media={media} sizes="(min-width: 1408px) 1280px, 100vw" priority />
+      <Picture
+        media={media}
+        sizes="(min-width: 1408px) 734px, (min-width: 1024px) 53vw, 100vw"
+        priority
+      />
       {media.caption && (
         <figcaption className="caption" lang={langIf(media.textLang, locale)}>
           {nb(media.caption)}
@@ -208,7 +215,15 @@ function Cover({ media, locale }: { media: ResolvedMedia | undefined; locale: Lo
 }
 
 /** Three more stories as the home page's text rows (`.story-row`, collections.css). */
-function RelatedPosts({ posts, locale }: { posts: PostCard[]; locale: Locale }) {
+function RelatedPosts({
+  posts,
+  locale,
+  indexed,
+}: {
+  posts: PostCard[];
+  locale: Locale;
+  indexed: boolean;
+}) {
   const t = useT();
   const id = useId();
   if (posts.length === 0) return null;
@@ -222,7 +237,7 @@ function RelatedPosts({ posts, locale }: { posts: PostCard[]; locale: Locale }) 
               {nb(t.items.post.related)}
             </h2>
           </div>
-          <TextLink link={all} />
+          {indexed && <TextLink link={all} />}
         </div>
         <div className="story-list story-list--first">
           {posts.map((post) => {
@@ -242,12 +257,7 @@ function RelatedPosts({ posts, locale }: { posts: PostCard[]; locale: Locale }) 
                     <SiteLink href={`/blog/${post.slug}`} lang={lang} hrefLang={lang}>
                       {post.title}
                     </SiteLink>
-                    {lang && (
-                      <>
-                        {" "}
-                        <span className="meta">{t.sections.inEnglish}</span>
-                      </>
-                    )}
+                    <InEnglish target={lang} />
                   </h3>
                   {post.excerpt && (
                     <p className="body excerpt" lang={lang}>
@@ -259,15 +269,17 @@ function RelatedPosts({ posts, locale }: { posts: PostCard[]; locale: Locale }) 
             );
           })}
         </div>
-        <p className="foot-link">
-          <TextLink link={all} />
-        </p>
+        {indexed && (
+          <p className="foot-link">
+            <TextLink link={all} />
+          </p>
+        )}
       </div>
     </section>
   );
 }
 
-function PostIntro({ intro, media, locale }: IntroProps<"post">) {
+function PostIntro({ intro, media, locale, indexed }: IntroProps<"post">) {
   const t = useT();
   const { post } = intro;
   const lang = langIf(post.textLang, locale);
@@ -298,15 +310,15 @@ function PostIntro({ intro, media, locale }: IntroProps<"post">) {
           <div className="article-body" lang={lang}>
             <RichHtml html={intro.bodyHtml} className="prose" />
           </div>
-          <AllLink kind="post" className="item-foot article-foot" />
+          {indexed && <AllLink kind="post" className="item-foot article-foot" />}
         </div>
       </article>
-      <RelatedPosts posts={intro.related} locale={locale} />
+      <RelatedPosts posts={intro.related} locale={locale} indexed={indexed} />
     </>
   );
 }
 
-function StoryIntro({ intro, media, locale }: IntroProps<"story">) {
+function StoryIntro({ intro, media, locale, indexed }: IntroProps<"story">) {
   const { story } = intro;
   const lang = langIf(story.textLang, locale);
   const people = [story.personName, story.location].filter(Boolean);
@@ -333,7 +345,7 @@ function StoryIntro({ intro, media, locale }: IntroProps<"story">) {
         <div className="article-body" lang={lang}>
           <RichHtml html={intro.bodyHtml} className="prose" />
         </div>
-        <AllLink kind="story" className="item-foot article-foot" />
+        {indexed && <AllLink kind="story" className="item-foot article-foot" />}
       </div>
     </article>
   );
@@ -343,10 +355,12 @@ function StoryIntro({ intro, media, locale }: IntroProps<"story">) {
 // Products: the photo on 1–5, the words on 7–12
 // ---------------------------------------------------------------------------
 
-function ProductIntro({ intro, media, locale }: IntroProps<"product">) {
+function ProductIntro({ intro, media, locale, indexed }: IntroProps<"product">) {
   const t = useT();
   const { product } = intro;
   const lang = langIf(product.textLang, locale);
+  // A field without approved Greek is still in English, whatever the name is in.
+  const fieldLang = (key: string) => langIf(intro.english.includes(key) ? "en" : "el", locale);
   const cover = product.coverMediaId ? media[product.coverMediaId] : undefined;
   const price =
     product.priceCents !== null
@@ -354,6 +368,9 @@ function ProductIntro({ intro, media, locale }: IntroProps<"product">) {
         ? t.sections.products.free
         : formatMoney(product.priceCents, product.currency, locale)
       : product.priceLabel;
+  // A figure (price_cents, or a studio label such as "€19") is set as the
+  // price; words such as "See books" are meta, as on the shop's tile.
+  const figure = product.priceCents !== null || /\d/.test(product.priceLabel);
   const was =
     intro.compareAtCents !== null &&
     product.priceCents !== null &&
@@ -379,13 +396,16 @@ function ProductIntro({ intro, media, locale }: IntroProps<"product">) {
             {nb(product.name)}
           </h1>
           {(lead || intro.whoFor) && (
-            <p className="lead" lang={lang}>
+            <p className="lead" lang={fieldLang(lead ? "description" : "whoFor")}>
               {nb(lead ?? intro.whoFor)}
             </p>
           )}
           {price && (
-            <p className="item-price">
-              <span lang={product.priceCents === null ? lang : undefined}>{price}</span>
+            <p className={figure ? "item-price" : "meta item-price-note"}>
+              {/* The free-text price label is only ever stored in English */}
+              <span lang={product.priceCents === null ? langIf("en", locale) : undefined}>
+                {price}
+              </span>
               {was && <s className="meta">{was}</s>}
             </p>
           )}
@@ -395,20 +415,32 @@ function ProductIntro({ intro, media, locale }: IntroProps<"product">) {
             </div>
           ) : intro.externalUrl ? (
             <div className="actions">
-              <ActionLink href={intro.externalUrl} label={t.items.product.get} />
+              <ActionLink
+                href={intro.externalUrl}
+                // A shop entry that stands for a book opens the book's own page: say so.
+                label={
+                  intro.externalUrl.startsWith("/books/")
+                    ? t.items.product.seeBook
+                    : t.items.product.get
+                }
+              />
             </div>
           ) : null}
           {intro.stockNote && (
-            <p className="meta item-stock" lang={lang}>
+            <p className="meta item-stock" lang={fieldLang("stockNote")}>
               {intro.stockNote}
             </p>
           )}
-          <Text parts={rest} lang={lang} />
+          <Text parts={rest} lang={fieldLang("description")} />
           {!whoForIsLead && (
-            <Block title={t.items.product.whoFor} text={intro.whoFor} lang={lang} />
+            <Block title={t.items.product.whoFor} text={intro.whoFor} lang={fieldLang("whoFor")} />
           )}
-          <Included title={t.items.product.included} items={intro.included} lang={lang} />
-          <AllLink kind="product" />
+          <Included
+            title={t.items.product.included}
+            items={intro.included}
+            lang={fieldLang("included")}
+          />
+          {indexed && <AllLink kind="product" />}
         </div>
       </div>
     </article>
@@ -519,20 +551,20 @@ function LedIntro({
 }: {
   head: ReactNode;
   cover: ResolvedMedia | undefined;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <article className="item-intro band-ivory">
       <div className="wrap grid-12 item-grid item-grid--led">
         <div className="item-head">{head}</div>
         <Media media={cover} sizes="(min-width: 1024px) 28vw, min(100vw, 448px)" />
-        <div className="item-more">{children}</div>
+        {children && <div className="item-more">{children}</div>}
       </div>
     </article>
   );
 }
 
-function MasterclassIntro({ intro, media, locale }: IntroProps<"masterclass">) {
+function MasterclassIntro({ intro, media, locale, indexed }: IntroProps<"masterclass">) {
   const t = useT();
   const m = t.items.masterclass;
   const { masterclass } = intro;
@@ -591,12 +623,12 @@ function MasterclassIntro({ intro, media, locale }: IntroProps<"masterclass">) {
     >
       <Text parts={paragraphs(intro.description)} lang={lang} />
       <Included title={m.included} items={intro.included} lang={lang} />
-      <AllLink kind="masterclass" />
+      {indexed && <AllLink kind="masterclass" />}
     </LedIntro>
   );
 }
 
-function EventIntro({ intro, media, locale }: IntroProps<"event">) {
+function EventIntro({ intro, media, locale, indexed }: IntroProps<"event">) {
   const t = useT();
   const e = t.items.event;
   const { event, ended } = intro;
@@ -636,7 +668,7 @@ function EventIntro({ intro, media, locale }: IntroProps<"event">) {
         </>
       }
     >
-      <AllLink kind="event" />
+      {indexed ? <AllLink kind="event" /> : null}
     </LedIntro>
   );
 }
@@ -646,6 +678,7 @@ export function ItemIntro(props: {
   media: MediaMap;
   locale: Locale;
   listenAnchor: string | null;
+  indexed: boolean;
 }) {
   const { intro } = props;
   switch (intro.kind) {

@@ -34,7 +34,7 @@
     background: var(--color-bg-alt);
   }
   /* "(in English)" after a title on /el */
-  :is(.title, .display-l) > .meta {
+  :is(.title, .display-l, .display-m) > .meta {
     white-space: nowrap;
   }
   @media (min-width: 1024px) {
@@ -391,6 +391,12 @@
   .reviews--track > li {
     scroll-snap-align: start;
   }
+  /* Previous and Next glide, unless the reader asks for less motion */
+  @media (prefers-reduced-motion: no-preference) {
+    .reviews--track {
+      scroll-behavior: smooth;
+    }
+  }
   @media (min-width: 720px) {
     .reviews--track {
       grid-auto-columns: calc((100% - var(--grid-gap)) / 2);
@@ -703,7 +709,7 @@
   .plates li .caption {
     margin-top: var(--space-3);
   }
-  /* Masonry: two columns, four from 1024; each plate keeps 4:5 or 3:2 */
+  /* Masonry: two columns, four from 1024; each plate is 4:5 or 3:2, chosen in the component so a short set's lanes end level */
   .plates--masonry {
     display: block;
     columns: 2;
@@ -716,6 +722,10 @@
   @media (min-width: 1024px) {
     .plates--masonry {
       columns: 4;
+    }
+    /* On the img: the plate's inline --ratio would beat a stylesheet --ratio */
+    .plates--masonry .plate img {
+      aspect-ratio: var(--ratio-lg, var(--ratio, 4 / 5));
     }
     /* A short set balances into three columns, so none is left empty */
     .plates--masonry:not(:has(> li:nth-child(8))) {

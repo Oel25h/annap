@@ -18,18 +18,26 @@ declare global {
   }
 }
 
-const FALLBACK_SITE_URL = "http://localhost:3000";
-
 function trimSlash(value: string): string {
   return value.replace(/\/+$/, "");
 }
 
-/** Server only: build the public config from environment variables. */
+/**
+ * Server only: build the public config from environment variables. SITE_URL
+ * has no default: canonicals, hreflang, the sitemap and emails are built
+ * from it, and a guessed origin would publish them all wrong.
+ */
 export function readServerPublicConfig(): PublicConfig {
+  const raw = process.env.SITE_URL?.trim() ?? "";
+  if (!raw || !URL.canParse(raw)) {
+    throw new Error(
+      "SITE_URL is not set (or not a URL): the worker needs its public origin (e.g. https://www.anastasiapatience.com).",
+    );
+  }
   return {
     supabaseUrl: process.env.SUPABASE_URL ?? "",
     supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY ?? "",
-    siteUrl: trimSlash(process.env.SITE_URL || FALLBACK_SITE_URL),
+    siteUrl: trimSlash(raw),
   };
 }
 

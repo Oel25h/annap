@@ -42,8 +42,12 @@ begin
       p := jsonb_set(p - 'by', '{attribution}', p -> 'by');
     end if;
     p := p - 'accent' - 'imageMediaId';
-    s := jsonb_set(s, '{variant}',
-      to_jsonb(case s ->> 'variant' when 'with_portrait' then 'statement' else 'centred' end));
+    -- An old with_portrait quote becomes the statement; a 3.0 variant stays.
+    if s ->> 'variant' = 'with_portrait' then
+      s := jsonb_set(s, '{variant}', '"statement"');
+    elsif coalesce(s ->> 'variant', '') not in ('centred', 'statement') then
+      s := jsonb_set(s, '{variant}', '"centred"');
+    end if;
   elsif t = 'rich_text' then
     p := p - 'pullQuote';
     if s ->> 'variant' = 'with_pull_quote' then

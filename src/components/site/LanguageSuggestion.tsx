@@ -1,8 +1,8 @@
 import { Link, useMatches, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/i18n/context";
 import { writeLocaleCookie, type Locale } from "@/lib/i18n/locale";
-import { getMessages } from "@/lib/i18n/messages";
+import { loadMessages, type Messages } from "@/lib/i18n/messages";
 import { useMiniPlayerShown } from "@/components/audio/AudioProvider";
 
 const DISMISSED = "ap:lang-suggestion";
@@ -33,7 +33,8 @@ function dismissedRecently(): boolean {
  * A quiet bar suggesting the page in the reader's own language, written in
  * that language. It appears only after hydration (the HTML is the same for
  * everyone), only when the other language really exists for this page, never
- * takes focus, and steps aside while the docked audio player or a buy bar is
+ * takes focus when it appears (and hands it back to the footer when dismissed),
+ * and steps aside while the docked audio player or a buy bar is
  * showing (the buy bar by CSS). Docked at the bottom like them, it never
  * fades in and never covers the legal row.
  */
@@ -43,6 +44,9 @@ export function LanguageSuggestion() {
   const matches = useMatches();
   const playerDocked = useMiniPlayerShown();
   const [target, setTarget] = useState<Locale | null>(null);
+  // The bar is written in the other language, whose copy this page did not ship.
+  const [copy, setCopy] = useState<Messages["site"]["suggestion"] | null>(null);
+  const bar = useRef<HTMLDivElement>(null);
 
   // Whether this page has an approved twin in the other language.
   const twin = matches.some((match) => {
@@ -60,19 +64,40 @@ export function LanguageSuggestion() {
     else setTarget(null);
   }, [locale, pathname, twin]);
 
-  if (!target || playerDocked) return null;
-  const copy = getMessages(target).site.suggestion;
+  useEffect(() => {
+    setCopy(null);
+    if (!target) return;
+    let live = true;
+    loadMessages(target).then(
+      (messages) => live && setCopy(messages.site.suggestion),
+      () => {}, // Offline: no suggestion this time.
+    );
+    return () => {
+      live = false;
+    };
+  }, [target]);
+
+  if (!target || !copy || playerDocked) return null;
   const dismiss = () => {
     try {
       localStorage.setItem(DISMISSED, String(Date.now()));
     } catch {
       // Storage blocked: it simply comes back next visit.
     }
+    // The bar is the last stop in the tab order. Before it unmounts, hand focus
+    // back to the stop before it (the footer's last link), so a keyboard or
+    // screen reader user keeps their place instead of dropping to <body>.
+    if (bar.current?.contains(document.activeElement)) {
+      const stops = Array.from(
+        document.querySelectorAll<HTMLElement>("footer a[href], footer button:not([disabled])"),
+      ).filter((el) => el.getClientRects().length > 0);
+      (stops.at(-1) ?? document.getElementById("main"))?.focus({ preventScroll: true });
+    }
     setTarget(null);
   };
 
   return (
-    <div className="lang-suggest" lang={target}>
+    <div className="lang-suggest" lang={target} ref={bar}>
       <div className="wrap">
         <p>{copy.text}</p>
         <div className="lang-suggest-actions">

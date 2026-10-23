@@ -97,22 +97,7 @@ export const MEDIA = {
     focal: [0.5, 0.45],
   },
   // id(11) was the foundation emblem, retired: never reuse it.
-  journalDesk: {
-    id: id(12),
-    key: "journal-desk",
-    file: "src/assets/blog-one.jpg",
-    alt: "An open journal, a fountain pen and a cup of tea on a velvet throw",
-    postCoverUrl: "/blog-one.jpg",
-    postSlug: "the-morning-i-decided-to-keep-going",
-  },
-  laptopWriting: {
-    id: id(13),
-    key: "laptop-writing",
-    file: "src/assets/blog-two.jpg",
-    alt: "A woman writing at a laptop by a sunny window",
-    postCoverUrl: "/blog-two.jpg",
-    postSlug: "your-first-digital-product-in-30-days",
-  },
+  // id(12) and id(13) were stock covers (blog-one.jpg, a generic flatlay; blog-two.jpg, another woman), retired by DESIGN.md §7: never reuse them.
   windowPrayer: {
     id: id(14),
     key: "window-prayer",

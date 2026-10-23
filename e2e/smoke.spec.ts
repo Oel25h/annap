@@ -46,6 +46,10 @@ for (const path of PAGES) {
         "href",
         abs(greek(path)),
       );
+      await expect(page.locator('link[rel="alternate"][hreflang="x-default"]')).toHaveAttribute(
+        "href",
+        abs(path),
+      );
 
       expect(errors, `console errors on ${url}`).toEqual([]);
     });
@@ -70,6 +74,15 @@ test("switching language keeps the page and does not reload", async ({ page, isM
   await expect(page).toHaveURL(/\/about$/);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   expect(await page.evaluate(() => (window as unknown as { __marker?: number }).__marker)).toBe(1);
+});
+
+test("a client-side page change focuses the new page's h1", async ({ page, isMobile }) => {
+  await page.goto("/", { waitUntil: "networkidle" });
+  if (isMobile) await page.getByRole("button", { name: "Menu", exact: true }).click();
+  await page.getByRole("link", { name: "Gallery", exact: true }).first().focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/gallery$/);
+  await expect(page.locator("main h1")).toBeFocused();
 });
 
 test("the menu opens, closes on Escape and returns focus", async ({ page, isMobile }) => {
@@ -97,16 +110,19 @@ test("the footer has one nav and the legal row", async ({ page }) => {
   await expect(footer.getByText("Based in Cyprus")).toBeVisible();
 });
 
-test("links inside the Greek site stay in Greek", async ({ page }) => {
-  await page.goto("/el", { waitUntil: "networkidle" });
-  const hrefs = await page
-    .locator('a[href^="/"]:not([hreflang])')
-    .evaluateAll((links) => links.map((a) => a.getAttribute("href") ?? ""));
-  const english = hrefs.filter(
-    (h) => !h.startsWith("/el") && !/^\/(admin|auth|api)(\/|$)/.test(h) && !/\.\w+$/.test(h),
-  );
-  expect(english, "internal links on /el that point at English pages").toEqual([]);
-});
+// The legal pages hold links typed into rich text, which the server moves to /el.
+for (const url of ["/el", "/el/privacy", "/el/terms", "/el/cookies"]) {
+  test(`links inside the Greek site stay in Greek: ${url}`, async ({ page }) => {
+    await page.goto(url, { waitUntil: "networkidle" });
+    const hrefs = await page
+      .locator('a[href^="/"]:not([hreflang])')
+      .evaluateAll((links) => links.map((a) => a.getAttribute("href") ?? ""));
+    const english = hrefs.filter(
+      (h) => !h.startsWith("/el") && !/^\/(admin|auth|api)(\/|$)/.test(h) && !/\.\w+$/.test(h),
+    );
+    expect(english, `internal links on ${url} that point at English pages`).toEqual([]);
+  });
+}
 
 test("unknown pages return 404", async ({ page }) => {
   const response = await page.goto("/this-page-does-not-exist");

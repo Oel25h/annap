@@ -394,7 +394,9 @@ carries the position, so the fill is decoration.
 
 ## 3. Typography
 
-Three families, one job each, loaded from `@fontsource-variable` (Latin + Greek subsets):
+Three families, one job each, loaded from `@fontsource-variable` (Latin + Greek subsets).
+Noto Serif Display ships cut to the weights it uses (360 to 400, in `src/assets/fonts`),
+and its roman face is preloaded, since it sets every h1:
 
 - **Noto Serif Display** — headlines and the opening line only, **28px and up**. Never
   for UI, never below 28px.
@@ -514,8 +516,11 @@ Layout tokens:
   - `md` 720: two-column forms, dot leaders, story excerpts;
   - `lg` 1024: the grid and the open spread;
   - `xl` 1180: inline nav and the three-pane studio.
-- `scroll-padding-top` equals the header height. When the mini player is docked,
-  `scroll-padding-bottom` is 80px, so focus and anchors are never hidden.
+- `scroll-padding-top` is the header height plus 12px (`--space-3`), so a focused
+  control's ring clears the header and its hairline. Sections take
+  `scroll-margin-top: -12px`, so a section jumped to still meets the header flush. When
+  the mini player is docked, `scroll-padding-bottom` is 80px, so focus and anchors are
+  never hidden.
 
 | Section (from 1024) | Placement |
 |---|---|

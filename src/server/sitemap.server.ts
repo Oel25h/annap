@@ -6,21 +6,20 @@
  */
 import { localizePath } from "@/lib/i18n/locale";
 import { readServerPublicConfig } from "@/lib/public-config";
-import { extractTranslatable } from "@/sections/translation";
-import { ITEM_BASE, type ItemKind } from "./items.server";
+import { ITEM_BASE, itemHasGreek, type ItemKind } from "./items.server";
 import { overlayKey, type OverlayMap } from "./overlays.server";
-import { parseSections } from "./pages.server";
+import { pageHasGreek, parseSections } from "./pages.server";
 import { publicDb, type PublicDb } from "./supabase-public.server";
 
 type Entry = { path: string; greek: boolean; lastmod: string | null };
 
-const ITEM_TABLES: Record<ItemKind, { table: string; entity: string }> = {
-  book: { table: "books", entity: "book" },
-  post: { table: "blog_posts", entity: "blog_post" },
-  product: { table: "products", entity: "product" },
-  masterclass: { table: "masterclasses", entity: "masterclass" },
-  event: { table: "events", entity: "event" },
-  story: { table: "foundation_stories", entity: "foundation_story" },
+const ITEM_TABLES: Record<ItemKind, string> = {
+  book: "books",
+  post: "blog_posts",
+  product: "products",
+  masterclass: "masterclasses",
+  event: "events",
+  story: "foundation_stories",
 };
 
 /** Every approved Greek translation, keyed like the page loaders key them. */
@@ -49,20 +48,16 @@ async function pageEntries(db: PublicDb, greek: OverlayMap): Promise<Entry[]> {
   if (error) throw new Error(`Sitemap pages: ${error.message}`);
   return (data ?? [])
     .filter((row) => !row.noindex)
-    .map((row) => {
-      // Same rule as loadPage: an approved title, and approved text in some section.
-      const sections = parseSections(row.sections, row.path).filter(
-        (s) => Object.keys(extractTranslatable(s)).length > 0,
-      );
-      const title = greek.get(overlayKey("page_meta", row.id))?.fields.title;
-      const text =
-        sections.length === 0 || sections.some((s) => greek.has(overlayKey("page_section", s.id)));
-      return { path: row.path, greek: !!title && text, lastmod: row.updated_at };
-    });
+    .map((row) => ({
+      path: row.path,
+      // The rule loadPage uses for each page's own head.
+      greek: pageHasGreek(row.id, parseSections(row.sections, row.path), greek),
+      lastmod: row.updated_at,
+    }));
 }
 
 async function itemEntries(db: PublicDb, kind: ItemKind, greek: OverlayMap): Promise<Entry[]> {
-  const { table, entity } = ITEM_TABLES[kind];
+  const table = ITEM_TABLES[kind];
   const { data, error } = await db
     .from(table as "books")
     .select("id, slug, updated_at")
@@ -71,7 +66,8 @@ async function itemEntries(db: PublicDb, kind: ItemKind, greek: OverlayMap): Pro
   if (error) throw new Error(`Sitemap ${table}: ${error.message}`);
   return (data ?? []).map((row) => ({
     path: `${ITEM_BASE[kind]}/${row.slug}`,
-    greek: greek.has(overlayKey(entity, row.id)),
+    // The rule each item's own head uses.
+    greek: itemHasGreek(kind, row.id, greek),
     lastmod: row.updated_at,
   }));
 }

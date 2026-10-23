@@ -11,7 +11,7 @@ import type { AudiobookItem, MediaMap, RenderedSection } from "@/sections/types"
 export type PlayableTrack = {
   id: string;
   title: string;
-  /** Null when the chapter is not free to stream: its row links to the book instead. */
+  /** Null when the chapter is not free to stream: its row leads to where the book is sold. */
   src: string | null;
   mime: string;
   durationSeconds: number | null;
@@ -30,8 +30,11 @@ export type PlayableBook = {
   locale: Locale;
   /** Where "Open the player" goes: the page (English path) and anchor of the full player. */
   playerHref: string;
-  /** Where the full audiobook is sold, for chapters that are not free to stream. */
-  bookHref: string;
+  /**
+   * Where the full audiobook is sold, for chapters that are not free to stream;
+   * null when nowhere is, and the row is then plain text.
+   */
+  bookHref: string | null;
   tracks: PlayableTrack[];
 };
 
@@ -45,7 +48,7 @@ export function toPlayable(item: AudiobookItem, media: MediaMap, playerHref: str
     coverSrcSet: cover?.srcSet ?? null,
     locale: item.locale,
     playerHref,
-    bookHref: item.bookSlug ? `/books/${item.bookSlug}#formats` : "/books",
+    bookHref: item.fullUrl,
     tracks: item.tracks.map((track) => {
       const audio = track.audioMediaId ? media[track.audioMediaId] : undefined;
       return {

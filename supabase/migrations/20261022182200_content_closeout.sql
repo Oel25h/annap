@@ -76,6 +76,14 @@ where path = '/gallery'
   and sections #>> '{0,type}' = 'gallery'
   and sections #> '{0,props,imageMediaIds}' = '["5eed0000-0000-4000-8000-000000000001", "5eed0000-0000-4000-8000-000000000004", "5eed0000-0000-4000-8000-000000000008", "5eed0000-0000-4000-8000-000000000002", "5eed0000-0000-4000-8000-000000000005", "5eed0000-0000-4000-8000-000000000003", "5eed0000-0000-4000-8000-000000000009"]'::jsonb;
 
+-- The gallery keeps one frame per pose: the second desk shot and the rust portrait leave it.
+update public.pages
+set sections = jsonb_set(sections, '{0,props,imageMediaIds}',
+  (sections #> '{0,props,imageMediaIds}') - '5eed0000-0000-4000-8000-000000000005' - '5eed0000-0000-4000-8000-000000000003')
+where path = '/gallery'
+  and sections #>> '{0,type}' = 'gallery'
+  and sections #> '{0,props,imageMediaIds}' = '["5eed0000-0000-4000-8000-000000000004", "5eed0000-0000-4000-8000-000000000008", "5eed0000-0000-4000-8000-000000000002", "5eed0000-0000-4000-8000-000000000005", "5eed0000-0000-4000-8000-000000000003", "5eed0000-0000-4000-8000-000000000009"]'::jsonb;
+
 update public.pages
 set sections = jsonb_set(sections, '{1,props,downloadMediaIds}', (sections #> '{1,props,downloadMediaIds}') - '5eed0000-0000-4000-8000-000000000001')
 where path = '/press'

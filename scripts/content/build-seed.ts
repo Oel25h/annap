@@ -124,7 +124,7 @@ const pages: Page[] = [
           imageMediaId: MEDIA.hands.id,
           caption: "Feeding hope, one heart at a time.",
           primary: { label: "Donate", href: "/foundation#give" },
-          link: { label: "Volunteer", href: "/contact" },
+          link: { label: "Volunteer", href: "/contact?topic=volunteering" },
           secondary: { label: "Impact stories", href: "/foundation#stories" },
         },
         { anchor: "foundation", background: "cream" },
@@ -168,7 +168,7 @@ const pages: Page[] = [
         {
           title: "Every scar is a syllabus.",
           body: p(
-            "My story is stitched together from grief, faith, and stubborn hope — and every book, masterclass, and blog post I make is a hand extended back to you.",
+            "My story is stitched together from grief, faith, and stubborn hope — and every book, masterclass, and story I share is a hand extended back to you.",
             "Every mother is a mystic. Every ordinary woman carries something the world desperately needs — usually the exact thing she thinks disqualifies her.",
             "I write for the woman rebuilding after loss, the mother whispering prayers over a sick child, the entrepreneur with a dream she’s afraid to name.",
           ),
@@ -264,7 +264,7 @@ const pages: Page[] = [
     title: "Books",
     seoTitle: "Books by Anastasia Patience",
     seoDescription:
-      "Memoir, workbook and gentle wisdom: books to carry you through the seasons you cannot skip, in print, ebook and audio.",
+      "Memoir, workbook and gentle wisdom: books to carry you through the seasons you cannot skip, in print, eBook and audio.",
     status: "published",
     sections: [
       s("book_list", "rows", {
@@ -407,8 +407,6 @@ const pages: Page[] = [
           MEDIA.bookDesk.id,
           MEDIA.cyprus.id,
           MEDIA.portraitBurgundy.id,
-          MEDIA.authorTable.id,
-          MEDIA.portraitRust.id,
           MEDIA.sunset.id,
         ],
       }),
@@ -496,7 +494,7 @@ const pages: Page[] = [
     title: "Anastasia Patience",
     seoTitle: "Start here: Anastasia Patience",
     seoDescription:
-      "Everything in one place: the free ebook, the audiobook, my stories, masterclasses and the foundation.",
+      "Everything in one place: the free eBook, the audiobook, my stories, masterclasses and the foundation.",
     status: "published",
     // The link list is filled from the old start page's links in SQL below.
     sections: [],
@@ -518,14 +516,14 @@ const pages: Page[] = [
           body: [
             '<p>This website is run by Anastasia Patience and Patience Media House, based in Cyprus. This notice explains what we collect when you use it, why, and what you can ask us to do. To reach us about your data, use the <a href="/contact">contact page</a>.</p>',
             "<h2>What we collect</h2>",
-            '<ul><li><strong>Letters (newsletter):</strong> your email address and language. You confirm by email before we send anything (double opt-in).</li><li><strong>Free ebook:</strong> your first name, email and language, so we can send the download link. Ticking the letters box is separate and optional.</li><li><strong>Contact form:</strong> your name, email and message.</li><li><strong>Purchases and gifts:</strong> your name, email and, for printed books, your delivery address. Card details go straight to Stripe; we never see them.</li><li><strong>In your browser only:</strong> for the audiobook player, the edition you chose, where you stopped in each chapter, the chapters you have finished and your playback speed; your language choice; and whether you closed the language suggestion. These stay on your device, and we never collect them. More in <a href="/cookies">cookies and storage</a>.</li></ul>',
+            '<ul><li><strong>Letters (newsletter):</strong> your email address and language. You confirm by email before we send anything (double opt-in).</li><li><strong>Free eBook:</strong> your first name, email and language, so we can send the download link. Ticking the letters box is separate and optional.</li><li><strong>Contact form:</strong> your name, email and message.</li><li><strong>Purchases and gifts:</strong> your name, email and, for printed books, your delivery address. Card details go straight to Stripe; we never see them.</li><li><strong>In your browser only:</strong> for the audiobook player, the edition you chose, where you stopped in each chapter, the chapters you have finished and your playback speed; your language choice; and whether you closed the language suggestion. These stay on your device, and we never collect them. More in <a href="/cookies">cookies and storage</a>.</li></ul>',
             "<h2>Why</h2>",
-            "<p>We use your details only to do what you asked: send the letters you confirmed, the ebook you requested, a reply to your message, or the order you paid for. We rely on your consent for the letters and on taking the steps you asked for everything else. Records of payments are kept because the law requires it.</p>",
+            "<p>We use your details only to do what you asked: send the letters you confirmed, the eBook you requested, a reply to your message, or the order you paid for. We rely on your consent for the letters and on taking the steps you asked for everything else. Records of payments are kept because the law requires it.</p>",
             "<h2>Who helps us run the site</h2>",
             "<ul><li><strong>Supabase</strong> (database and file storage, in the EU)</li><li><strong>Cloudflare</strong> (hosting, and a check that forms are filled in by people)</li><li><strong>Stripe</strong> (payments)</li><li><strong>Resend</strong> (sending emails)</li><li><strong>Google</strong> (YouTube videos, which load only when you press play)</li></ul>",
             "<p>We do not sell your data, and we do not use advertising or tracking cookies.</p>",
             "<h2>How long we keep it</h2>",
-            "<ul><li>Unconfirmed newsletter sign-ups: deleted after 30 days.</li><li>Free ebook requests: 24 months, unless you also confirmed the letters.</li><li>Download links: they stop working after 7 days.</li><li>Contact messages: 24 months after we archive them.</li><li>Email delivery records: 12 months.</li><li>Orders and gifts: for as long as accounting law requires, after which names, emails and addresses are removed.</li></ul>",
+            "<ul><li>Unconfirmed newsletter sign-ups: deleted after 30 days.</li><li>Free eBook requests: 24 months, unless you also confirmed the letters.</li><li>Download links: they stop working after 7 days.</li><li>Contact messages: 24 months after we archive them.</li><li>Email delivery records: 12 months.</li><li>Orders and gifts: for as long as accounting law requires, after which names, emails and addresses are removed.</li></ul>",
             "<h2>Your rights</h2>",
             "<p>You can ask to see, correct or delete your data, or object to how we use it. Every letter has an unsubscribe link. If you are unhappy with how we handled your data, you can complain to the Commissioner for Personal Data Protection in Cyprus.</p>",
           ].join(""),
@@ -552,7 +550,7 @@ const pages: Page[] = [
             "<h2>Words and pictures</h2>",
             "<p>The writing, recordings and photographs on this site belong to Anastasia Patience unless credited otherwise. You are welcome to share links and short quotations with credit. Please ask before reusing anything else.</p>",
             "<h2>Digital purchases</h2>",
-            "<p>Ebooks, audio and other digital products are delivered as soon as payment is confirmed, through a download link that works for 7 days. When you buy, you agree that delivery starts straight away, which means the usual 14-day right to cancel ends once the download begins. If a file does not work, tell us and we will fix it or refund you.</p>",
+            "<p>eBooks, audio and other digital products are delivered as soon as payment is confirmed, through a download link that works for 7 days. When you buy, you agree that delivery starts straight away, which means the usual 14-day right to cancel ends once the download begins. If a file does not work, tell us and we will fix it or refund you.</p>",
             "<h2>Printed books</h2>",
             "<p>Printed books bought through other shops are covered by that shop’s terms.</p>",
             "<h2>Gifts to the foundation</h2>",
@@ -618,7 +616,7 @@ function sectionsSql(sections: unknown[]): string {
 
 const startDefaults = [
   {
-    label: "Get the free ebook",
+    label: "Get the free eBook",
     description: "Find Your Reason to Smile, free to download",
     href: "/books#free-ebook",
     featured: true,
@@ -679,17 +677,35 @@ for (const page of pages) {
   let sectionSql = sectionsSql(sections);
   if (page.path === "/start") {
     // Keep any links Anastasia added on the old start page, after the new ones.
+    // The old page linked `is_internal && to_path ? to_path : href`; the same
+    // address is checked here as safeUrl does (no #anchors: nothing on /start
+    // to point at), rows without a label are dropped, and the old links fill
+    // only the room the schema leaves after the defaults.
     const known = startDefaults.map((link) => q(link.href)).join(", ");
+    const room = 20 - startDefaults.length; // link_list items .max(20)
     sectionSql = `(
-    with old as (
-      select coalesce(jsonb_agg(jsonb_build_object(
-        'id', l.id, 'label', left(l.label, 80), 'description', left(coalesce(l.sub, ''), 140),
-        'href', coalesce(l.to_path, l.href), 'featured', false
-      ) order by l.sort_order), '[]'::jsonb) as items
+    with src as (
+      select l.id, l.sort_order, btrim(l.label) as label, btrim(coalesce(l.sub, '')) as sub,
+        btrim(case when l.is_internal and nullif(btrim(l.to_path), '') is not null
+          then l.to_path else coalesce(l.href, '') end) as href
       from public.start_page_links l
       where l.enabled
-        and (l.to_path ~ '^/[a-z0-9/-]*$' or l.href ~ '^https://')
-        and coalesce(l.to_path, l.href) not in (${known}, '/books', '/masterclasses', '/blog', '/foundation')
+    ),
+    kept as (
+      select * from src
+      where label <> ''
+        and length(href) <= 2000
+        and (href ~* '^(https://|mailto:|tel:)' or href ~ '^/([^/]|$)')
+        and href not in (${known}, '/books', '/masterclasses', '/blog', '/foundation')
+      order by sort_order
+      limit ${room}
+    ),
+    old as (
+      select coalesce(jsonb_agg(jsonb_build_object(
+        'id', k.id, 'label', left(k.label, 80), 'description', left(k.sub, 140),
+        'href', k.href, 'featured', false
+      ) order by k.sort_order), '[]'::jsonb) as items
+      from kept k
     )
     select jsonb_set(s.v, '{0,props,items}', (s.v #> '{0,props,items}') || old.items)
     from old, (select ${sectionSql} as v) s
@@ -805,6 +821,24 @@ from (values
   ('faith-when-the-doctors-say-no', 'Faith, When The Doctors Say No', 'Faith, when the doctors say no')
 ) as v(slug, seeded, title)
 where p.slug = v.slug and p.title = v.seeded;
+`);
+
+out.push(`-- The starter masterclass in sentence case, while its title is still the starter one.
+update public.masterclasses
+set title = 'Turn your story into a digital business'
+where slug = 'masterclass' and title = 'Turn Your Story Into A Digital Business';
+`);
+
+out.push(`-- The contact link carried over from the old start page, in sentence case.
+update public.pages p
+set sections = jsonb_set(p.sections, '{0,props,items}', (
+  select jsonb_agg(case when e ->> 'label' = 'Contact Me' then jsonb_set(e, '{label}', to_jsonb('Contact me'::text)) else e end order by i)
+  from jsonb_array_elements(p.sections #> '{0,props,items}') with ordinality as x(e, i)
+))
+where p.path = '/start'
+  and p.sections #>> '{0,type}' = 'link_list'
+  and jsonb_typeof(p.sections #> '{0,props,items}') = 'array'
+  and p.sections #> '{0,props,items}' @> '[{"label": "Contact Me"}]';
 `);
 
 out.push(`-- Praise: the reader reviews already on the live site, when there is none yet.

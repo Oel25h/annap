@@ -11,7 +11,8 @@
   }
   html {
     -webkit-text-size-adjust: 100%;
-    scroll-padding-top: var(--size-header);
+    /* The header with its hairline, plus room for a focus ring (2px outline, 4px offset) */
+    scroll-padding-top: calc(var(--size-header) + var(--space-3));
   }
   /* A docked bar (mini player or buy bar) never hides a focused element or an anchor */
   html:has(.mini-player),
@@ -243,8 +244,11 @@
   }
 
   /* ---------- The one grid: 12 columns from 1024, one column below ---------- */
+  /* Below 1024, one column that never grows past the wrap: a long word (or an nb()-bound
+     pair) breaks at the edge instead of widening the track */
   .grid-12 {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-5);
   }
   @media (min-width: 1024px) {
@@ -257,6 +261,8 @@
   /* ---------- Section rhythm: an h2 on the left, at most one link on the right ---------- */
   .section {
     padding-block: var(--section-pt) var(--section-pb);
+    /* A section jumped to (#listen, #free-ebook, …) still meets the header flush */
+    scroll-margin-top: calc(-1 * var(--space-3));
   }
   /* Two sections on the same ground share one gap */
   .section.band-ivory + .section.band-ivory,
@@ -311,6 +317,7 @@
   }
   .shead-text {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-4);
     min-width: 0;
   }

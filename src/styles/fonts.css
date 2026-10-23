@@ -1,13 +1,21 @@
 /*
  * Self-hosted variable fonts, Latin and Greek only. The browser downloads a
  * file only when the page uses a character in its range.
+ *
+ * Noto Serif Display is used only at weights 360 to 400 (the display roles,
+ * the drop cap, the player's opening line), so src/assets/fonts holds its
+ * Fontsource files cut to that weight range, at about half the size, with the
+ * same characters. To regenerate one (fonttools 4.67):
+ *   fonttools varLib.instancer <fontsource file> wght=360:400 -o cut.ttf
+ *   pyftsubset cut.ttf --unicodes="<its unicode-range>" --layout-features='*' \
+ *     --flavor=woff2 --output-file=src/assets/fonts/<name>.woff2
  */
 @font-face {
   font-family: "Noto Serif Display Variable";
   font-style: normal;
   font-display: swap;
-  font-weight: 100 900;
-  src: url("../../node_modules/@fontsource-variable/noto-serif-display/files/noto-serif-display-latin-wght-normal.woff2")
+  font-weight: 360 400;
+  src: url("../assets/fonts/noto-serif-display-latin-normal-360-400.woff2")
     format("woff2-variations");
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
@@ -17,8 +25,8 @@
   font-family: "Noto Serif Display Variable";
   font-style: normal;
   font-display: swap;
-  font-weight: 100 900;
-  src: url("../../node_modules/@fontsource-variable/noto-serif-display/files/noto-serif-display-greek-wght-normal.woff2")
+  font-weight: 360 400;
+  src: url("../assets/fonts/noto-serif-display-greek-normal-360-400.woff2")
     format("woff2-variations");
   unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
 }
@@ -26,8 +34,8 @@
   font-family: "Noto Serif Display Variable";
   font-style: italic;
   font-display: swap;
-  font-weight: 100 900;
-  src: url("../../node_modules/@fontsource-variable/noto-serif-display/files/noto-serif-display-latin-wght-italic.woff2")
+  font-weight: 360 400;
+  src: url("../assets/fonts/noto-serif-display-latin-italic-360-400.woff2")
     format("woff2-variations");
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
@@ -37,8 +45,8 @@
   font-family: "Noto Serif Display Variable";
   font-style: italic;
   font-display: swap;
-  font-weight: 100 900;
-  src: url("../../node_modules/@fontsource-variable/noto-serif-display/files/noto-serif-display-greek-wght-italic.woff2")
+  font-weight: 360 400;
+  src: url("../assets/fonts/noto-serif-display-greek-italic-360-400.woff2")
     format("woff2-variations");
   unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
 }

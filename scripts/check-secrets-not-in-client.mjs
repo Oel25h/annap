@@ -74,7 +74,9 @@ async function checkNoBuildTimeConfig() {
   if (offenders.length) {
     console.error("[secrets:check] FAIL — build-time VITE_ config read in:");
     for (const f of offenders) console.error(`  - ${f}`);
-    console.error("Read configuration through getPublicConfig() so one build serves every environment.");
+    console.error(
+      "Read configuration through getPublicConfig() so one build serves every environment.",
+    );
     process.exit(1);
   }
 }

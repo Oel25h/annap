@@ -29,6 +29,16 @@ describe("sanitizeRichText", () => {
     );
   });
 
+  test("points site paths to the Greek edition on a Greek page", () => {
+    const html =
+      '<a href="/contact">a</a><a href="/">b</a><a href="/#free-ebook">c</a><a href="/el/privacy">d</a><a href="/admin">e</a><a href="/og.jpg">f</a><a href="mailto:a@b.c">g</a>';
+    assert.equal(
+      sanitizeRichText(html, "el"),
+      '<a href="/el/contact">a</a><a href="/el">b</a><a href="/el#free-ebook">c</a><a href="/el/privacy">d</a><a href="/admin">e</a><a href="/og.jpg">f</a><a href="mailto:a@b.c">g</a>',
+    );
+    assert.equal(sanitizeRichText('<a href="/contact">a</a>'), '<a href="/contact">a</a>');
+  });
+
   test("drops empty paragraphs", () => {
     assert.equal(sanitizeRichText("<p> </p><p>Text</p><p></p>"), "<p>Text</p>");
   });

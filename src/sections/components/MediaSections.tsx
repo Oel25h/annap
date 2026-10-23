@@ -9,13 +9,14 @@ import {
 } from "react";
 import { Icon } from "@/components/site/Icon";
 import { SiteLink } from "@/components/site/SiteLink";
-import { formatTime } from "@/components/audio/AudioProvider";
+import { formatTime } from "@/components/audio/format";
 import { useT } from "@/lib/i18n/context";
 import { fmt, formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/locale";
 import { nb } from "@/lib/i18n/rag";
 import type { MediaMap, RenderedSection, ResolvedMedia, VideoCard } from "@/sections/types";
 import { Picture } from "../render/Picture";
+import { masonryShapes } from "./masonry";
 import { keyLang, SectionShell, type HeadLink, type SectionContext } from "../render/SectionShell";
 import { Empty } from "./CollectionSections";
 
@@ -163,9 +164,20 @@ function oneLine(text: string): string {
   return end > 0 && end < 160 ? first.slice(0, end + 1) : `${first.slice(0, 157).trimEnd()}…`;
 }
 
-function Poster({ video, media, sizes }: { video: VideoCard; media: MediaMap; sizes: string }) {
+function Poster({
+  video,
+  media,
+  sizes,
+  priority = false,
+}: {
+  video: VideoCard;
+  media: MediaMap;
+  sizes: string;
+  /** The feature's poster when the section opens the page: it is the page's largest image. */
+  priority?: boolean;
+}) {
   const image = video.thumbnailMediaId ? media[video.thumbnailMediaId] : undefined;
-  return <Picture media={image} sizes={sizes} decorative />;
+  return <Picture media={image} sizes={sizes} priority={priority} decorative />;
 }
 
 /** The sr-only end of a row's name, ", 11 minutes 5 seconds, on YouTube"; SiteLink adds "(opens YouTube)". */
@@ -185,7 +197,7 @@ function OnYouTube({ video, locale }: { video: VideoCard; locale: Locale }) {
  *   ("Latest · 8:42", the title in Display M, one line) and Up next, three rows
  *   that open YouTube. The side column ends with the frame.
  * - single: one film and its caption.
- * - grid (/videos): the newest film and its caption, then the rest as tiles.
+ * - grid (/videos): the filmstrip layout (feature, caption, Up next), then the rest as tiles.
  * Phones: frame, caption, Up next, then the channel link at the foot.
  */
 export function Video({ section, media, ctx }: Props<"video">) {
@@ -217,8 +229,10 @@ export function Video({ section, media, ctx }: Props<"video">) {
     );
   }
   const [feature, ...rest] = videos;
-  const upNext = section.variant === "filmstrip" ? rest.slice(0, 3) : [];
-  const tiles = section.variant === "grid" ? rest : [];
+  // filmstrip and grid both set the next three beside the feature, so the side
+  // column ends with the frame (DESIGN.md §9); grid then tiles the rest.
+  const upNext = section.variant === "single" ? [] : rest.slice(0, 3);
+  const tiles = section.variant === "grid" ? rest.slice(3) : [];
   const line = oneLine(feature.description);
   const featureLang = langIf(feature.textLang, ctx.locale);
 
@@ -234,7 +248,9 @@ export function Video({ section, media, ctx }: Props<"video">) {
           label={[fmt(t.sections.video.playOn, { title: feature.title }), duration(feature)]
             .filter(Boolean)
             .join(", ")}
-          poster={<Poster video={feature} media={media} sizes={FEATURE_SIZES} />}
+          poster={
+            <Poster video={feature} media={media} sizes={FEATURE_SIZES} priority={ctx.isFirst} />
+          }
           duration={feature.durationSeconds}
         />
         <div className="film-side">
@@ -374,15 +390,11 @@ export function Embed({ section, media, ctx }: Props<"embed">) {
 const PLATE_SIZES: Record<string, string> = {
   grid: "(min-width: 1440px) 296px, (min-width: 1024px) 22vw, calc(50vw - 32px)",
   masonry: "(min-width: 1440px) 296px, (min-width: 1024px) 22vw, calc(50vw - 32px)",
+  /** A short masonry set sits in three lanes from 1024. */
+  masonryShort: "(min-width: 1440px) 405px, (min-width: 1024px) 30vw, calc(50vw - 32px)",
   carousel: "(min-width: 1440px) 624px, (min-width: 1024px) 45vw, (min-width: 720px) 45vw, 86vw",
   filmstrip: "(min-width: 1440px) 296px, (min-width: 1024px) 22vw, (min-width: 720px) 30vw, 62vw",
 };
-
-/** Masonry keeps to the system's ratios: 4:5 for an upright photo, 3:2 for a wide one. */
-const plateRatio = (image: ResolvedMedia) =>
-  ({
-    "--ratio": image.width && image.height && image.width > image.height ? "3 / 2" : "4 / 5",
-  }) as CSSProperties;
 
 /**
  * Plates on the 12 columns: a grid, a masonry, or a carousel or film strip that
@@ -416,6 +428,9 @@ export function Gallery({ section, media, ctx }: Props<"gallery">) {
   const shown = open !== null ? images[open] : undefined;
   const scrolls = section.variant === "carousel" || section.variant === "filmstrip";
   const masonry = section.variant === "masonry";
+  // Two lanes below 1024; three from 1024, four once there are eight (as in the CSS).
+  const small = masonry ? masonryShapes(images, 2) : [];
+  const large = masonry ? masonryShapes(images, images.length >= 8 ? 4 : 3) : [];
 
   return (
     <SectionShell
@@ -435,8 +450,14 @@ export function Gallery({ section, media, ctx }: Props<"gallery">) {
               type="button"
               className="plate"
               aria-label={image.alt || fmt(t.sections.gallery.open, { n: index + 1, total })}
+              // The name is the photo's alt, which may still be English on /el.
+              lang={image.alt ? langIf(image.textLang, ctx.locale) : undefined}
               aria-haspopup="dialog"
-              style={masonry ? plateRatio(image) : undefined}
+              style={
+                masonry
+                  ? ({ "--ratio": small[index], "--ratio-lg": large[index] } as CSSProperties)
+                  : undefined
+              }
               onClick={(event) => {
                 opener.current = event.currentTarget;
                 setOpen(index);
@@ -444,7 +465,13 @@ export function Gallery({ section, media, ctx }: Props<"gallery">) {
             >
               <Picture
                 media={image}
-                sizes={PLATE_SIZES[section.variant] ?? PLATE_SIZES.grid}
+                sizes={
+                  (masonry && total < 8
+                    ? PLATE_SIZES.masonryShort
+                    : PLATE_SIZES[section.variant]) ?? PLATE_SIZES.grid
+                }
+                // Opening the page, the first plates are in view at every width.
+                priority={ctx.isFirst && index < 3}
                 decorative
               />
             </button>

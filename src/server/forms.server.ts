@@ -372,7 +372,13 @@ export async function joinWaitlist(raw: unknown): Promise<FormResult> {
 // Contact
 // ---------------------------------------------------------------------------
 
-export const CONTACT_TOPICS = ["general", "speaking", "media", "partnerships"] as const;
+export const CONTACT_TOPICS = [
+  "general",
+  "speaking",
+  "media",
+  "partnerships",
+  "volunteering",
+] as const;
 
 const ContactInput = z.object({
   name: z.string().trim().min(1).max(120),

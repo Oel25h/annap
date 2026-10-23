@@ -37,12 +37,13 @@ import {
 } from "./store";
 
 export type { PlayableBook, PlayableTrack } from "./playable";
-export { formatTime } from "./format";
 
 /** Loading text waits this long, as everywhere on the site, so a short stall never flashes. */
 const LOADING_DELAY = 400;
 /** HTMLMediaElement.HAVE_FUTURE_DATA: enough is buffered to play on. */
 const HAVE_FUTURE_DATA = 3;
+/** HTMLMediaElement.HAVE_METADATA: duration and seeking are known. */
+const HAVE_METADATA = 1;
 
 /** What the page can ask of the player. Every action takes the edition and chapter it applies to. */
 export type AudioActions = {
@@ -124,6 +125,34 @@ function createPlayer(store: Store, element: () => HTMLAudioElement | null) {
     audio.play().catch(() => store.set({ requested: !audio.paused }));
   };
 
+  /**
+   * A position chosen before the chapter's metadata arrived. Most browsers honour
+   * currentTime set that early; for the rest it is applied on loadedmetadata. One slot,
+   * so every later seek replaces it and the last position chosen is the one that plays.
+   */
+  let pending: { src: string; at: number } | null = null;
+  const applyPending = () => {
+    const audio = element();
+    const p = pending;
+    pending = null;
+    if (audio && p && audio.src === p.src && Math.abs(audio.currentTime - p.at) > 1) {
+      audio.currentTime = p.at;
+    }
+  };
+  /** Moves the playhead, also before metadata. */
+  const setTime = (audio: HTMLAudioElement, at: number) => {
+    if (audio.readyState < HAVE_METADATA) {
+      pending = { src: audio.src, at };
+      // The same function each time, so it is never registered twice.
+      audio.addEventListener("loadedmetadata", applyPending, { once: true });
+    } else pending = null;
+    try {
+      audio.currentTime = at;
+    } catch {
+      // Applied on loadedmetadata.
+    }
+  };
+
   /** Put a chapter in the element, paused at `startAt` (or where the reader stopped), then maybe play. */
   const load = (
     book: PlayableBook,
@@ -141,19 +170,8 @@ function createPlayer(store: Store, element: () => HTMLAudioElement | null) {
       audio.src = track.src;
       audio.defaultPlaybackRate = rate;
       audio.playbackRate = rate;
-      if (at) {
-        const src = audio.src;
-        // Before metadata this sets the start position; some browsers only honour it after.
-        try {
-          audio.currentTime = at;
-        } catch {
-          // Applied on loadedmetadata below.
-        }
-        const apply = () => {
-          if (audio.src === src && Math.abs(audio.currentTime - at) > 1) audio.currentTime = at;
-        };
-        audio.addEventListener("loadedmetadata", apply, { once: true });
-      }
+      // Also at 0, so a start left pending by an earlier load of this chapter is replaced.
+      setTime(audio, at);
       store.set({
         book,
         index,
@@ -166,7 +184,7 @@ function createPlayer(store: Store, element: () => HTMLAudioElement | null) {
       });
       patchRecord(book, { trackId: track.id, position: Math.floor(at) });
     } else if (startAt !== undefined) {
-      audio.currentTime = startAt;
+      setTime(audio, startAt);
       store.set({ position: startAt });
     }
     if (autoplay) start();
@@ -180,7 +198,7 @@ function createPlayer(store: Store, element: () => HTMLAudioElement | null) {
     const max = known || track.durationSeconds || Infinity;
     const to = Math.max(0, Math.min(seconds, max));
     if (!isLoaded(book, index)) return load(book, index, { startAt: to });
-    audio.currentTime = to;
+    setTime(audio, to);
     store.set({ position: to });
     if (audio.paused) remember();
   };
@@ -237,7 +255,8 @@ function createPlayer(store: Store, element: () => HTMLAudioElement | null) {
       const { book, position } = state();
       if (!audio || !book) return;
       audio.load();
-      if (position) audio.currentTime = position;
+      // After load() there is no metadata, so this also replaces a start left by the failed load.
+      setTime(audio, position);
       start();
     },
   };
@@ -497,12 +516,14 @@ export function useMiniPlayerShown(): boolean {
 /**
  * Brings the full player into view and puts focus on its Play button, never
  * starting sound. On phones Play sits below the opening line, so it is the
- * part scrolled into view. Returns false when the player isn't on this page.
+ * part scrolled into view. Returns false when the player isn't on this page or,
+ * given `bookId`, shows another edition.
  */
-export function openPlayer(anchor: string): boolean {
+export function openPlayer(anchor: string, bookId?: string): boolean {
   const section = document.getElementById(anchor);
   const play = document.getElementById(`${anchor}-play`);
   if (!section || !play) return false;
+  if (bookId && play.dataset.bookId !== bookId) return false;
   if (window.matchMedia("(min-width: 1024px)").matches) section.scrollIntoView();
   else play.scrollIntoView({ block: "center" });
   play.focus({ preventScroll: true });

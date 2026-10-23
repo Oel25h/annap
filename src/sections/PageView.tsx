@@ -101,7 +101,7 @@ function findListen(sections: RenderedSection[], media: MediaMap, path: string):
  * The band each visible section is drawn on. `opened` is true when something
  * ivory (an intro or the title band) already sits above the first section.
  */
-export function effectiveBands(sections: RenderedSection[], opened: boolean): Band[] {
+function effectiveBands(sections: RenderedSection[], opened: boolean): Band[] {
   const bands: Band[] = [];
   let cocoaUsed = false;
   sections.forEach((section, index) => {
@@ -176,6 +176,7 @@ export function PageView({ page }: { page: PageData }) {
           media={page.media}
           locale={page.locale}
           listenAnchor={listen?.anchor ?? null}
+          indexed={page.indexed ?? false}
         />
       )}
       {titleBand && (

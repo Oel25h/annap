@@ -145,6 +145,12 @@ export type FormOptions = {
    * back (default). Off for forms that leave the page, such as giving.
    */
   retryOnReconnect?: boolean;
+  /**
+   * The form leaves the page when it succeeds (giving, on to Stripe). Back from
+   * there restores the page from the back/forward cache as it was left, so the
+   * form is made ready again.
+   */
+  leavesPage?: boolean;
 };
 
 const offlineNow = () => typeof navigator !== "undefined" && navigator.onLine === false;
@@ -176,6 +182,7 @@ export function useFormAction<T extends { ok: true } | { ok: false; error: strin
    */
   const inFlight = useRef(false);
   const retryOnReconnect = options.retryOnReconnect ?? true;
+  const leavesPage = options.leavesPage ?? false;
   /** The success heading: focused when the form is replaced. */
   const done = useRef<HTMLElement | null>(null);
   const doneRef = useCallback((node: HTMLElement | null) => {
@@ -200,6 +207,19 @@ export function useFormAction<T extends { ok: true } | { ok: false; error: strin
     window.addEventListener("online", retry, { once: true });
     return () => window.removeEventListener("online", retry);
   }, [state, retryOnReconnect]);
+
+  // Back from a page this form led to, through the back/forward cache: ready again.
+  useEffect(() => {
+    if (!leavesPage) return;
+    const ready = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      inFlight.current = false;
+      refocus.current = null;
+      setState({ step: "idle" });
+    };
+    window.addEventListener("pageshow", ready);
+    return () => window.removeEventListener("pageshow", ready);
+  }, [leavesPage]);
 
   /**
    * Runs the checks, shows their messages and returns the names that failed.

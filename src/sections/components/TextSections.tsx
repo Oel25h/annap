@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { useT } from "@/lib/i18n/context";
-import { nb } from "@/lib/i18n/rag";
+import { keepCapSpace, nb } from "@/lib/i18n/rag";
 import { Icon, type IconName } from "@/components/site/Icon";
 import { SiteLink } from "@/components/site/SiteLink";
 import type { MediaMap, RenderedSection, ResolvedMedia } from "@/sections/types";
@@ -72,6 +72,7 @@ export function RichText({ section, ctx }: Props<"rich_text">) {
   const p = section.props;
   const title = p.title.trim();
   const foreword = section.variant === "foreword";
+  const body = foreword ? keepCapSpace(p.body) : p.body;
   if (foreword && title) {
     return (
       <SectionShell section={section} ctx={ctx} labelled>
@@ -81,11 +82,7 @@ export function RichText({ section, ctx }: Props<"rich_text">) {
               {title}
             </SectionHeading>
           </div>
-          <RichHtml
-            html={p.body}
-            className="fw-body prose dropcap"
-            lang={keyLang(section, "body")}
-          />
+          <RichHtml html={body} className="fw-body prose dropcap" lang={keyLang(section, "body")} />
         </div>
       </SectionShell>
     );
@@ -97,7 +94,7 @@ export function RichText({ section, ctx }: Props<"rich_text">) {
       head={title ? { title, titleLang: keyLang(section, "title") } : null}
     >
       <RichHtml
-        html={p.body}
+        html={body}
         className={foreword ? "prose dropcap" : "prose"}
         lang={keyLang(section, "body")}
       />
@@ -107,20 +104,20 @@ export function RichText({ section, ctx }: Props<"rich_text">) {
 
 /**
  * A photograph and its words side by side (the home Foundation block): the
- * photo on six columns, 3:2 (4:5 on five columns when it is taller than wide),
- * then the h2, lead, body and actions on the other six.
+ * photo on six columns at 3:2, cropped on its focal point whatever its
+ * orientation (DESIGN.md §7: 4:5 belongs to the arch), then the h2, lead, body
+ * and actions on the other six.
  */
 export function TwoColumn({ section, media, ctx }: Props<"two_column">) {
   const p = section.props;
   const image = media[p.imageMediaId]?.kind === "image" ? media[p.imageMediaId] : undefined;
-  const portrait = isPortrait(image);
   const primary = p.primary.href && p.primary.label ? p.primary : null;
   const link = headLink(p.link, "", keyLang(section, "link.label"));
   const secondary = headLink(p.secondary, "", keyLang(section, "secondary.label"));
   const classes = [
     "two-col grid-12",
     section.variant === "image_right" ? "two-col--right" : "two-col--left",
-    !image ? "two-col--text" : portrait ? "two-col--portrait" : "",
+    !image ? "two-col--text" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -129,12 +126,7 @@ export function TwoColumn({ section, media, ctx }: Props<"two_column">) {
       <div className={classes}>
         {image && (
           <figure className="two-col-media">
-            <Picture
-              media={image}
-              sizes={
-                portrait ? "(min-width: 1024px) 36vw, 100vw" : "(min-width: 1024px) 45vw, 100vw"
-              }
-            />
+            <Picture media={image} sizes="(min-width: 1024px) 45vw, 100vw" />
             {p.caption && (
               <figcaption className="caption" lang={keyLang(section, "caption")}>
                 {nb(p.caption)}
@@ -275,8 +267,8 @@ export function Stats({ section, ctx }: Props<"stats">) {
 export function Timeline({ section, media, ctx }: Props<"timeline">) {
   const p = section.props;
   const title = p.title.trim();
-  // Under the section's h2 the chapter titles are h3s; with no h2 they head their own rows.
-  const ItemHeading = title ? "h3" : "h2";
+  // One level under the section's heading: h3 under its h2, h2 under the page h1 or with no title.
+  const ItemHeading = title && ctx.headingLevel === "h2" ? "h3" : "h2";
   return (
     <SectionShell
       section={section}
@@ -349,7 +341,7 @@ export function List({ section, ctx }: Props<"list">) {
   const title = p.title.trim();
   const numbered = section.variant === "numbered";
   const Rows = numbered ? "ol" : "ul";
-  const ItemHeading = title ? "h3" : "h2";
+  const ItemHeading = title && ctx.headingLevel === "h2" ? "h3" : "h2";
   return (
     <SectionShell
       section={section}

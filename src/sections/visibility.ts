@@ -55,7 +55,8 @@ export function isEmpty(section: RenderedSection, media?: MediaMap, primary = fa
     case "testimonials":
       return !section.data || section.data.items.length === 0;
     case "gallery":
-      return !section.data || section.data.imageMediaIds.length === 0;
+      // Like Gallery itself: only the ids that still resolve to an image count.
+      return !section.data?.imageMediaIds.some((id) => !media || media[id]?.kind === "image");
     case "products":
       return !primary && !section.data?.products.length;
     case "masterclasses":

@@ -118,16 +118,17 @@ export async function pageJsonLd(
   return graph(nodes);
 }
 
-/** JSON-LD for a collection item: the item itself and its breadcrumb. */
+/** JSON-LD for a collection item: the item itself (when it has a node) and its breadcrumb. */
 export async function itemJsonLd(
   db: PublicDb,
-  item: Node,
+  item: Node | null,
   trail: { locale: Locale; parent: string; path: string; name: string },
 ): Promise<string> {
   const crumbs = await breadcrumb(db, trail.locale, [
     { path: trail.parent },
     { path: trail.path, name: trail.name },
   ]);
+  if (!item) return graph([crumbs]);
   const { "@context": _context, ...node } = item;
   return graph([node, crumbs]);
 }

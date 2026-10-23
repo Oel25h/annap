@@ -20,11 +20,14 @@ export function BookIntro({
   media,
   locale,
   listenAnchor,
+  indexed,
 }: {
   intro: Extract<Intro, { kind: "book" }>;
   media: MediaMap;
   locale: Locale;
   listenAnchor: string | null;
+  /** /books is published: the way back to it has somewhere to go. */
+  indexed: boolean;
 }) {
   const t = useT();
   const { book } = intro;
@@ -56,20 +59,22 @@ export function BookIntro({
               listen={listenAnchor ? { anchor: listenAnchor, above: false } : null}
               id="formats"
             />
-            <p className="book-links">
-              {book.freeDownload && (
-                <a className="link" href="#free-ebook">
-                  {t.items.book.freeEbook}
-                  <Icon name="arrow-down" />
-                </a>
-              )}
-              <TextLink link={{ label: t.items.back.book, href: "/books" }} />
-            </p>
+            {(book.freeDownload || indexed) && (
+              <p className="book-links">
+                {book.freeDownload && (
+                  <a className="link" href="#free-ebook">
+                    {t.items.book.freeEbook}
+                    <Icon name="arrow-down" />
+                  </a>
+                )}
+                {indexed && <TextLink link={{ label: t.items.back.book, href: "/books" }} />}
+              </p>
+            )}
           </div>
           {intro.whoFor && (
             <div className="book-aside">
               <h2 className="title">{t.items.book.whoFor}</h2>
-              <p className="body" lang={lang}>
+              <p className="body" lang={langIf(intro.whoForLang, locale)}>
                 <Lines text={intro.whoFor} />
               </p>
             </div>

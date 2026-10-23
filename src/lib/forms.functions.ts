@@ -68,7 +68,7 @@ export const subscribe = createServerFn({ method: "POST" })
     return forms.subscribe(data);
   });
 
-export type ContactTopic = "general" | "speaking" | "media" | "partnerships";
+export type ContactTopic = "general" | "speaking" | "media" | "partnerships" | "volunteering";
 
 export type ContactRequest = {
   name: string;
