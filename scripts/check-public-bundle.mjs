@@ -2,7 +2,7 @@
 /**
  * Fails when visitors would download studio-only libraries, or when the home
  * page's JavaScript is over budget (brief 3.3). Reads the chunk graph that
- * scripts/vite/client-chunk-graph.ts writes during `bun run build:cf`.
+ * scripts/vite/client-chunk-graph.ts writes during `bun run build`.
  *
  * Public code = the client entry and everything it imports statically, plus
  * every public route chunk and everything it imports, statically or lazily.
@@ -11,7 +11,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 
 const GRAPH = ".output/client-chunks.json";
-const ASSETS = ".output/public";
+const ASSETS = "dist";
 const BUDGET_TOTAL_KB = 150;
 const BUDGET_APP_KB = 45;
 
@@ -30,7 +30,7 @@ const PRIVATE_ROUTE = /\/src\/routes\/(_authenticated\/|auth\.tsx|admin|preview)
 const ROUTE = /\/src\/routes\/([^?]+)\?tsr-split/;
 
 if (!existsSync(GRAPH)) {
-  console.error(`${GRAPH} is missing. Run \`bun run build:cf\` first.`);
+  console.error(`${GRAPH} is missing. Run \`bun run build\` first.`);
   process.exit(1);
 }
 const chunks = JSON.parse(readFileSync(GRAPH, "utf8"));

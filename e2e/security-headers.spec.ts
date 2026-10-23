@@ -44,3 +44,10 @@ test("server functions refuse cross-site calls", async ({ request }) => {
   });
   expect(res.status()).toBe(403);
 });
+
+test("static files get the security headers from netlify.toml", async ({ request }) => {
+  const res = await request.get("/apple-touch-icon.png");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(res.headers()["strict-transport-security"]).toContain("max-age=");
+});

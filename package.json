@@ -13,15 +13,15 @@
     "typecheck": "tsc --noEmit",
     "secrets:check": "bun run scripts/check-secrets-not-in-client.mjs",
     "bundle:check": "node scripts/check-public-bundle.mjs",
-    "build:cf": "NITRO_PRESET=cloudflare-module vite build",
-    "preview:cf": "wrangler dev -c .output/server/wrangler.json --env-file ../../.env",
+    "serve": "node scripts/serve-netlify.mjs",
     "test:unit": "bun test src",
     "test:e2e": "playwright test",
     "test:reflow": "playwright test e2e/reflow.spec.ts --project=desktop",
     "test:a11y": "playwright test e2e/a11y.spec.ts --project=desktop",
-    "gate": "bun run typecheck && bun run lint && bun run test:unit && bun run db:check && bun run build:cf && bun run secrets:check && bun run test:e2e",
+    "gate": "bun run typecheck && bun run lint && bun run test:unit && bun run db:check && bun run build && bun run secrets:check && bun run bundle:check && bun run test:e2e",
     "check": "bun run gate",
-    "deploy": "bun run gate && wrangler deploy -c .output/server/wrangler.json",
+    "deploy": "bun run deploy:netlify",
+    "deploy:netlify": "bun run gate && npx -y netlify-cli@24.11.3 deploy --prod --no-build --dir dist --functions netlify/functions",
     "db:check": "bash scripts/check-db.sh",
     "db:types": "npx -y supabase@2.121.0 gen types typescript --db-url postgresql://postgres:postgres@127.0.0.1:54322/postgres --schema public > src/integrations/supabase/types.ts && prettier --write src/integrations/supabase/types.ts"
   },
@@ -108,7 +108,6 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^8.0.16",
-    "wrangler": "^4.151.3"
+    "vite": "^8.0.16"
   }
 }

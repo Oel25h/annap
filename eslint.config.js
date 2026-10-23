@@ -12,7 +12,6 @@ export default tseslint.config(
       ".output/**",
       ".vinxi/**",
       ".netlify/**",
-      ".wrangler/**",
       ".tanstack/**",
       "node_modules/**",
       "bun.lock",

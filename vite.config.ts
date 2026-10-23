@@ -9,11 +9,13 @@ const fromRoot = (path: string) => new URL(path, import.meta.url).pathname;
 
 /**
  * TanStack Start + Nitro + Tailwind.
- * Ship builds target Cloudflare Workers (NITRO_PRESET=cloudflare-module, see wrangler.jsonc).
+ * Ship builds target Netlify Functions (Nitro's `netlify` preset, see netlify.toml): the
+ * server lands in .netlify/functions-internal, the static files in dist. The scheduled
+ * work runs as Netlify Scheduled Functions (netlify/functions), outside Nitro.
  */
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const nitroPreset = process.env.NITRO_PRESET || env.NITRO_PRESET || "cloudflare-module";
+  const nitroPreset = process.env.NITRO_PRESET || env.NITRO_PRESET || "netlify";
 
   return {
     server: {
@@ -34,21 +36,7 @@ export default defineConfig(({ mode }) => {
       tanstackStart({
         server: { entry: "server" },
       }),
-      nitro({
-        preset: nitroPreset,
-        // Cron Triggers on Cloudflare: Nitro writes them into the worker config.
-        experimental: { tasks: true },
-        tasks: {
-          "outbox:drain": { handler: fromRoot("./src/server/tasks/outbox-drain.ts") },
-          "purge:expired": { handler: fromRoot("./src/server/tasks/purge-expired.ts") },
-          "youtube:sync": { handler: fromRoot("./src/server/tasks/youtube-sync.ts") },
-        },
-        scheduledTasks: {
-          "*/5 * * * *": ["outbox:drain"],
-          "17 3 * * *": ["purge:expired"],
-          "0 * * * *": ["youtube:sync"],
-        },
-      }),
+      nitro({ preset: nitroPreset }),
       viteReact(),
       clientChunkGraph(),
     ],

@@ -5,11 +5,13 @@ import { defineConfig, devices } from "@playwright/test";
 if (existsSync(".env")) process.loadEnvFile(".env");
 
 /**
- * End-to-end tests run against the production Cloudflare build served by
- * workerd (wrangler dev), backed by the local Supabase stack (`npx supabase start`).
- * `bun run gate` builds first, so the server here only serves .output.
+ * End-to-end tests run against the production Netlify build (dist and the
+ * server function in .netlify/functions-internal) served the way Netlify
+ * serves it by scripts/serve-netlify.mjs, backed by the local Supabase stack
+ * (`npx supabase start`). `bun run gate` builds first, so the server here
+ * only serves the build.
  */
-const PORT = Number(process.env.E2E_PORT ?? 8787);
+const PORT = Number(process.env.E2E_PORT ?? 8888);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -31,7 +33,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `bunx wrangler dev -c .output/server/wrangler.json --env-file ${process.cwd()}/.env --port ${PORT} --ip 127.0.0.1`,
+    command: `node scripts/serve-netlify.mjs --port ${PORT}`,
     url: `http://127.0.0.1:${PORT}/`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

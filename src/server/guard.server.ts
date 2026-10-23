@@ -12,9 +12,10 @@ export type FormError = "invalid" | "busy" | "verify";
 
 const HOUR = 3600;
 
+/** The visitor's address, as Netlify's edge saw it (the header a client cannot set). */
 export function clientIp(): string {
-  const cf = getRequestHeader("cf-connecting-ip");
-  if (cf) return cf;
+  const netlify = getRequestHeader("x-nf-client-connection-ip");
+  if (netlify) return netlify;
   const forwarded = getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim();
   return forwarded || "unknown";
 }

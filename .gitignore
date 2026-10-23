@@ -21,12 +21,12 @@ dist-ssr
 .nitro
 *.local
 
-# Wrangler / Cloudflare
+# Netlify (build output: server function in .netlify, static files in dist)
+.netlify/
+
+# Old hosts (the site deploys to Netlify)
 .wrangler/
 .dev.vars
-
-# Old hosts (the site deploys to Cloudflare Workers)
-.netlify
 
 # Vercel (old host)
 .vercel
@@ -54,6 +54,7 @@ dist-ssr
 *.sln
 *.sw?
 .env*
+!.env.example
 
 .admin-temp-creds.json
 

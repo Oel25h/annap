@@ -1,0 +1,46 @@
+# Netlify: the site is server-rendered by one Node function (Nitro's `netlify`
+# preset writes it to .netlify/functions-internal/server), static files come
+# from dist, and the scheduled work runs as Netlify Scheduled Functions from
+# netlify/functions. Secrets are set in the Netlify UI (Site configuration >
+# Environment variables), never here. See .env.example for the list.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  BUN_VERSION = "1.4.2"
+  # Netlify detects Nitro on its own; say so anyway, so a stray NITRO_PRESET cannot change it.
+  NITRO_PRESET = "netlify"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# The schedules live next to the code, in each function's `config` export:
+#   outbox-drain   */5 * * * *   send queued emails
+#   purge-expired  17 3 * * *    delete expired personal data (03:17 UTC)
+#   youtube-sync   0 * * * *     sync the YouTube channel
+
+# Greek pages need no redirect: /el/... is handled by the router's locale
+# rewrite inside the server function (src/lib/i18n/rewrite.ts).
+
+# Static files (images, fonts, scripts) are served by Netlify's CDN and never
+# reach the server, so they get the static security headers here. Pages are
+# rendered by the function, which sets these too, plus the per-route
+# Content-Security-Policy, framing rules (studio previews) and Cache-Control
+# (src/start.ts, src/lib/security-headers.ts). Keep the two lists in step.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Cross-Origin-Opener-Policy = "same-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

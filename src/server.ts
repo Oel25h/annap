@@ -5,7 +5,7 @@ import { renderErrorPage } from "./lib/error-page";
 
 // Imported statically: a dynamic import of the entry makes rolldown emit its
 // namespace helper after first use in the shared chunk ("__exportAll is not
-// a function" at startup on Workers).
+// a function" at startup).
 import serverEntry from "@tanstack/react-start/server-entry";
 
 type ServerEntry = {
