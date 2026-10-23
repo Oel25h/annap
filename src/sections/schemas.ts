@@ -73,7 +73,7 @@ function renamedEnum<V extends readonly [string, ...string[]]>(
 /** narrow: the 720 reading column. default: the 1280 grid. full: edge to edge. */
 export const SECTION_WIDTHS = ["narrow", "default", "full"] as const;
 export const SECTION_SPACINGS = ["compact", "default", "generous"] as const;
-export const SECTION_BACKGROUNDS = ["ivory", "cream", "cocoa"] as const;
+export const SECTION_BACKGROUNDS = ["ivory", "cream"] as const;
 
 export type SectionWidth = (typeof SECTION_WIDTHS)[number];
 
@@ -95,7 +95,10 @@ export const sectionSettingsSchema = z.object({
   // "wide" was a fourth width with no layout of its own; it reads as the grid.
   width: renamedEnum(SECTION_WIDTHS, { wide: "default" }).default("default"),
   spacing: z.enum(SECTION_SPACINGS).default("default"),
-  background: z.enum(SECTION_BACKGROUNDS).default("ivory"),
+  // The site is bright: the retired dark "cocoa" band reads as ivory.
+  background: z
+    .preprocess((v) => (v === "cocoa" ? "ivory" : v), z.enum(SECTION_BACKGROUNDS))
+    .default("ivory"),
 });
 
 export type SectionSettings = z.infer<typeof sectionSettingsSchema>;

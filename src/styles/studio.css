@@ -1299,10 +1299,6 @@
     background: var(--color-peach-cream);
     color: var(--color-cocoa-ink);
   }
-  .swatch--cocoa {
-    background: var(--color-cocoa-ink);
-    color: var(--color-peach-cream);
-  }
   .swatch input:checked ~ .swatch-ring {
     border-color: var(--color-text);
   }

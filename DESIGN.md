@@ -1,5 +1,5 @@
 ---
-version: 3.0.0
+version: 3.1.0
 name: "Anastasia Patience — The Open Book"
 description: >-
   Design system for the bilingual (EN / EL under /el) personal site and admin
@@ -81,24 +81,6 @@ colors:
     focus: apricot
     header-bg: cocoa-night-88
     selection: blush
-    error: blush
-    on-error: cocoa-ink
-  band-cocoa:
-    bg: cocoa-ink
-    surface: cocoa-ink
-    text: peach-cream
-    text-secondary: peach-cream-76
-    text-tertiary: peach-cream-68
-    accent-text: apricot
-    hairline: apricot-32
-    leader: apricot-48
-    field-border: peach-cream-52
-    track: peach-cream-52
-    selected: peach-cream
-    on-selected: cocoa-ink
-    focus: apricot
-    action-hover: apricot
-    on-action-hover: cocoa-ink
     error: blush
     on-error: cocoa-ink
 typography:
@@ -227,11 +209,15 @@ than the content. 3.0 keeps the one book device that does real work and removes 
 3. **One of each.** One grid, one type scale, one spacing scale, one radius (12px), one
    hairline, one selected style, one icon style (24px, 1.5 stroke), one italic.
 4. **Warm, never loud.** Tangerine is a fill for the one action that matters in a view.
-   Orange *text* is always Burnt orange (Apricot on dark grounds). Dark mode is cocoa,
-   never black.
-5. **Real, not rendered.** Real photographs of Anastasia and real copy from `en.ts`,
-   `el.ts` and `site.ts`, word for word. A reader's quote is never edited. No blobs,
-   gradients, glass cards, stock people, generated imagery or emoji.
+   Orange *text* is always Burnt orange (Apricot on dark grounds).
+   **Bright, like the original site.** Every public page is warm ivory with peach bands:
+   no dark, cocoa, brown or berry backgrounds anywhere, whatever the reader's system
+   setting (Joel, 2026-10-23). Dark mode exists only as an opt-in and is cocoa, never
+   black.
+5. **Her photos.** The photographs Joel supplied with the site (`src/assets/`, seeded
+   through `scripts/content/media.ts`) and real copy from `en.ts`, `el.ts` and
+   `site.ts`, word for word. A reader's quote is never edited. No blobs, gradients,
+   glass cards or emoji.
 6. **Two languages, one layout.** Greek runs 20–30% longer. Every component is set with
    the Greek string first and checked at 320, 390, 1024 and 1440.
 7. **Phones first.** Every page, the player and the studio work at 320px with no
@@ -250,7 +236,7 @@ than the content. 3.0 keeps the one book device that does real work and removes 
 | `--color-apricot` | #FFB27A | Hairlines, dot leaders and card edges on light. On dark: accent text, focus and fills. The Stale badge fill. |
 | `--color-peach-cream` | #FFF1E6 | Alternate band, the eBook card, arch fill; text and selected fill on dark. |
 | `--color-warm-ivory` | #FFFAF5 | Page and surface; text on selected fills. |
-| `--color-cocoa-ink` | #3B1F14 | Text. Also the selected fill, the cocoa band (videos, footer), text on Tangerine and the dark-mode surface. |
+| `--color-cocoa-ink` | #3B1F14 | Text. Also the selected fill, text on Tangerine and the dark-mode surface. |
 | `--color-berry` | #7A2E4A | Error text, Missing badge text, Delete. Never a fill behind text. |
 | `--color-blush` | #F7C9C0 | Text selection, Missing badge fill, error text on dark. |
 | `--color-cocoa-night` | #1F120C | Dark-mode page. |
@@ -293,17 +279,9 @@ utilities, the status badges, the video chips and the studio swatches.
 | `--color-error` / `--color-on-error` | berry · 8.74 (8.19 on peach) / warm-ivory | blush · 12.23 / cocoa-ink | |
 | `--color-status-*` | see Badges | | translation status in the studio |
 
-`band-cocoa` re-points the semantics for the cocoa band (videos, footer) in both modes:
-- text peach-cream (13.63), text-secondary peach-cream-76 (8.47), text-tertiary
-  peach-cream-68 (7.06);
-- accent and focus Apricot (8.55);
-- field border and track peach-cream-52 (4.73);
-- selected peach-cream with cocoa-ink text (13.63);
-- error Blush (10.11).
-
 ### 2.3 Rules
 
-- **Orange text is Burnt orange** on light grounds and Apricot on cocoa or night.
+- **Orange text is Burnt orange** on light grounds (Apricot in opt-in dark mode).
   Tangerine is never text (2.79 on ivory).
 - **Text on Tangerine is Cocoa** (5.22). Never white or peach on Tangerine.
 - A Tangerine fill is always identified by its Cocoa label or glyph, never by the fill
@@ -331,13 +309,12 @@ utilities, the status badges, the video chips and the studio swatches.
   dark-mode errors.
 - **Dark mode maps semantics, not pixels:**
   - ivory becomes cocoa-night and surfaces become cocoa-ink;
-  - peach bands collapse to night with hairline rules, and the cocoa band stays
-    cocoa-ink;
+  - peach bands collapse to night with hairline rules;
   - orange text becomes Apricot, and Tangerine fills stay Tangerine with Cocoa labels.
 
   Photos are never dimmed or filtered.
-- Theme switch: `<html class="dark">` forces dark and `<html class="light">` forces
-  light. With neither class, the page follows `prefers-color-scheme`.
+- Theme: the site is light by default and does **not** follow `prefers-color-scheme`.
+  Only `<html class="dark">` opts into dark mode.
 
 ### 2.4 Contrast guard rails
 
@@ -357,7 +334,7 @@ their ground. Every text pair in the system is in the first table.
 | Berry on Blush | 6.07 | Missing badge |
 | Cocoa on Apricot | 8.55 | Stale badge |
 | Cocoa on Blush | 10.11 | text selection |
-| Peach on Night / Cocoa | 16.50 / 13.63 | dark text, cocoa band |
+| Peach on Night / Cocoa | 16.50 / 13.63 | opt-in dark mode |
 | Peach-76 on Night / Cocoa | 9.77 / 8.47 | |
 | Peach-68 on Night / Cocoa | 8.06 / 7.06 | |
 | Apricot on Night / Cocoa | 10.35 / 8.55 | dark accent and focus |
@@ -545,14 +522,11 @@ Layout tokens:
 
 | Utility | Light | Dark | Used for |
 |---|---|---|---|
-| `band-ivory` | warm-ivory | cocoa-night | hero, book, quote, stories; About hero, chapters, mission, close |
-| `band-peach` | peach-cream | cocoa-night + hairline top and bottom | the audiobook spread, foundation; About foreword and values |
-| `band-cocoa` | cocoa-ink, peach text | cocoa-ink | videos, footer |
+| `band-ivory` | warm-ivory | cocoa-night | hero, book, quote, videos, stories; About hero, chapters, mission, close |
+| `band-peach` | peach-cream | cocoa-night + hairline top and bottom | the audiobook spread, foundation, footer; About foreword and values |
 
-`band-cocoa` re-points every semantic token, so components inside it need no dark
-variants. Band rules:
-- a page never opens on cocoa;
-- at most two cocoa bands per page;
+There is no dark band: the cocoa band was retired in 3.1 (a stored `"cocoa"` reads as
+ivory). Band rules:
 - two peach bands never touch;
 - a band never changes inside a section.
 
@@ -645,8 +619,9 @@ Motion is rare and slow. The page is complete the moment it arrives.
 
 ## 7. Photography
 
-**Real photographs of Anastasia and her work only.** No stock people, no generated
-imagery, no illustration, and no photo of another woman presented as part of her story.
+**The photographs Joel supplied with the site** (`src/assets/`), used as on the original
+site (Joel, 2026-10-23). The library is seeded from `scripts/content/media.ts`; Anastasia
+can swap any of them in the studio. No illustration.
 
 | Slot | File | Ratio | Notes |
 |---|---|---|---|
@@ -655,15 +630,17 @@ imagery, no illustration, and no photo of another woman presented as part of her
 | Book | `fyrts-cover.jpg` | 3:4 in the arch niche | `crop-cover` |
 | Videos, feature | `anastasia-book-desk.jpg` | 16:9 | object-position 50% 38% |
 | Videos, up next | `gallery-speaking.jpg`, `gallery-ghana.jpg`, `pathway-work.jpg` | 16:9 at 96px | placeholders until the channel's own thumbnails are wired |
-| Foundation | `gallery-community.jpg` | 3:2 | real alt; caption "Feeding hope, one heart at a time." |
+| Foundation | `pathway-purpose.jpg` | 3:2 | real alt; caption "Feeding hope, one heart at a time." |
+| Gallery | ten photos: desk, speaking, Cyprus, portraits, behind the scenes, family, sunset, author table, quote, open book | masonry | |
+| Stories | `blog-one.jpg`, `blog-two.jpg`, `blog-three.jpg` | 3:2 | one cover per starter post |
+| About, chapter 09 | `fyrts-author.jpg` | 3:2 | "Author & founder" |
+| Masterclass | `pathway-work.jpg` | 3:2 | cover |
 | Lead story | `blog-three.jpg` | 3:2 | decorative duplicate of the linked title (`alt=""`, `aria-hidden`) |
 | About hero | `portrait-two.jpg` | 4:5 arch | |
 | About, after chapter 02 | `gallery-ghana.jpg` | 3:2 | caption "From Ghana to Cyprus — and everywhere in between." |
 | About, after chapter 07 | `pathway-purpose.jpg` | 3:2 | hands holding the low sun |
 
-- **Not used:**
-  - `gallery-family.jpg` and `blog-two.jpg` show another woman;
-  - `blog-one.jpg` is a generic flatlay.
+- **Not used:** `gallery-community.jpg` (a crowd of strangers).
 - **Four ratios only**: 4:5 portrait (arch), 3:4 book cover, 16:9 video, 3:2 story,
   Foundation and About.
 - **Distinct frames.** On one page no two thumbnails repeat the same pose or scale, and
@@ -981,7 +958,7 @@ The footer Letters form uses the same pattern. On cocoa, errors are Blush at 10.
 
 ### Videos
 
-`band-cocoa`, `#videos`.
+`band-ivory`, `#videos`.
 
 - **Heading row.** The h2 "On stage, on camera." / «Στη σκηνή, στην κάμερα.» and the link
   "YouTube channel ↗", which opens YouTube.
@@ -1034,7 +1011,7 @@ The footer Letters form uses the same pattern. On cocoa, errors are Blush at 10.
 
 ### Footer
 
-`band-cocoa`, a plain `<footer>` with no `aria-labelledby`.
+`band-peach` with a hairline top rule, a plain `<footer>` with no `aria-labelledby`.
 
 - **Letters (top).** The h2 "Letters on faith and building a life you love." with "One
   letter a week, from my desk in Cyprus to your inbox." on 1–6. The form on 7–12 has:
@@ -1442,7 +1419,8 @@ Ship nothing that fails one of these.
 - [ ] Exactly one Tangerine fill at rest per view.
 - [ ] One selected style (Cocoa fill, Ivory text). The focus ring is never the selection
       cue.
-- [ ] Dark mode is cocoa (#1F120C / #3B1F14), never black, never grey.
+- [ ] Every public page is bright (ivory and peach) whatever the system theme; the
+      opt-in dark mode is cocoa (#1F120C / #3B1F14), never black, never grey.
 
 **Type**
 - [ ] Noto Serif Display only at 28px and up; three families total; type in rem + vw.
@@ -1464,8 +1442,7 @@ Ship nothing that fails one of these.
       autoplays; the player loads paused.
 
 **Photography**
-- [ ] Real photos of Anastasia in 4:5, 3:4, 16:9 or 3:2.
-- [ ] No stock, no AI imagery, no other woman presented as her story.
+- [ ] Joel's supplied photos (`scripts/content/media.ts`) in 4:5, 3:4, 16:9 or 3:2.
 - [ ] No reused hero portrait, no faces under badges.
 
 **Icons**
@@ -1497,8 +1474,8 @@ Ship nothing that fails one of these.
 
 - **Where the tokens live.** `src/styles.css` imports, in order:
   - `styles/fonts.css`: the three variable families, Latin and Greek subsets;
-  - `styles/tokens.css`: the palette, named tints, semantic tokens for light, dark and
-    `band-cocoa`, the type scale, spacing, sizes, radius and motion, plus the Tailwind
+  - `styles/tokens.css`: the palette, named tints, semantic tokens for light and
+    opt-in dark, the type scale, spacing, sizes, radius and motion, plus the Tailwind
     theme mapping;
   - `styles/base.css`: element defaults, type roles, bands, buttons, links and the
     utilities below;
@@ -1512,9 +1489,8 @@ Ship nothing that fails one of these.
   palette, capitals or tracked labels, shadows, gradients, blur outside the header,
   italic outside the type layer, reveals, and eyebrows, numerals or `caps()` in public
   components.
-- **Theme.** `<html class="dark">` forces dark and `<html class="light">` forces light;
-  with neither, the page follows `prefers-color-scheme`.
-- **Utilities:** `band-ivory`, `band-peach`, `band-cocoa`, `grid-12`, `section-pad`,
+- **Theme.** Light always; `<html class="dark">` is the only way into dark mode.
+- **Utilities:** `band-ivory`, `band-peach`, `grid-12`, `section-pad`,
   `shead`, `foot-link`, `card-hairline`, `dots`, `arch-wrap`, `arch`, `arch-niche`,
   `crop`, `crop-hero`, `crop-cover`, `header-glass`.
 - **Production class names** used by the base layer:

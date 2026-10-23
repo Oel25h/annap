@@ -72,7 +72,6 @@ const SPACING_LABEL: Record<string, [string, string]> = {
 const BACKGROUNDS: [string, string][] = [
   ["ivory", "Warm ivory"],
   ["cream", "Peach cream"],
-  ["cocoa", "Cocoa ink"],
 ];
 
 /** "items.<id>.title" → "Item 2 · Heading"; "primary.label" → "Button · Label". */

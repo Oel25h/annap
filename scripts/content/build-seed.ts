@@ -31,7 +31,7 @@ function uid(): string {
 
 type Settings = Partial<{
   anchor: string;
-  background: "ivory" | "cream" | "cocoa";
+  background: "ivory" | "cream";
   width: "narrow" | "default" | "full";
   spacing: "compact" | "default" | "generous";
 }>;
@@ -112,7 +112,7 @@ const pages: Page[] = [
         "filmstrip",
         // The channel link comes from the YouTube profile in the studio's social links.
         { title: "On stage, on camera." },
-        { anchor: "videos", background: "cocoa" },
+        { anchor: "videos" },
       ),
       s(
         "two_column",
@@ -227,6 +227,7 @@ const pages: Page[] = [
             label: "Now",
             title: "Author & founder",
             body: "I write the books I needed. I teach the classes I wished I had. Find Your Reason to Smile is my letter to every woman who ever felt too broken to begin again.",
+            imageMediaId: MEDIA.authorTable.id,
           },
         ].map((chapter) => item({ imageMediaId: null, caption: "", pullQuote: "", ...chapter })),
       }),
@@ -405,9 +406,16 @@ const pages: Page[] = [
         title: "A life in chapters.",
         imageMediaIds: [
           MEDIA.bookDesk.id,
+          MEDIA.speaking.id,
           MEDIA.cyprus.id,
           MEDIA.portraitBurgundy.id,
+          MEDIA.behindScenes.id,
+          MEDIA.family.id,
           MEDIA.sunset.id,
+          MEDIA.authorTable.id,
+          MEDIA.authorQuote.id,
+          MEDIA.portraitRust.id,
+          MEDIA.openBook.id,
         ],
       }),
     ],

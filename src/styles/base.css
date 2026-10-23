@@ -210,37 +210,9 @@
     background: var(--color-bg-alt);
     color: var(--color-text);
   }
-  .band-cocoa {
-    color-scheme: dark;
-    --color-bg: var(--color-cocoa-ink);
-    --color-surface: var(--color-cocoa-ink);
-    --color-surface-alt: var(--color-cocoa-ink);
-    --color-text: var(--color-peach-cream);
-    --color-text-secondary: var(--color-peach-cream-76);
-    --color-text-tertiary: var(--color-peach-cream-68);
-    --color-accent-text: var(--color-apricot);
-    --color-hairline: var(--color-apricot-32);
-    --color-leader: var(--color-apricot-48);
-    --color-field-border: var(--color-peach-cream-52);
-    --color-track: var(--color-peach-cream-52);
-    --color-selected: var(--color-peach-cream);
-    --color-on-selected: var(--color-cocoa-ink);
-    --color-focus: var(--color-apricot);
-    --color-action-hover: var(--color-apricot);
-    --color-on-action-hover: var(--color-cocoa-ink);
-    --color-error: var(--color-blush);
-    --color-on-error: var(--color-cocoa-ink);
-    background: var(--color-bg);
-    color: var(--color-text);
-  }
   /* In dark mode peach bands become night, so hairlines mark their edges */
   :root.dark .band-peach {
     border-block: 1px solid var(--color-hairline);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not(.light) .band-peach {
-      border-block: 1px solid var(--color-hairline);
-    }
   }
 
   /* ---------- The one grid: 12 columns from 1024, one column below ---------- */
@@ -266,7 +238,6 @@
   }
   /* Two sections on the same ground share one gap */
   .section.band-ivory + .section.band-ivory,
-  .section.band-cocoa + .section.band-cocoa,
   .title-band + .section.band-ivory,
   .item-intro + .section.band-ivory {
     padding-top: 0;
@@ -711,11 +682,6 @@
     border-color: var(--color-text);
     background: var(--color-bg-alt);
     color: var(--color-text);
-  }
-  .band-cocoa .btn-quiet:hover {
-    background: transparent;
-    border-color: var(--color-accent-text);
-    color: var(--color-accent-text);
   }
   /* Text: a tertiary action ("Not now", "Keep as is"), underlined like a link */
   .btn-text {

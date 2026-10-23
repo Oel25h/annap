@@ -485,7 +485,7 @@ export function Gallery({ section, media, ctx }: Props<"gallery">) {
       </ul>
       <dialog
         ref={dialog}
-        className="lightbox band-cocoa"
+        className="lightbox band-ivory"
         aria-label={t.sections.gallery.dialog}
         onClose={() => {
           setOpen(null);

@@ -6,14 +6,5 @@
 @import "./styles/site.css";
 @import "./styles/sections.css";
 
-/* dark: follows the system unless <html class="light"> or "dark" forces a mode */
-@custom-variant dark {
-  &:where(.dark, .dark *) {
-    @slot;
-  }
-  @media (prefers-color-scheme: dark) {
-    &:where(:root:not(.light), :root:not(.light) *) {
-      @slot;
-    }
-  }
-}
+/* dark: only when <html class="dark"> opts in; the site is bright by default */
+@custom-variant dark (&:where(.dark, .dark *));
