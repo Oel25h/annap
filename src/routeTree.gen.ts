@@ -37,6 +37,7 @@ import { Route as AuthenticatedAdminProductsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminSocialsRouteImport } from './routes/_authenticated/admin.socials'
 import { Route as AuthenticatedAdminStartRouteImport } from './routes/_authenticated/admin.start'
 import { Route as AuthenticatedAdminSubscribersRouteImport } from './routes/_authenticated/admin.subscribers'
+import { Route as AuthenticatedAdminTranslationsRouteImport } from './routes/_authenticated/admin.translations'
 import { Route as ApiDownloadTokenRouteImport } from './routes/api/download/$token'
 import { Route as ApiNewsletterConfirmRouteImport } from './routes/api/newsletter/confirm'
 import { Route as ApiNewsletterUnsubscribeRouteImport } from './routes/api/newsletter/unsubscribe'
@@ -193,6 +194,12 @@ const AuthenticatedAdminSubscribersRoute =
     path: '/subscribers',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminTranslationsRoute =
+  AuthenticatedAdminTranslationsRouteImport.update({
+    id: '/translations',
+    path: '/translations',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const ApiDownloadTokenRoute = ApiDownloadTokenRouteImport.update({
   id: '/api/download/$token',
   path: '/api/download/$token',
@@ -265,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/admin/socials': typeof AuthenticatedAdminSocialsRoute
   '/admin/start': typeof AuthenticatedAdminStartRoute
   '/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
+  '/admin/translations': typeof AuthenticatedAdminTranslationsRoute
   '/api/download/$token': typeof ApiDownloadTokenRoute
   '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
   '/api/newsletter/unsubscribe': typeof ApiNewsletterUnsubscribeRoute
@@ -301,6 +309,7 @@ export interface FileRoutesByTo {
   '/admin/socials': typeof AuthenticatedAdminSocialsRoute
   '/admin/start': typeof AuthenticatedAdminStartRoute
   '/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
+  '/admin/translations': typeof AuthenticatedAdminTranslationsRoute
   '/api/download/$token': typeof ApiDownloadTokenRoute
   '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
   '/api/newsletter/unsubscribe': typeof ApiNewsletterUnsubscribeRoute
@@ -340,6 +349,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/socials': typeof AuthenticatedAdminSocialsRoute
   '/_authenticated/admin/start': typeof AuthenticatedAdminStartRoute
   '/_authenticated/admin/subscribers': typeof AuthenticatedAdminSubscribersRoute
+  '/_authenticated/admin/translations': typeof AuthenticatedAdminTranslationsRoute
   '/api/download/$token': typeof ApiDownloadTokenRoute
   '/api/newsletter/confirm': typeof ApiNewsletterConfirmRoute
   '/api/newsletter/unsubscribe': typeof ApiNewsletterUnsubscribeRoute
@@ -379,6 +389,7 @@ export interface FileRouteTypes {
     | '/admin/socials'
     | '/admin/start'
     | '/admin/subscribers'
+    | '/admin/translations'
     | '/api/download/$token'
     | '/api/newsletter/confirm'
     | '/api/newsletter/unsubscribe'
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/admin/socials'
     | '/admin/start'
     | '/admin/subscribers'
+    | '/admin/translations'
     | '/api/download/$token'
     | '/api/newsletter/confirm'
     | '/api/newsletter/unsubscribe'
@@ -453,6 +465,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/socials'
     | '/_authenticated/admin/start'
     | '/_authenticated/admin/subscribers'
+    | '/_authenticated/admin/translations'
     | '/api/download/$token'
     | '/api/newsletter/confirm'
     | '/api/newsletter/unsubscribe'
@@ -684,6 +697,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSubscribersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/translations': {
+      id: '/_authenticated/admin/translations'
+      path: '/translations'
+      fullPath: '/admin/translations'
+      preLoaderRoute: typeof AuthenticatedAdminTranslationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/download/$token': {
       id: '/api/download/$token'
       path: '/api/download/$token'
@@ -756,6 +776,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminSocialsRoute: typeof AuthenticatedAdminSocialsRoute
   AuthenticatedAdminStartRoute: typeof AuthenticatedAdminStartRoute
   AuthenticatedAdminSubscribersRoute: typeof AuthenticatedAdminSubscribersRoute
+  AuthenticatedAdminTranslationsRoute: typeof AuthenticatedAdminTranslationsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminPagesPageIdRoute: typeof AuthenticatedAdminPagesPageIdRoute
   AuthenticatedAdminPagesIndexRoute: typeof AuthenticatedAdminPagesIndexRoute
@@ -774,6 +795,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminSocialsRoute: AuthenticatedAdminSocialsRoute,
   AuthenticatedAdminStartRoute: AuthenticatedAdminStartRoute,
   AuthenticatedAdminSubscribersRoute: AuthenticatedAdminSubscribersRoute,
+  AuthenticatedAdminTranslationsRoute: AuthenticatedAdminTranslationsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminPagesPageIdRoute: AuthenticatedAdminPagesPageIdRoute,
   AuthenticatedAdminPagesIndexRoute: AuthenticatedAdminPagesIndexRoute,

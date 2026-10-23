@@ -15,6 +15,7 @@ const NAV: { group: string; items: { to: string; label: string; exact?: boolean 
       { to: "/admin", label: "Overview", exact: true },
       { to: "/admin/pages", label: "Pages" },
       { to: "/admin/media", label: "Media" },
+      { to: "/admin/translations", label: "Greek translations" },
       { to: "/admin/start", label: "Start page" },
       { to: "/admin/socials", label: "Social links" },
     ],
