@@ -1,11 +1,10 @@
-import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 /**
- * The studio, end to end, as the local test admin: sign in with a password
- * and a six-digit code, edit and publish a page, upload an image, and
- * approve a Greek draft by hand. Everything the tests change is put back.
+ * The studio, end to end, as the local test admin: sign in with a password,
+ * edit and publish a page, upload an image, and approve a Greek draft by
+ * hand. Everything the tests change is put back.
  *
  * Local Supabase only. Create the admin first with
  * `bash scripts/create-studio-test-admin.sh`; the tests skip themselves if
@@ -16,23 +15,7 @@ const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
 const LOCAL = /^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/?$/.test(url);
 
 const ADMIN = { email: "studio-test@example.test", password: "local-studio-test-1" };
-const TOTP_SECRET = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
-const ABOUT = "f491b501-013f-41f7-93d1-75c683419166";
 const CTA = "c0de0030-0000-4000-8000-000000000030";
-
-/** RFC 6238 code for the local test admin's factor. */
-function totp(now = Date.now()) {
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-  const bits = [...TOTP_SECRET]
-    .map((c) => alphabet.indexOf(c).toString(2).padStart(5, "0"))
-    .join("");
-  const secret = Buffer.from(bits.match(/.{8}/g)!.map((b) => parseInt(b, 2)));
-  const counter = Buffer.alloc(8);
-  counter.writeBigUInt64BE(BigInt(Math.floor(now / 30_000)));
-  const h = createHmac("sha1", secret).update(counter).digest();
-  const o = h[h.length - 1] & 15;
-  return ((h.readUInt32BE(o) & 0x7fffffff) % 1_000_000).toString().padStart(6, "0");
-}
 
 test.describe.configure({ mode: "serial" });
 test.skip(!LOCAL || !key, "Runs only against the local Supabase stack.");
@@ -86,18 +69,11 @@ test.afterAll(async () => {
   await page?.context().close();
 });
 
-test("the admin signs in with a password and a six-digit code", async () => {
+test("the admin signs in with a password", async () => {
   await page.goto("/auth", { waitUntil: "networkidle" });
   await page.getByLabel("Email").fill(ADMIN.email);
   await page.getByLabel("Password").fill(ADMIN.password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  const code = page.getByLabel("Six-digit code");
-  await code.waitFor();
-  // Start in a fresh 30-second window, so the code can't expire mid-way.
-  const left = 30_000 - (Date.now() % 30_000);
-  if (left < 5_000) await page.waitForTimeout(left + 500);
-  await code.fill(totp());
-  await page.getByRole("button", { name: "Continue" }).click();
   await page.waitForURL(/\/admin\/?$/);
   await expect(page.getByRole("heading", { level: 1, name: "Your studio" })).toBeVisible();
 
@@ -111,14 +87,16 @@ test("the admin signs in with a password and a six-digit code", async () => {
 
 test("an edit to a page waits as a draft, then goes live on Publish", async ({ request }) => {
   const api = db(request);
-  const [before] = await api.get<{ sections: { id: string; props: { title: string } }[] }>(
-    `pages?id=eq.${ABOUT}&select=sections`,
-  );
+  const [before] = await api.get<{
+    id: string;
+    sections: { id: string; props: { title: string } }[];
+  }>("pages?path=eq./about&select=id,sections");
+  const aboutId = before.id;
   const original = before.sections.find((s) => s.id === CTA)!.props.title;
   const edited = `Start with chapter one, today ${Date.now() % 10_000}.`;
 
   try {
-    await page.goto(`/admin/pages/${ABOUT}`, { waitUntil: "networkidle" });
+    await page.goto(`/admin/pages/${aboutId}`, { waitUntil: "networkidle" });
     await page
       .locator("#outline")
       .getByRole("button", { name: /^Call to action/ })
@@ -130,7 +108,7 @@ test("an edit to a page waits as a draft, then goes live on Publish", async ({ r
 
     // Saved as a draft: the live page has not changed yet.
     const [draft] = await api.get<{ sections: { id: string; props: { title: string } }[] }>(
-      `pages?id=eq.${ABOUT}&select=sections`,
+      `pages?id=eq.${aboutId}&select=sections`,
     );
     expect(draft.sections.find((s) => s.id === CTA)!.props.title).toBe(original);
 
@@ -140,7 +118,7 @@ test("an edit to a page waits as a draft, then goes live on Publish", async ({ r
     await dialog.waitFor({ state: "hidden", timeout: 20_000 });
 
     const [live] = await api.get<{ sections: { id: string; props: { title: string } }[] }>(
-      `pages?id=eq.${ABOUT}&select=sections`,
+      `pages?id=eq.${aboutId}&select=sections`,
     );
     expect(live.sections.find((s) => s.id === CTA)!.props.title).toBe(edited);
 
@@ -149,8 +127,8 @@ test("an edit to a page waits as a draft, then goes live on Publish", async ({ r
     await expect(visitor.getByRole("heading", { name: edited })).toBeVisible();
     await visitor.close();
   } finally {
-    await api.patch(`pages?id=eq.${ABOUT}`, { sections: before.sections });
-    await api.del(`content_drafts?entity_type=eq.page&entity_id=eq.${ABOUT}`);
+    await api.patch(`pages?id=eq.${aboutId}`, { sections: before.sections });
+    await api.del(`content_drafts?entity_type=eq.page&entity_id=eq.${aboutId}`);
   }
 });
 

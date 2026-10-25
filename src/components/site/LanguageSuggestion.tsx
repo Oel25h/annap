@@ -35,8 +35,9 @@ function dismissedRecently(): boolean {
  * everyone), only when the other language really exists for this page, never
  * takes focus when it appears (and hands it back to the footer when dismissed),
  * and steps aside while the docked audio player or a buy bar is
- * showing (the buy bar by CSS). Docked at the bottom like them, it never
- * fades in and never covers the legal row.
+ * showing (the buy bar by CSS). It lives at the end of the page body, so
+ * while a long page scrolls it sits on the bottom edge, and it lets go
+ * before the footer. It never fades in and never covers the legal row.
  */
 export function LanguageSuggestion() {
   const locale = useLocale();

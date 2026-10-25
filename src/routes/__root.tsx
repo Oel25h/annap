@@ -202,10 +202,10 @@ function SiteChrome({ children }: { children: ReactNode }) {
       />
       <main id="main" tabIndex={-1}>
         {children}
+        <LanguageSuggestion />
       </main>
       <SiteFooter shell={shell} />
       <MiniPlayer />
-      <LanguageSuggestion />
     </AudioProvider>
   );
 }

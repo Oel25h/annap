@@ -79,7 +79,11 @@ test("switching language keeps the page and does not reload", async ({ page, isM
 test("a client-side page change focuses the new page's h1", async ({ page, isMobile }) => {
   await page.goto("/", { waitUntil: "networkidle" });
   if (isMobile) await page.getByRole("button", { name: "Menu", exact: true }).click();
-  await page.getByRole("link", { name: "Gallery", exact: true }).first().focus();
+  const gallery = page.getByRole("link", { name: "Gallery", exact: true }).first();
+  if (!(await gallery.isVisible())) {
+    await page.getByRole("button", { name: "Explore", exact: true }).click();
+  }
+  await gallery.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/gallery$/);
   await expect(page.locator("main h1")).toBeFocused();

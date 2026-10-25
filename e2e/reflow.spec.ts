@@ -152,19 +152,19 @@ for (const theme of THEMES) {
   });
 }
 
-// DESIGN.md, Hero: the hero ends near 764px, so the player's editions show above
-// the fold at 1440×900.
+// DESIGN.md, Hero: the hero ends near 764px, so the player shows above the fold
+// at 1440×900. A single full recording has no editions row; the spread is the player.
 test.describe("the fold", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
   for (const locale of LOCALES) {
-    test(`${localePath("/", locale)} shows the player's editions above the fold at 1440×900`, async ({
+    test(`${localePath("/", locale)} shows the player above the fold at 1440×900`, async ({
       page,
     }) => {
       const url = await openPage(page, { name: "home", path: "/" }, locale);
-      const box = await page.locator(".editions").first().boundingBox();
-      expect(box, `${url}: the player's editions`).not.toBeNull();
-      expect(box!.y, `${url}: top of the editions`).toBeLessThan(900);
+      const box = await page.locator(".listen-band").first().boundingBox();
+      expect(box, `${url}: the player`).not.toBeNull();
+      expect(box!.y, `${url}: top of the player`).toBeLessThan(900);
     });
   }
 });

@@ -7,7 +7,7 @@
  * only when those rows exist).
  *
  *   psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f scripts/content/local-fixtures.sql
- *   bun scripts/content/greek-fixtures.ts
+ *   DB_URL=postgresql://postgres:postgres@127.0.0.1:55422/postgres bun scripts/content/greek-fixtures.ts
  *
  * Rows are written as approved with origin "fixture", which the database
  * allows only because they are marked as fixtures. The script talks to the
@@ -18,7 +18,10 @@
 import { $ } from "bun";
 import { MEDIA } from "./media";
 
-const LOCAL_DB = "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+const LOCAL_DB = process.env.DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
+if (!/^postgresql:\/\/postgres:postgres@127\.0\.0\.1:\d+\/postgres$/.test(LOCAL_DB)) {
+  throw new Error("Greek fixtures only write to the local database.");
+}
 
 type Fields = Record<string, string>;
 /**

@@ -165,8 +165,10 @@ for (const viewport of VIEWPORTS) {
             const url = await openPage(page, entry, locale);
             const violations = (await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze())
               .violations;
-            // Below 1180 the menu is a state of its own: the panel is checked open too.
-            const menu = page.locator("header.site-header button[aria-controls]");
+            // Below 1180 the phone menu is a state of its own: the panel is checked open too.
+            // Explore on the desktop bar is a second button with aria-controls, so this
+            // stays on the phone button, which is hidden from 1180.
+            const menu = page.locator("header.site-header button.menu-btn[aria-controls]");
             if (await menu.isVisible()) {
               await menu.click();
               const panel = `[id="${await menu.getAttribute("aria-controls")}"]`;
