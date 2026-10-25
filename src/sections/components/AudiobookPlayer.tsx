@@ -1,5 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { useAudio, useAudioActions, useAudioState, useSelectedBook } from "@/components/audio/AudioProvider";
+import {
+  useAudio,
+  useAudioActions,
+  useAudioState,
+  useSelectedBook,
+} from "@/components/audio/AudioProvider";
 import {
   formatTime,
   hoursMinutes,
@@ -146,7 +151,12 @@ function OpenBook({
         </div>
         {!(books.length === 1 && book.tracks.length <= 1) && (
           <div className="player-editions">
-            <Editions books={books} selected={book} name={`${section.id}-edition`} locale={locale} />
+            <Editions
+              books={books}
+              selected={book}
+              name={`${section.id}-edition`}
+              locale={locale}
+            />
             {section.data?.onlyOtherLanguage && locale === "el" && (
               <p className="meta player-note">{p.greekComing}</p>
             )}

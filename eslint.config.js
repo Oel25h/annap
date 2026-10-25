@@ -18,6 +18,7 @@ export default tseslint.config(
       "public/**",
       ".ralph/**",
       "scripts/**",
+      "supabase/.temp/**",
     ],
   },
   {

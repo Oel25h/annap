@@ -264,7 +264,12 @@ export async function uploadToLibrary(file: File, access: Access = "public"): Pr
  * file to the presigned address, then the library row points at the public URL.
  */
 async function uploadAudio(file: File, mime: string): Promise<MediaRow> {
-  if (mime !== "audio/mpeg" && mime !== "audio/mp4" && mime !== "audio/x-m4a" && mime !== "audio/aac") {
+  if (
+    mime !== "audio/mpeg" &&
+    mime !== "audio/mp4" &&
+    mime !== "audio/x-m4a" &&
+    mime !== "audio/aac"
+  ) {
     throw new Error(`${file.name}: MP3 or M4A only.`);
   }
   const { prepareAudioUpload, discardAudioUpload } = await import("@/lib/audio-upload.functions");
