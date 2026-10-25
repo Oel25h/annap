@@ -113,9 +113,10 @@ type NavRow = {
 };
 
 function buildMenu(rows: NavRow[], menu: string, greek: Map<string, string>): NavItem[] {
-  const toItem = (row: NavRow): NavItem | null => {
-    const href = row.page?.path ?? row.url;
-    if (!href) return null; // a menu item for an unpublished page stays hidden
+  const toItem = (row: NavRow): NavItem => {
+    // No address means a group label, such as Explore. A link to an
+    // unpublished page also arrives with none, and is dropped below.
+    const href = row.page?.path ?? row.url ?? "";
     const greekLabel = greek.get(row.id);
     return {
       id: row.id,
@@ -131,17 +132,15 @@ function buildMenu(rows: NavRow[], menu: string, greek: Map<string, string>): Na
   const byId = new Map<string, NavItem>();
   for (const row of inMenu.filter((r) => !r.parent_id)) {
     const item = toItem(row);
-    if (item) {
-      top.push(item);
-      byId.set(row.id, item);
-    }
+    top.push(item);
+    byId.set(row.id, item);
   }
   for (const row of inMenu.filter((r) => r.parent_id)) {
     const parent = byId.get(row.parent_id!);
     const item = toItem(row);
-    if (parent && item) parent.children.push(item);
+    if (parent && item.href) parent.children.push(item);
   }
-  return top;
+  return top.filter((item) => item.href !== "" || item.children.length > 0);
 }
 
 export async function getSiteShell(db: PublicDb, locale: Locale): Promise<SiteShell> {

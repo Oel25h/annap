@@ -1,6 +1,6 @@
 /**
- * The Greek translations queue's server functions. Admins only, signed in
- * with two factors; every read and write runs with their own token. Approval
+ * The Greek translations queue's server functions. Admins only; every read
+ * and write runs with their own token. Approval
  * happens only through approveGreek, pressed by a person.
  */
 import { createServerFn } from "@tanstack/react-start";

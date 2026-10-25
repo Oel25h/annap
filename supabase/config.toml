@@ -1,4 +1,14 @@
 project_id = "extyqqkasmchctvoltbm"
+
+# Evently's local stack already publishes 54321, 54322, and 54324 on this machine.
+[api]
+port = 55421
+
+[db]
+port = 55422
+
+[inbucket]
+port = 55424
 [auth]
 site_url = "http://127.0.0.1:8787"
 additional_redirect_urls = ["http://localhost:3000", "http://127.0.0.1:3000"]

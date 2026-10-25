@@ -1515,6 +1515,7 @@ export type Database = {
           mime: string;
           original_name: string | null;
           path: string;
+          playback_url: string | null;
           status: string;
           updated_at: string;
           variants: NonNullable<Json>;
@@ -1539,6 +1540,7 @@ export type Database = {
           mime: string;
           original_name?: string | null;
           path: string;
+          playback_url?: string | null;
           status?: string;
           updated_at?: string;
           variants?: NonNullable<Json>;
@@ -1562,6 +1564,7 @@ export type Database = {
           mime?: string;
           original_name?: string | null;
           path?: string;
+          playback_url?: string | null;
           status?: string;
           updated_at?: string;
           variants?: NonNullable<Json>;

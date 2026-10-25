@@ -44,8 +44,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { name: "theme-color", content: "#fffaf5", media: "(prefers-color-scheme: light)" },
-      { name: "theme-color", content: "#1f120c", media: "(prefers-color-scheme: dark)" },
+      { name: "theme-color", content: "#fbf6ef" },
       { name: "author", content: "Anastasia Patience" },
       { property: "og:site_name", content: "Anastasia Patience" },
     ],
@@ -77,7 +76,7 @@ function RootShell({ children }: { children: ReactNode }) {
   const lang = useRouterState({ select: (s) => localeFromSearch(s.location.search) });
   const nonce = useRouter().options.ssr?.nonce;
   return (
-    <html lang={lang} suppressHydrationWarning>
+    <html lang={lang} className="light" suppressHydrationWarning>
       <head>
         <script
           nonce={nonce}

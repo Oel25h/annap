@@ -1,4 +1,4 @@
-/* Hero variants and the About facts (DESIGN.md §9 Hero, §9 About). Always ivory. */
+/* Hero variants and the About facts (DESIGN.md §9 Hero, §9 About). Always the page ground. */
 @layer components {
   /* ---------- Shared: one column on phones, the 12-column grid from 1024 ---------- */
   .hero {

@@ -7,6 +7,13 @@ export const el: Messages = {
     language: "Γλώσσα",
     menu: "Μενού",
     home: "Anastasia Patience, αρχική",
+    explore: {
+      books: "Απομνημονεύματα και τετράδιο, να σε πάνε σπίτι.",
+      stories: "Από την ειλικρινή μέση.",
+      videos: "Ομιλίες και αναγνώσεις, σε εικόνα.",
+      gallery: "Φωτογραφίες στην πορεία.",
+      foundation: "Εκεί που κανείς δεν μένει πίσω.",
+    },
     greekNotice:
       "Ορισμένα μέρη αυτής της σελίδας δεν είναι ακόμη διαθέσιμα στα ελληνικά και εμφανίζονται στα αγγλικά.",
     opensNewTab: " (ανοίγει σε νέα καρτέλα)",
@@ -58,6 +65,7 @@ export const el: Messages = {
       listenStart: "Από το κεφάλαιο {n}",
       listenBy: "με τη φωνή μου",
       listenResume: "Συνέχισε από το κεφάλαιο {n}",
+      listenResumeWhole: "Συνέχισε",
       listenLeft: "{m}\u00a0λεπ. ακόμη",
     },
     player: {
@@ -77,6 +85,8 @@ export const el: Messages = {
       positionOf: "{elapsed} από {total}",
       announce: "Τώρα παίζει το κεφάλαιο {n} από {total}, {title}",
       announceSelected: "{book}: κεφάλαιο {n} από {total}, {title}",
+      announceWhole: "Τώρα παίζει: {title}",
+      announceSelectedWhole: "{title}",
       readByAuthor: "Με τη φωνή της συγγραφέως",
       readByName: "Αφήγηση: {narrator}",
       rowPlay: "Αναπαραγωγή κεφαλαίου {n}: ",
@@ -97,6 +107,7 @@ export const el: Messages = {
       chapterOf: "Κεφάλαιο {n} από {total}",
       chapterShort: "Κεφάλαιο {n}",
       position: "Θέση στο κεφάλαιο",
+      positionWhole: "Θέση στην ηχογράφηση",
       previous: "Προηγούμενο κεφάλαιο",
       back15: "Πίσω 15 δευτερόλεπτα",
       pause: "Παύση",

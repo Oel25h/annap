@@ -31,7 +31,6 @@ export function errorText(e: unknown, fallback = "Something went wrong. Try agai
   if (e instanceof Error && e.message) {
     if (/studio:signed_out|JWT|jwt/.test(e.message))
       return "You've been signed out. Sign in again.";
-    if (/studio:needs_2fa/.test(e.message)) return "Enter your six-digit code to continue.";
     if (/duplicate key/.test(e.message)) return "Another item already uses that web address.";
     return e.message;
   }

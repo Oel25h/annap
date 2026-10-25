@@ -1,7 +1,7 @@
 /**
  * Middleware for studio server functions. In the browser it attaches the
- * signed-in admin's token; on the server it checks the token, two-factor
- * sign-in, the role and the session before the function runs. Public
+ * signed-in admin's token; on the server it checks the token, the role
+ * and the session before the function runs. Public
  * functions never use it, so visitors never load the Supabase client.
  */
 import { createMiddleware } from "@tanstack/react-start";
@@ -25,7 +25,7 @@ function studioMiddleware(check: StudioCheck) {
     });
 }
 
-/** Admins only, signed in with two factors. */
+/** Admins only. */
 export const requireAdmin = studioMiddleware("is_admin");
-/** Greek readers (and admins), signed in with two factors. */
+/** Greek readers and admins. */
 export const requireTranslator = studioMiddleware("is_translator");

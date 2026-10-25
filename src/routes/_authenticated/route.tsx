@@ -41,7 +41,7 @@ function StudioGate() {
 
   useEffect(() => {
     if (loading) return;
-    // Signed out, or still to enter the two-factor code: the sign-in page takes it from here.
+    // Signed out, or not an admin: the sign-in page takes it from here.
     if (!userId || !isAdmin) nav({ to: "/auth", replace: true });
   }, [loading, userId, isAdmin, nav]);
 

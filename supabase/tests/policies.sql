@@ -12,7 +12,7 @@ begin
   where n.nspname = 'public' and c.relkind = 'r' and not c.relrowsecurity;
   if bad is not null then raise exception 'RLS disabled on: %', bad; end if;
 
-  -- 2. Admin access always goes through is_admin() (role plus two-factor).
+  -- 2. Admin access always goes through is_admin() (the admin role, on a live session).
   select string_agg(schemaname || '.' || tablename || ' "' || policyname || '"', ', ') into bad
   from pg_policies
   where schemaname in ('public', 'storage')
@@ -26,16 +26,11 @@ begin
     and privilege_type in ('INSERT', 'UPDATE', 'DELETE', 'TRUNCATE');
   if bad is not null then raise exception 'anon can write to: %', bad; end if;
 
-  -- 4. A signed-in session without two-factor is refused everywhere but user_roles.
-  select string_agg(c.relname, ', ') into bad
-  from pg_class c join pg_namespace n on n.oid = c.relnamespace
-  where n.nspname = 'public' and c.relkind = 'r' and c.relname <> 'user_roles'
-    and not exists (
-      select 1 from pg_policies p
-      where p.schemaname = 'public' and p.tablename = c.relname
-        and p.policyname = 'require aal2' and p.permissive = 'RESTRICTIVE'
-    );
-  if bad is not null then raise exception 'Missing restrictive aal2 policy on: %', bad; end if;
+  -- 4. Password sign-in is enough. No table still demands a two-factor session.
+  select string_agg(schemaname || '.' || tablename, ', ') into bad
+  from pg_policies
+  where policyname = 'require aal2';
+  if bad is not null then raise exception 'Two-factor policies still present on: %', bad; end if;
 
   -- 5. Server-only tables are invisible to client roles.
   select string_agg(distinct table_name || ' (' || grantee || ')', ', ') into bad

@@ -1,8 +1,8 @@
 /**
  * Server side of studio sign-in checks. A studio function runs with the
  * caller's own token, so row-level security applies to every read and write,
- * and only after the database confirms the role, two-factor sign-in and a
- * live session (is_admin / is_translator).
+ * and only after the database confirms the role and a live session
+ * (is_admin / is_translator).
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getRequest } from "@tanstack/react-start/server";
@@ -12,8 +12,8 @@ import { readServerPublicConfig } from "@/lib/public-config";
 
 export type StudioCheck = "is_admin" | "is_translator";
 
-/** Codes the studio understands: sign in again, finish two-factor, or no access. */
-export type StudioAuthCode = "signed_out" | "needs_2fa" | "forbidden";
+/** Codes the studio understands: sign in again, or no access. */
+export type StudioAuthCode = "signed_out" | "forbidden";
 
 export class StudioAuthError extends Error {
   constructor(public code: StudioAuthCode) {
@@ -44,7 +44,6 @@ export async function studioContext(check: StudioCheck): Promise<StudioContext> 
   const { data, error } = await supabase.auth.getClaims(token);
   const claims = data?.claims;
   if (error || !claims?.sub) throw new StudioAuthError("signed_out");
-  if (claims.aal !== "aal2") throw new StudioAuthError("needs_2fa");
 
   const { data: allowed, error: roleError } = await supabase.rpc(check);
   if (roleError || allowed !== true) throw new StudioAuthError("forbidden");

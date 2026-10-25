@@ -7,7 +7,7 @@
  * the same way, on the studio's tokens.
  *
  * Reads and writes go through the signed-in admin's own Supabase session,
- * so row-level security (admin role plus two-factor) applies to each one.
+ * so row-level security (the admin role, on a live session) applies to each one.
  */
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from "react";

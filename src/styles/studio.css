@@ -1292,11 +1292,11 @@
     color: var(--color-text-secondary);
   }
   .swatch--ivory {
-    background: var(--color-warm-ivory);
+    background: var(--color-paper);
     color: var(--color-cocoa-ink);
   }
   .swatch--cream {
-    background: var(--color-peach-cream);
+    background: var(--color-paper-alt);
     color: var(--color-cocoa-ink);
   }
   .swatch--cocoa {

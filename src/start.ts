@@ -28,12 +28,15 @@ const securityMiddleware = createMiddleware().server(async ({ next, request, pat
   const headers: Record<string, string> = { ...STATIC_SECURITY_HEADERS };
   const isHtml = result.response.headers.get("content-type")?.includes("text/html");
   if (isHtml && !import.meta.env.DEV) {
+    const publicConfig = readServerPublicConfig();
     headers["Content-Security-Policy"] = contentSecurityPolicy({
       nonce,
-      supabaseUrl: readServerPublicConfig().supabaseUrl,
+      supabaseUrl: publicConfig.supabaseUrl,
       studio: pathname.startsWith("/admin"),
       preview: PREVIEW_PATHS.some((path) => pathname.startsWith(path)),
       origin: new URL(request.url).origin,
+      audioOrigin: originOf(process.env.R2_PUBLIC_URL),
+      audioUploadOrigin: r2UploadOrigin(process.env.R2_ACCOUNT_ID),
     });
   }
   if (request.method !== "GET" || PRIVATE_PATHS.test(pathname)) {
@@ -46,6 +49,18 @@ const securityMiddleware = createMiddleware().server(async ({ next, request, pat
   }
   return { ...result, response: withHeaders(result.response, headers) };
 });
+
+function originOf(value: string | undefined): string | undefined {
+  const raw = value?.trim();
+  if (!raw || !URL.canParse(raw)) return undefined;
+  return new URL(raw).origin;
+}
+
+function r2UploadOrigin(accountId: string | undefined): string | undefined {
+  const id = accountId?.trim();
+  if (!id || !/^[a-z0-9]{32}$/i.test(id)) return undefined;
+  return `https://${id}.r2.cloudflarestorage.com`;
+}
 
 const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {

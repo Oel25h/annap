@@ -399,6 +399,10 @@ function MediaDetail({
     focal.y !== Number(row.focal_y);
 
   useEffect(() => {
+    if (row.playback_url) {
+      setPreview(row.playback_url);
+      return;
+    }
     if (row.bucket === "downloads") signedUrl(row.bucket, row.path).then(setPreview);
     else setPreview(publicUrl(row.bucket, row.path));
   }, [row]);
@@ -432,9 +436,14 @@ function MediaDetail({
   }
 
   async function remove() {
+    if (row.playback_url) {
+      const { discardAudioUpload } = await import("@/lib/audio-upload.functions");
+      await discardAudioUpload({ data: { key: row.path } });
+    } else {
+      await supabase.storage.from(row.bucket).remove(objectPaths(row));
+    }
     const { error: rowError } = await supabase.from("media_assets").delete().eq("id", row.id);
     if (rowError) throw new Error(errorText(rowError));
-    await supabase.storage.from(row.bucket).remove(objectPaths(row));
     await supabase
       .from("content_translations")
       .delete()

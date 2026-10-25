@@ -16,21 +16,25 @@
   --color-apricot: #ffb27a;
   --color-peach-cream: #fff1e6;
   --color-warm-ivory: #fffaf5;
+  --color-paper: #fbf6ef;
+  --color-paper-alt: #fbf6ef;
+  --color-footer: #fbe4d6;
   --color-cocoa-ink: #3b1f14;
   --color-berry: #7a2e4a;
   --color-blush: #f7c9c0;
   --color-cocoa-night: #1f120c;
 
-  /* Contrast noted on ivory and peach, or on night and cocoa */
-  --color-cocoa-ink-76: rgb(59 31 20 / 0.76); /* 6.79 · 6.59 */
-  --color-cocoa-ink-68: rgb(59 31 20 / 0.68); /* 5.27 · 5.11 */
-  --color-cocoa-ink-52: rgb(59 31 20 / 0.52); /* 3.27 · 3.20: borders, tracks, scrims; never text */
+  /* Contrast noted on paper and paper-alt, or on night and cocoa */
+  --color-cocoa-ink-76: rgb(59 31 20 / 0.76); /* 6.96 · 6.65 */
+  --color-cocoa-ink-68: rgb(59 31 20 / 0.68); /* 5.34 · 5.17 */
+  --color-cocoa-ink-52: rgb(59 31 20 / 0.52); /* 3.29 · 3.24: borders, tracks, scrims; never text */
   --color-peach-cream-76: rgb(255 241 230 / 0.76); /* 9.77 · 8.47 */
   --color-peach-cream-68: rgb(255 241 230 / 0.68); /* 8.06 · 7.06 */
   --color-peach-cream-52: rgb(255 241 230 / 0.52); /* 5.17 · 4.73: borders, tracks; never text */
   --color-apricot-32: rgb(255 178 122 / 0.32);
   --color-apricot-48: rgb(255 178 122 / 0.48);
   --color-warm-ivory-88: rgb(255 250 245 / 0.88);
+  --color-paper-88: rgb(251 246 239 / 0.88);
   --color-cocoa-night-88: rgb(31 18 12 / 0.88);
 }
 
@@ -151,17 +155,17 @@
 :root {
   color-scheme: light;
 
-  --color-bg: var(--color-warm-ivory);
-  --color-bg-alt: var(--color-peach-cream);
-  --color-surface: var(--color-warm-ivory);
-  --color-surface-alt: var(--color-peach-cream);
-  --color-text: var(--color-cocoa-ink); /* 14.54 */
+  --color-bg: var(--color-paper);
+  --color-bg-alt: var(--color-paper-alt);
+  --color-surface: var(--color-paper);
+  --color-surface-alt: var(--color-paper-alt);
+  --color-text: var(--color-cocoa-ink); /* 15.09 */
   --color-text-secondary: var(--color-cocoa-ink-76);
   --color-text-tertiary: var(--color-cocoa-ink-68);
-  --color-accent-text: var(--color-burnt-orange); /* 4.99 ivory · 4.68 peach */
+  --color-accent-text: var(--color-burnt-orange); /* 5.18 paper · 4.80 paper-alt */
   --color-hairline: var(--color-apricot); /* decorative rules and card edges only */
   --color-leader: var(--color-apricot);
-  --color-field-border: var(--color-cocoa-ink-52); /* 3.27 */
+  --color-field-border: var(--color-cocoa-ink-52); /* 3.29 */
   --color-track: var(--color-cocoa-ink-52);
   --color-action: var(--color-tangerine);
   --color-on-action: var(--color-cocoa-ink); /* 5.22; never white on Tangerine */
@@ -171,9 +175,9 @@
   --color-on-selected: var(--color-warm-ivory);
   --color-ribbon: var(--color-tangerine);
   --color-focus: var(--color-burnt-orange);
-  --color-header-bg: var(--color-warm-ivory-88);
+  --color-header-bg: var(--color-paper-88);
   --color-selection: var(--color-blush);
-  --color-error: var(--color-berry); /* 8.74 */
+  --color-error: var(--color-berry); /* 9.06 */
   --color-on-error: var(--color-warm-ivory);
 
   /* Translation status in the studio. Stale and Missing look the same in both modes. */

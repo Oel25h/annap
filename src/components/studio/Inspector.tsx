@@ -70,8 +70,8 @@ const SPACING_LABEL: Record<string, [string, string]> = {
   generous: ["Generous", "128 top · 128 bottom on desktop"],
 };
 const BACKGROUNDS: [string, string][] = [
-  ["ivory", "Warm ivory"],
-  ["cream", "Peach cream"],
+  ["ivory", "Page"],
+  ["cream", "Page"],
   ["cocoa", "Cocoa ink"],
 ];
 
@@ -763,7 +763,7 @@ export function Inspector({ editing, lang, onLang, options, onDelete }: Props) {
               </p>
             </div>
             {section.type === "hero" ? (
-              <p className="meta">The hero always sits on Warm ivory.</p>
+              <p className="meta">The hero always sits on the page background.</p>
             ) : (
               <fieldset className="setting">
                 <legend className="setting-label">Background</legend>

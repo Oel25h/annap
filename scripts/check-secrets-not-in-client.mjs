@@ -36,7 +36,14 @@ const FORBIDDEN_PATTERNS = [
 ];
 
 /** Env vars that are server-only — their exact values must not appear in client assets. */
-const SERVER_ONLY_ENV = ["SUPABASE_SERVICE_ROLE_KEY", "ADMIN_SETUP_SECRET", "GEMINI_API_KEY"];
+const SERVER_ONLY_ENV = [
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "SUPABASE_SECRET_KEY",
+  "ADMIN_SETUP_SECRET",
+  "GEMINI_API_KEY",
+  "R2_ACCESS_KEY_ID",
+  "R2_SECRET_ACCESS_KEY",
+];
 
 async function walk(dir) {
   const out = [];

@@ -28,6 +28,8 @@ export type PlayableBook = {
   coverSrcSet: string | null;
   /** The language of the recording. */
   locale: Locale;
+  /** The book this edition records, so a language change can load the other recording. */
+  bookId: string | null;
   /** Where "Open the player" goes: the page (English path) and anchor of the full player. */
   playerHref: string;
   /**
@@ -47,6 +49,7 @@ export function toPlayable(item: AudiobookItem, media: MediaMap, playerHref: str
     coverSrc: cover?.src ?? null,
     coverSrcSet: cover?.srcSet ?? null,
     locale: item.locale,
+    bookId: item.bookId,
     playerHref,
     bookHref: item.fullUrl,
     tracks: item.tracks.map((track) => {

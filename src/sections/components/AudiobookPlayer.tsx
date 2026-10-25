@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { useAudioActions, useAudioState, useSelectedBook } from "@/components/audio/AudioProvider";
+import { useAudio, useAudioActions, useAudioState, useSelectedBook } from "@/components/audio/AudioProvider";
 import {
   formatTime,
   hoursMinutes,
@@ -9,6 +9,7 @@ import {
 } from "@/components/audio/format";
 import {
   bookSeconds,
+  firstPlayable,
   neighbour,
   sectionBooks,
   type PlayableBook,
@@ -44,9 +45,10 @@ const langOf = (book: PlayableBook, locale: Locale) =>
   book.locale !== locale ? book.locale : undefined;
 
 /**
- * The open book, directly under the hero: the h2 and the editions, then one
- * spread. The verso sets the chapter's opening line large beside the controls;
- * the recto is the contents, with the ribbon at the current chapter.
+ * The open book, directly under the hero: the h2, then one spread.
+ * A full recording puts the cover on the left page and the controls on the
+ * right. Several chapters keep the contents on the right, with the ribbon
+ * at the current one.
  */
 export function AudiobookPlayer({
   section,
@@ -98,6 +100,22 @@ function OpenBook({
   useEffect(() => actions.setSpread(onScreen, book.id), [actions, onScreen, book.id]);
   useEffect(() => () => actions.setSpread(false, null), [actions]);
 
+  // A language change loads the same book's recording in the new language.
+  const playback = useAudio();
+  const handoff = useRef("");
+  useEffect(() => {
+    const current = playback.book;
+    if (!current?.bookId || current.locale === locale) return;
+    const twin = books.find((item) => item.bookId === current.bookId && item.locale === locale);
+    if (!twin) return;
+    const index = twin.tracks[playback.index]?.src ? playback.index : firstPlayable(twin);
+    if (!twin.tracks[index]?.src) return;
+    const mark = `${locale}:${twin.id}:${index}`;
+    if (handoff.current === mark) return;
+    handoff.current = mark;
+    actions.retarget(twin, index, playback.playing);
+  }, [actions, books, locale, playback.book, playback.index, playback.playing]);
+
   return (
     <SectionShell
       // Always peach-wide and evenly spaced; the section's language goes on its own text only.
@@ -121,18 +139,30 @@ function OpenBook({
               {nb(props.intro)}
             </p>
           )}
+          {books.length === 1 &&
+            book.tracks.length <= 1 &&
+            section.data?.onlyOtherLanguage &&
+            locale === "el" && <p className="meta player-note">{p.greekComing}</p>}
         </div>
-        <div className="player-editions">
-          <Editions books={books} selected={book} name={`${section.id}-edition`} locale={locale} />
-          {section.data?.onlyOtherLanguage && locale === "el" && (
-            <p className="meta player-note">{p.greekComing}</p>
-          )}
-        </div>
+        {!(books.length === 1 && book.tracks.length <= 1) && (
+          <div className="player-editions">
+            <Editions books={books} selected={book} name={`${section.id}-edition`} locale={locale} />
+            {section.data?.onlyOtherLanguage && locale === "el" && (
+              <p className="meta player-note">{p.greekComing}</p>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="book-spread" role="region" aria-label={p.region} ref={spreadRef}>
+      <div
+        className={book.tracks.length <= 1 ? "book-spread book-spread--whole" : "book-spread"}
+        role="region"
+        aria-label={p.region}
+        ref={spreadRef}
+      >
+        {book.tracks.length <= 1 && <RecordingCover book={book} locale={locale} />}
         <Verso book={book} anchor={anchor} locale={locale} />
-        <Recto book={book} id={section.id} locale={locale} />
+        {book.tracks.length > 1 && <Recto book={book} id={section.id} locale={locale} />}
       </div>
     </SectionShell>
   );
@@ -167,9 +197,13 @@ function Editions({
     const items: string[] = [];
     // On /el every edition says its language; on English pages only another language does.
     if (locale === "el" || book.locale !== "en") items.push(p.edition[book.locale]);
+    const whole = book.tracks.length <= 1;
     if (book.id === selected.id && progress) {
-      items.push(fmt(p.chapterShort, { n: progress.chapter }));
+      if (!whole) items.push(fmt(p.chapterShort, { n: progress.chapter }));
       items.push(fmt(p.timeLeft, { time: hoursMinutes(progress.left, p) }));
+    } else if (whole) {
+      const seconds = bookSeconds(book);
+      if (seconds > 0) items.push(hoursMinutes(seconds, p));
     } else {
       items.push(plural(p.chapters, book.tracks.length, locale));
       const seconds = bookSeconds(book);
@@ -233,7 +267,36 @@ function Editions({
   );
 }
 
-/** The left page: status, speed, the chapter, its opening line, the scrubber and the transport. */
+/** The cover of a full recording: the left page, in place of a one-line contents. */
+function RecordingCover({ book, locale }: { book: PlayableBook; locale: Locale }) {
+  const t = useT();
+  const p = t.sections.player;
+  const byAuthor = !book.narrator || /anastasia patience/i.test(book.narrator);
+  const seconds = bookSeconds(book);
+  return (
+    <div className="recording-cover">
+      {book.coverSrc && (
+        <img
+          src={book.coverSrc}
+          srcSet={book.coverSrcSet ?? undefined}
+          sizes="(min-width: 1024px) 240px, 46vw"
+          width={240}
+          height={320}
+          alt=""
+        />
+      )}
+      <p className="meta">
+        {byAuthor ? p.readByAuthor : fmt(p.readByName, { narrator: book.narrator })}
+      </p>
+      {seconds > 0 && <p className="recording-length">{hoursMinutes(seconds, p)}</p>}
+      <span className="sr-only" lang={langOf(book, locale)}>
+        {book.title}
+      </span>
+    </div>
+  );
+}
+
+/** The listening page: status, speed, the recording, its opening line, the scrubber and the transport. */
 function Verso({ book, anchor, locale }: { book: PlayableBook; anchor: string; locale: Locale }) {
   const t = useT();
   const p = t.sections.player;
@@ -253,6 +316,7 @@ function Verso({ book, anchor, locale }: { book: PlayableBook; anchor: string; l
   });
   const track = book.tracks[v.index];
   const total = book.tracks.length;
+  const whole = total <= 1;
   const contentLang = langOf(book, locale);
   const max = Math.max(1, Math.round(v.duration));
   const percent = v.duration ? Math.min(100, (v.position / v.duration) * 100) : 0;
@@ -265,10 +329,17 @@ function Verso({ book, anchor, locale }: { book: PlayableBook; anchor: string; l
     if (!v.hydrated) return;
     if (shown.current !== null && shown.current !== key) {
       const values = { n: v.index + 1, total, title: track.title, book: book.title };
-      setAnnouncement(fmt(v.requested ? p.announce : p.announceSelected, values));
+      const message = whole
+        ? v.requested
+          ? p.announceWhole
+          : p.announceSelectedWhole
+        : v.requested
+          ? p.announce
+          : p.announceSelected;
+      setAnnouncement(fmt(message, values));
     }
     shown.current = key;
-  }, [v.hydrated, v.index, v.requested, key, total, track.title, book.title, p]);
+  }, [v.hydrated, v.index, v.requested, key, total, whole, track.title, book.title, p]);
 
   // While sound is on its way (asked for, not yet playing, not yet 400ms late), the
   // status keeps what it said: no "Paused" between chapters, no flash of "Buffering…".
@@ -301,7 +372,7 @@ function Verso({ book, anchor, locale }: { book: PlayableBook; anchor: string; l
   const next = neighbour(book, v.index, 1);
 
   return (
-    <div className="verso">
+    <div className={whole ? "verso verso--whole" : "verso"}>
       <div className="page-head">
         {v.error ? (
           <p className="status status--error meta">
@@ -322,7 +393,7 @@ function Verso({ book, anchor, locale }: { book: PlayableBook; anchor: string; l
           {rateLabel(v.rate, locale)}
         </button>
       </div>
-      <p className="meta chapter-of">{fmt(p.chapterOf, { n: v.index + 1, total })}</p>
+      {!whole && <p className="meta chapter-of">{fmt(p.chapterOf, { n: v.index + 1, total })}</p>}
       <h3 className="title chapter-title" lang={contentLang}>
         {track.title}
       </h3>
@@ -343,7 +414,7 @@ function Verso({ book, anchor, locale }: { book: PlayableBook; anchor: string; l
           step={1}
           value={Math.min(max, Math.round(v.position))}
           disabled={!track.src}
-          aria-label={p.position}
+          aria-label={whole ? p.positionWhole : p.position}
           aria-valuetext={fmt(p.positionOf, {
             elapsed: formatTime(v.position),
             total: formatTime(v.duration),
@@ -356,17 +427,19 @@ function Verso({ book, anchor, locale }: { book: PlayableBook; anchor: string; l
         <span>{formatTime(v.position)}</span>
         <span>{formatTime(v.duration)}</span>
       </div>
-      <div className="transport">
+      <div className={whole ? "transport transport--whole" : "transport"}>
         {/* aria-disabled, not disabled: focus stays put when the first or last chapter is reached */}
-        <button
-          className="ctl"
-          type="button"
-          aria-label={p.previous}
-          aria-disabled={prev < 0 || undefined}
-          onClick={() => prev >= 0 && actions.step(book, v.index, -1)}
-        >
-          <Icon name="prev" />
-        </button>
+        {!whole && (
+          <button
+            className="ctl"
+            type="button"
+            aria-label={p.previous}
+            aria-disabled={prev < 0 || undefined}
+            onClick={() => prev >= 0 && actions.step(book, v.index, -1)}
+          >
+            <Icon name="prev" />
+          </button>
+        )}
         <button
           className="ctl"
           type="button"
@@ -401,15 +474,17 @@ function Verso({ book, anchor, locale }: { book: PlayableBook; anchor: string; l
             30
           </span>
         </button>
-        <button
-          className="ctl"
-          type="button"
-          aria-label={p.next}
-          aria-disabled={next < 0 || undefined}
-          onClick={() => next >= 0 && actions.step(book, v.index, 1)}
-        >
-          <Icon name="next" />
-        </button>
+        {!whole && (
+          <button
+            className="ctl"
+            type="button"
+            aria-label={p.next}
+            aria-disabled={next < 0 || undefined}
+            onClick={() => next >= 0 && actions.step(book, v.index, 1)}
+          >
+            <Icon name="next" />
+          </button>
+        )}
       </div>
       <p className="sr-only" role="status">
         {announcement}

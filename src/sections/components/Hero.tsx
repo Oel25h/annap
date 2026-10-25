@@ -211,8 +211,14 @@ function ListenAction({ listen }: { listen: Listen }) {
   const navigate = useNavigate();
   const meta = useListenMeta(listen);
   const { anchor } = listen;
-  const parts =
-    meta.kind === "start"
+  const parts = meta.whole
+    ? meta.kind === "start"
+      ? [t.sections.hero.listenBy]
+      : [
+          t.sections.hero.listenResumeWhole,
+          meta.minutesLeft ? fmt(t.sections.hero.listenLeft, { m: meta.minutesLeft }) : "",
+        ]
+    : meta.kind === "start"
       ? [fmt(t.sections.hero.listenStart, { n: meta.chapter }), t.sections.hero.listenBy]
       : [
           fmt(t.sections.hero.listenResume, { n: meta.chapter }),

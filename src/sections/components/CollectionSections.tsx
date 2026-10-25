@@ -380,6 +380,11 @@ export function LatestPosts({ section, media, ctx }: Props<"latest_posts">) {
                         post.category && <p className="label label--accent">{post.category.name}</p>
                       }
                     >
+                      {post.excerpt && (
+                        <p className="body" lang={langIf(post.textLang, ctx.locale)}>
+                          {post.excerpt}
+                        </p>
+                      )}
                       <p className="tile-meta">
                         <StoryMeta post={post} locale={ctx.locale} />
                       </p>

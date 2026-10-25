@@ -51,7 +51,7 @@ export async function resolveMedia(
     db
       .from("media_assets")
       .select(
-        "id, kind, bucket, path, mime, width, height, duration_seconds, variants, dominant_color, focal_x, focal_y, alt, caption, credit",
+        "id, kind, bucket, path, playback_url, mime, width, height, duration_seconds, variants, dominant_color, focal_x, focal_y, alt, caption, credit",
       )
       .in("id", wanted),
     locale === "el" ? fetchOverlays(db, { media_asset: wanted }) : Promise.resolve(new Map()),
@@ -63,7 +63,8 @@ export async function resolveMedia(
     const variants = parseVariants(row.variants);
     const fallback =
       [...variants].reverse().find((v) => v.w <= DEFAULT_WIDTH) ?? variants[0] ?? null;
-    const src = publicObjectUrl(row.bucket, fallback?.path ?? row.path);
+    const stored = row.playback_url;
+    const src = stored ?? publicObjectUrl(row.bucket, fallback?.path ?? row.path);
     const srcSet =
       row.kind === "image" && variants.length > 0
         ? variants.map((v) => `${publicObjectUrl(row.bucket, v.path)} ${v.w}w`).join(", ")
@@ -76,7 +77,7 @@ export async function resolveMedia(
       id: row.id,
       kind,
       src,
-      original: publicObjectUrl(row.bucket, row.path),
+      original: stored ?? publicObjectUrl(row.bucket, row.path),
       srcSet,
       mime: fallback ? "image/webp" : row.mime,
       width: row.width,

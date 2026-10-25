@@ -1,4 +1,4 @@
--- Publishing, version history, audit trail and two-factor rules, exercised as
+-- Publishing, version history, audit trail and sign-in rules, exercised as
 -- real sessions. Everything runs in one transaction that is rolled back.
 \o /dev/null
 begin;
@@ -85,18 +85,12 @@ select public.publish_draft('page', '00000000-0000-0000-0000-0000000000b1', 'pub
 select pg_temp.expect('publishing new English marks approved Greek stale',
   (select is_stale from public.content_translations where entity_id = '5ec71011-0000-4000-8000-000000000001'));
 
--- An admin without two-factor gets nothing. --------------------------------------
+-- Password sign-in is enough for an admin. ---------------------------------------
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-00000000a001","session_id":"00000000-0000-0000-0000-00000000c001","role":"authenticated","aal":"aal1"}', true);
-select pg_temp.expect('aal1 admin cannot read pages', not exists (select 1 from public.pages));
-select pg_temp.expect('aal1 admin still sees their own role',
+select pg_temp.expect('password sign-in can read pages', exists (select 1 from public.pages));
+select pg_temp.expect('password sign-in still sees their own role',
   exists (select 1 from public.user_roles where user_id = '00000000-0000-0000-0000-00000000a001'));
-do $$
-begin
-  update public.pages set title = 'hijack';
-  if found then raise exception 'aal1 admin updated a page'; end if;
-end;
-$$;
 
 -- A translator manages Greek but cannot change content. ----------------------------
 select set_config('request.jwt.claims',

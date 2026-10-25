@@ -1,6 +1,6 @@
 /**
  * The newsletter screen's sending: a test to the signed-in admin, then the
- * real send once confirmed. Admins only, signed in with two factors.
+ * real send once confirmed. Admins only.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";

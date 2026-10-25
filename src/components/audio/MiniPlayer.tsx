@@ -69,7 +69,7 @@ export function MiniPlayer() {
         {book.coverSrc ? <img src={book.coverSrc} width={32} height={43} alt="" /> : <span />}
         <p className="mini-text">
           <span className="dots meta">
-            <span>{fmt(p.chapterShort, { n: s.index + 1 })}</span>
+            {book.tracks.length > 1 && <span>{fmt(p.chapterShort, { n: s.index + 1 })}</span>}
             {/* A wait of 400ms or more shows here in place of the time, as on the verso */}
             <span>
               {s.buffering ? p.buffering : `${formatTime(s.position)} / ${formatTime(s.duration)}`}

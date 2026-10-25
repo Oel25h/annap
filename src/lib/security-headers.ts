@@ -59,8 +59,14 @@ export function contentSecurityPolicy(opts: {
   preview?: boolean;
   /** This site's origin, e.g. https://example.com. */
   origin: string;
+  /** Public R2 host the player streams from, when audio storage is configured. */
+  audioOrigin?: string;
+  /** R2 S3 host the studio uploads recordings to. */
+  audioUploadOrigin?: string;
 }): string {
   const supabase = supabaseOrigins(opts.supabaseUrl);
+  const audio = opts.audioOrigin ? [opts.audioOrigin] : [];
+  const audioUpload = opts.audioUploadOrigin ? [opts.audioUploadOrigin] : [];
   const scriptSrc = ["'self'", `'nonce-${opts.nonce}'`, TURNSTILE];
   const frameSrc = [...EMBED_HOSTS, TURNSTILE];
   if (opts.studio) {
@@ -73,9 +79,9 @@ export function contentSecurityPolicy(opts: {
     "script-src": scriptSrc,
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:", ...supabase.http],
-    "media-src": ["'self'", "blob:", ...supabase.http],
+    "media-src": ["'self'", "blob:", ...supabase.http, ...audio],
     "font-src": ["'self'"],
-    "connect-src": ["'self'", ...supabase.http, ...supabase.ws, TURNSTILE],
+    "connect-src": ["'self'", ...supabase.http, ...supabase.ws, TURNSTILE, ...audioUpload],
     "frame-src": frameSrc,
     "worker-src": ["'self'", "blob:"],
     "manifest-src": ["'self'"],

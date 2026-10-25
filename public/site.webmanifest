@@ -4,8 +4,8 @@
   "description": "Author, storyteller, founder of Patience Media House.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fffaf5",
-  "theme_color": "#fffaf5",
+  "background_color": "#fbf6ef",
+  "theme_color": "#fbf6ef",
   "icons": [
     {
       "src": "/favicon-192x192.png",

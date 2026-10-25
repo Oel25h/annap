@@ -103,6 +103,13 @@
   .story-tiles {
     margin-top: var(--space-7);
   }
+  .story-tiles .body {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+  }
 
   /* Browse by theme: 44px links in secondary text */
   .themes {

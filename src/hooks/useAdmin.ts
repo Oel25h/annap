@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type AdminState = {
   loading: boolean;
   userId: string | null;
-  /** An admin, signed in with two factors, on a live session (public.is_admin). */
+  /** An admin on a live session (public.is_admin). */
   isAdmin: boolean;
   email: string | null;
 };
@@ -28,7 +28,7 @@ export function useAdmin(): AdminState {
         if (!cancelled) setState({ loading: false, userId: null, isAdmin: false, email: null });
         return;
       }
-      // The database's own check: the admin role, a two-factor (aal2) session, still live.
+      // The database's own check: the admin role, on a session that is still live.
       const { data: allowed } = await supabase.rpc("is_admin");
       if (cancelled) return;
       setState({

@@ -1,6 +1,7 @@
 /**
  * Audiobook playback for the whole site. The one <audio> element lives in the
- * root layout, so listening carries on across pages and language switches.
+ * root layout, so listening carries on across pages. A language change loads
+ * the same book's recording in the new language.
  * Each edition remembers its chapter, position, speed and finished chapters
  * in this browser (read after hydration, so the server and the first render
  * always show a first visit), and the Media Session API drives the lock
@@ -62,6 +63,11 @@ export type AudioActions = {
   setSpread: (visible: boolean, bookId: string | null) => void;
   /** Load the current chapter again after an error. */
   retry: () => void;
+  /**
+   * Point the element at another edition of the same book (a language change).
+   * Keeps playing only when it was already playing.
+   */
+  retarget: (book: PlayableBook, index: number, autoplay: boolean) => void;
 };
 
 const AudioContext = createContext<{ store: Store; actions: AudioActions } | null>(null);
@@ -258,6 +264,13 @@ function createPlayer(store: Store, element: () => HTMLAudioElement | null) {
       // After load() there is no metadata, so this also replaces a start left by the failed load.
       setTime(audio, position);
       start();
+    },
+    retarget(book, index, autoplay) {
+      const track = book.tracks[index];
+      if (!track?.src) return;
+      const at = Math.max(0, state().position);
+      const cap = track.durationSeconds && track.durationSeconds > 0 ? track.durationSeconds : at;
+      load(book, index, { startAt: Math.min(at, cap), autoplay });
     },
   };
   return { actions, remember, load };
@@ -486,24 +499,27 @@ export function useSelectedBook(books: PlayableBook[]): PlayableBook | undefined
 
 /**
  * The hero's Listen line, for the edition the page's player shows: "start"
- * (chapter n) or "resume" (chapter n, m minutes left in it). Always "start" on
- * the server and in the first render in the browser.
+ * or "resume" (minutes left). A single recording is `whole` and is never
+ * described as a chapter. Always "start" on the server and in the first
+ * render in the browser.
  */
 export function useListen(books: PlayableBook[]): {
   kind: "start" | "resume";
   chapter: number;
   minutesLeft: number;
+  whole: boolean;
 } {
   const locale = useLocale();
   return useAudioState((s) => {
     const book = selectedBook(s, books, locale);
-    if (!book) return { kind: "start" as const, chapter: 1, minutesLeft: 0 };
+    if (!book) return { kind: "start" as const, chapter: 1, minutesLeft: 0, whole: true };
     const view = editionView(s, book);
     const resume = s.hydrated && (view.returning || (view.loaded && s.started));
     return {
       kind: resume ? ("resume" as const) : ("start" as const),
       chapter: view.index + 1,
       minutesLeft: Math.max(1, Math.ceil((view.duration - view.position) / 60)),
+      whole: book.tracks.length <= 1,
     };
   });
 }

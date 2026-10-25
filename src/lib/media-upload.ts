@@ -5,9 +5,11 @@
  *   960, 1600 and 2400px (never wider than the original, whose own width is
  *   the largest rung), the same ladder as scripts/seed-media.ts, plus their
  *   size and dominant colour.
- * - Audio free to stream goes to the public `audio` bucket. Paid audio and
- *   every eBook or PDF go to the private `downloads` bucket, which only
- *   signed, expiring links can read.
+ * - Recordings go to Cloudflare R2 (up to 2 GB). The player streams them
+ *   from the public R2 address, which accepts range requests.
+ * - eBooks, PDFs and paid files that are not recordings go to the private
+ *   `downloads` bucket, which only signed, expiring links can read.
+ *   Those stay capped at 50 MB.
  *
  * Files land at library/<id>/…, then one media_assets row is written, ready.
  */
@@ -21,7 +23,10 @@ export type MediaBucket = "media" | "audio" | "downloads";
 export type Access = "public" | "private";
 
 export const VARIANT_WIDTHS = [160, 480, 960, 1600, 2400];
+/** Images, video and documents stored in Supabase. */
 const MAX_BYTES = 50 * 1024 * 1024;
+/** Full-length recordings stored on R2. One hour at a high bitrate, with room. */
+const AUDIO_MAX_BYTES = 2 * 1024 * 1024 * 1024;
 
 const IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"];
 const VIDEO = ["video/mp4", "video/webm"];
@@ -171,14 +176,20 @@ function explain(message: string): string {
 }
 
 /**
- * Upload one file to the library and return its row. `access` matters only
- * for audio: "private" puts a paid chapter in the downloads bucket.
+ * Upload one file to the library and return its row. Recordings go to R2
+ * (up to 2 GB). Everything else stays in Supabase, capped at 50 MB.
+ * `access` still chooses the private downloads bucket for a paid file that
+ * is not a recording.
  */
 export async function uploadToLibrary(file: File, access: Access = "public"): Promise<MediaRow> {
   const mime = mimeOf(file);
   const kind = kindOf(file);
   if (!kind) throw new Error(`${file.name}: images, audio, video, PDF or ePub only.`);
   if (file.size === 0) throw new Error(`${file.name} is empty.`);
+  if (kind === "audio") {
+    if (file.size > AUDIO_MAX_BYTES) throw new Error(`${file.name} is larger than 2 GB.`);
+    return uploadAudio(file, mime);
+  }
   if (file.size > MAX_BYTES) throw new Error(`${file.name} is larger than 50 MB.`);
 
   const id = crypto.randomUUID();
@@ -214,7 +225,7 @@ export async function uploadToLibrary(file: File, access: Access = "public"): Pr
         facts.variants.push({ w: v.w, path: target, bytes: v.blob.size });
       }
       facts = { ...facts, width: image.width, height: image.height, color: image.color };
-    } else if (kind === "audio" || kind === "video") {
+    } else if (kind === "video") {
       facts.duration = await mediaDuration(file, kind);
     }
     await put(path, file, mime);
@@ -248,6 +259,53 @@ export async function uploadToLibrary(file: File, access: Access = "public"): Pr
   }
 }
 
+/**
+ * A recording goes to R2, not the 50 MB Supabase shelf. The browser sends the
+ * file to the presigned address, then the library row points at the public URL.
+ */
+async function uploadAudio(file: File, mime: string): Promise<MediaRow> {
+  if (mime !== "audio/mpeg" && mime !== "audio/mp4" && mime !== "audio/x-m4a" && mime !== "audio/aac") {
+    throw new Error(`${file.name}: MP3 or M4A only.`);
+  }
+  const { prepareAudioUpload, discardAudioUpload } = await import("@/lib/audio-upload.functions");
+  const prepared = await prepareAudioUpload({ data: { mime, bytes: file.size } });
+  const sent = await fetch(prepared.uploadUrl, {
+    method: "PUT",
+    body: file,
+    headers: { "content-type": prepared.contentType },
+  });
+  if (!sent.ok) {
+    throw new Error("The recording didn't upload. Check the audio storage settings and try again.");
+  }
+  const duration = await mediaDuration(file, "audio");
+  try {
+    const { data: user } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from("media_assets")
+      .insert({
+        id: prepared.id,
+        kind: "audio",
+        bucket: "audio",
+        path: prepared.key,
+        playback_url: prepared.playbackUrl,
+        mime: prepared.contentType,
+        bytes: file.size,
+        original_name: file.name.slice(0, 200),
+        duration_seconds: duration ? Math.round(duration * 100) / 100 : null,
+        variants: [],
+        status: "ready",
+        created_by: user.user?.id ?? null,
+      })
+      .select("*")
+      .single();
+    if (error || !data) throw new Error(explain(error?.message ?? "The file didn't save."));
+    return data;
+  } catch (e) {
+    await discardAudioUpload({ data: { key: prepared.key } }).catch(() => undefined);
+    throw e;
+  }
+}
+
 /** Every stored object of a library item: the original and its variants. */
 export function objectPaths(row: Pick<MediaRow, "path" | "variants">): string[] {
   const variants = (Array.isArray(row.variants) ? row.variants : []) as { path?: string }[];
@@ -270,10 +328,12 @@ export async function loadMedia(ids: string[]): Promise<Record<string, MediaRow>
 export async function moveToBucket(id: string, to: MediaBucket): Promise<void> {
   const { data: row, error } = await supabase
     .from("media_assets")
-    .select("id, bucket, path, mime")
+    .select("id, bucket, path, mime, playback_url")
     .eq("id", id)
     .single();
   if (error || !row) throw new Error("That file is no longer in the library.");
+  // Recordings live on R2. Free or paid only changes whether the player is given the address.
+  if (row.playback_url) return;
   if (row.bucket === to) return;
   const { data: blob, error: readError } = await supabase.storage
     .from(row.bucket)

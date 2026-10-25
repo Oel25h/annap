@@ -18,6 +18,9 @@ colors:
     apricot: "#FFB27A"
     peach-cream: "#FFF1E6"
     warm-ivory: "#FFFAF5"
+    paper: "#FBF6EF"
+    paper-alt: "#FBF6EF"
+    footer: "#FBE4D6"
     cocoa-ink: "#3B1F14"
     berry: "#7A2E4A"
     blush: "#F7C9C0"
@@ -32,12 +35,13 @@ colors:
     apricot-32: "rgb(255 178 122 / .32)"
     apricot-48: "rgb(255 178 122 / .48)"
     warm-ivory-88: "rgb(255 250 245 / .88)"
+    paper-88: "rgb(255 255 255 / .88)"
     cocoa-night-88: "rgb(31 18 12 / .88)"
   light:
-    bg: warm-ivory
-    bg-alt: peach-cream
-    surface: warm-ivory
-    surface-alt: peach-cream
+    bg: paper
+    bg-alt: paper-alt
+    surface: paper
+    surface-alt: paper-alt
     text: cocoa-ink
     text-secondary: cocoa-ink-76
     text-tertiary: cocoa-ink-68
@@ -54,7 +58,7 @@ colors:
     on-selected: warm-ivory
     ribbon: tangerine
     focus: burnt-orange
-    header-bg: warm-ivory-88
+    header-bg: paper-88
     selection: blush
     error: berry
     on-error: warm-ivory
@@ -248,8 +252,11 @@ than the content. 3.0 keeps the one book device that does real work and removes 
 | `--color-tangerine` | #F27329 | Fill for the primary action, the play buttons, the ribbon and the skip link. Never text, never a border, never under white or peach text. |
 | `--color-burnt-orange` | #C2410C | All orange text and links on light grounds. Also the focus ring, the scrubber fill and thumb, the primary hover fill, and the studio selection outline and tag. |
 | `--color-apricot` | #FFB27A | Hairlines, dot leaders and card edges on light. On dark: accent text, focus and fills. The Stale badge fill. |
-| `--color-peach-cream` | #FFF1E6 | Alternate band, the eBook card, arch fill; text and selected fill on dark. |
-| `--color-warm-ivory` | #FFFAF5 | Page and surface; text on selected fills. |
+| `--color-peach-cream` | #FFF1E6 | Text and selected fill on dark. Not a page ground. |
+| `--color-warm-ivory` | #FFFAF5 | Text on selected fills and on the burnt-orange hover. Not a page ground. |
+| `--color-paper` | #FBF6EF | Page and surface. |
+| `--color-paper-alt` | #FBF6EF | Alternate band, the eBook card, the arch fill. |
+| `--color-footer` | #FBE4D6 | Footer ground. |
 | `--color-cocoa-ink` | #3B1F14 | Text. Also the selected fill, the cocoa band (videos, footer), text on Tangerine and the dark-mode surface. |
 | `--color-berry` | #7A2E4A | Error text, Missing badge text, Delete. Never a fill behind text. |
 | `--color-blush` | #F7C9C0 | Text selection, Missing badge fill, error text on dark. |
@@ -259,7 +266,7 @@ than the content. 3.0 keeps the one book device that does real work and removes 
 - `cocoa-ink-76 / -68 / -52`;
 - `peach-cream-76 / -68 / -52`;
 - `apricot-32 / -48`;
-- `warm-ivory-88`, `cocoa-night-88`.
+- `warm-ivory-88`, `paper-88`, `cocoa-night-88`.
 
 No other alpha values. The `-52` tints are for borders, tracks and the dialog scrim,
 never for text.
@@ -271,26 +278,26 @@ utilities, the status badges, the video chips and the studio swatches.
 
 | Token | Light | Dark | Notes |
 |---|---|---|---|
-| `--color-bg` | warm-ivory | cocoa-night | page |
-| `--color-bg-alt` | peach-cream | cocoa-night | peach band; in dark it becomes night with hairline top and bottom rules |
-| `--color-surface` | warm-ivory | cocoa-ink | the spread, inputs, cards |
-| `--color-surface-alt` | peach-cream | cocoa-ink | the eBook card, the arch fill |
-| `--color-text` | cocoa-ink · 14.54 | peach-cream · 16.50 | |
-| `--color-text-secondary` | cocoa-ink-76 · 6.79 | peach-cream-76 · 9.77 | leads, captions, unselected editions |
-| `--color-text-tertiary` | cocoa-ink-68 · 5.27 | peach-cream-68 · 8.06 | meta, numbers, durations, hidden rows |
-| `--color-accent-text` | burnt-orange · 4.99 (4.68 on peach) | apricot · 10.35 | links' underline, the current chapter, category labels |
+| `--color-bg` | paper | cocoa-night | page |
+| `--color-bg-alt` | paper-alt | cocoa-night | alternate band; in dark it becomes night with hairline top and bottom rules |
+| `--color-surface` | paper | cocoa-ink | the spread, inputs, cards |
+| `--color-surface-alt` | paper-alt | cocoa-ink | the eBook card, the arch fill |
+| `--color-text` | cocoa-ink · 15.09 | peach-cream · 16.50 | |
+| `--color-text-secondary` | cocoa-ink-76 · 6.96 | peach-cream-76 · 9.77 | leads, captions, unselected editions |
+| `--color-text-tertiary` | cocoa-ink-68 · 5.34 | peach-cream-68 · 8.06 | meta, numbers, durations, hidden rows |
+| `--color-accent-text` | burnt-orange · 5.18 (4.80 on paper-alt) | apricot · 10.35 | links' underline, the current chapter, category labels |
 | `--color-hairline` | apricot | apricot-32 | decorative rules and card edges only |
 | `--color-leader` | apricot | apricot-48 | contents dot leaders |
-| `--color-field-border` | cocoa-ink-52 · 3.27 | peach-cream-52 · 5.17 | inputs, quiet buttons, segmented groups |
-| `--color-track` | cocoa-ink-52 · 3.27 (3.20 on peach) | peach-cream-52 · 5.17 (4.73 on cocoa) | scrubber track, switch track |
+| `--color-field-border` | cocoa-ink-52 · 3.29 | peach-cream-52 · 5.17 | inputs, quiet buttons, segmented groups |
+| `--color-track` | cocoa-ink-52 · 3.29 (3.24 on paper-alt) | peach-cream-52 · 5.17 (4.73 on cocoa) | scrubber track, switch track |
 | `--color-action` / `--color-on-action` | tangerine / cocoa-ink · 5.22 | same | |
 | `--color-action-hover` / `--color-on-action-hover` | burnt-orange / warm-ivory · 4.99 | apricot / cocoa-ink · 8.55 | |
 | `--color-selected` / `--color-on-selected` | cocoa-ink / warm-ivory · 14.54 | peach-cream / cocoa-night · 16.50 | the one selected style |
 | `--color-ribbon` | tangerine | tangerine | the bookmark tab |
 | `--color-focus` | burnt-orange | apricot | 2px outline |
-| `--color-header-bg` | warm-ivory-88 | cocoa-night-88 | with the one blur (14px) |
+| `--color-header-bg` | paper-88 | cocoa-night-88 | with the one blur (14px) |
 | `--color-selection` | blush, cocoa text · 10.11 | same | |
-| `--color-error` / `--color-on-error` | berry · 8.74 (8.19 on peach) / warm-ivory | blush · 12.23 / cocoa-ink | |
+| `--color-error` / `--color-on-error` | berry · 9.06 (8.40 on paper-alt) / warm-ivory | blush · 12.23 / cocoa-ink | |
 | `--color-status-*` | see Badges | | translation status in the studio |
 
 `band-cocoa` re-points the semantics for the cocoa band (videos, footer) in both modes:
@@ -304,7 +311,7 @@ utilities, the status badges, the video chips and the studio swatches.
 ### 2.3 Rules
 
 - **Orange text is Burnt orange** on light grounds and Apricot on cocoa or night.
-  Tangerine is never text (2.79 on ivory).
+  Tangerine is never text (2.89 on paper).
 - **Text on Tangerine is Cocoa** (5.22). Never white or peach on Tangerine.
 - A Tangerine fill is always identified by its Cocoa label or glyph, never by the fill
   alone. The fill does not need to contrast with the page; its label does.
@@ -330,8 +337,8 @@ utilities, the status badges, the video chips and the studio swatches.
 - Berry only for errors, Missing and Delete. Blush only for selection, Missing and
   dark-mode errors.
 - **Dark mode maps semantics, not pixels:**
-  - ivory becomes cocoa-night and surfaces become cocoa-ink;
-  - peach bands collapse to night with hairline rules, and the cocoa band stays
+  - paper becomes cocoa-night and surfaces become cocoa-ink;
+  - paper-alt bands collapse to night with hairline rules, and the cocoa band stays
     cocoa-ink;
   - orange text becomes Apricot, and Tangerine fills stay Tangerine with Cocoa labels.
 
@@ -346,14 +353,14 @@ their ground. Every text pair in the system is in the first table.
 
 | Pair (text or mark on ground) | Ratio | Where |
 |---|---|---|
-| Cocoa on Ivory / Peach | 14.54 / 13.63 | text |
-| Cocoa-76 on Ivory / Peach | 6.79 / 6.59 | secondary |
-| Cocoa-68 on Ivory / Peach | 5.27 / 5.11 | tertiary, meta, hidden rows |
-| Burnt on Ivory / Peach | 4.99 / 4.68 | accent text, focus ring, scrubber thumb |
+| Cocoa on Paper / Paper-alt | 15.09 / 13.98 | text |
+| Cocoa-76 on Paper / Paper-alt | 6.96 / 6.65 | secondary |
+| Cocoa-68 on Paper / Paper-alt | 5.34 / 5.17 | tertiary, meta, hidden rows |
+| Burnt on Paper / Paper-alt | 5.18 / 4.80 | accent text, focus ring, scrubber thumb |
 | Cocoa on Tangerine | 5.22 | primary buttons, play, skip link |
 | Ivory on Burnt | 4.99 | primary hover, the studio selection tag |
 | Ivory on Cocoa (selected) | 14.54 | selected rows, segments, tiles |
-| Berry on Ivory / Peach | 8.74 / 8.19 | errors |
+| Berry on Paper / Paper-alt | 9.06 / 8.40 | errors |
 | Berry on Blush | 6.07 | Missing badge |
 | Cocoa on Apricot | 8.55 | Stale badge |
 | Cocoa on Blush | 10.11 | text selection |
@@ -369,12 +376,12 @@ Non-text (WCAG 1.4.11, 3:1):
 
 | Mark | Ratio |
 |---|---|
-| Field border and track, Cocoa-52 on Ivory / Peach | 3.27 / 3.20 |
+| Field border and track, Cocoa-52 on Paper / Paper-alt | 3.29 / 3.24 |
 | Field border and track, Peach-52 on Night / Cocoa | 5.17 / 4.73 |
-| Focus ring, Burnt on Ivory / Peach | 4.99 / 4.68 |
+| Focus ring, Burnt on Paper / Paper-alt | 5.18 / 4.80 |
 | Focus ring, Apricot on Night / Cocoa | 10.35 / 8.55 |
 | Focus ring on selected fills (on-selected) | 14.54 / 16.50 |
-| Scrubber thumb, Burnt with a 4px surface ring | 4.99 |
+| Scrubber thumb, Burnt with a 4px surface ring | 5.18 |
 
 The scrubber fill against the track is 1.53 in light and 1.81 in dark. The 20px thumb
 carries the position, so the fill is decoration.
@@ -382,10 +389,10 @@ carries the position, so the fill is decoration.
 **Never** (each is below AA):
 - Burnt text on Blush (3.47), Apricot (2.93), Night (3.53) or Cocoa (2.91).
 - Ivory or Peach text on Tangerine (2.79 and 2.61).
-- Tangerine or Apricot as text on light grounds (2.79 and 1.70).
-- Opacity or a tint applied to Burnt text, which is already the tightest pair (4.68 on
-  peach).
-- Hairlines (Apricot 1.70 / 1.59, Apricot-32 2.15) as the only boundary of a control:
+- Tangerine or Apricot as text on light grounds (2.89 and 1.76).
+- Opacity or a tint applied to Burnt text, which is already the tightest pair (4.80 on
+  paper-alt).
+- Hairlines (Apricot 1.76 / 1.63, Apricot-32 2.15) as the only boundary of a control:
   every control edge uses `--color-field-border` or `--color-track`.
 - An icon-only Tangerine element without a Cocoa glyph.
 - The focus colour drawn on a selected fill: flip it to `--color-on-selected`.
@@ -545,8 +552,8 @@ Layout tokens:
 
 | Utility | Light | Dark | Used for |
 |---|---|---|---|
-| `band-ivory` | warm-ivory | cocoa-night | hero, book, quote, stories; About hero, chapters, mission, close |
-| `band-peach` | peach-cream | cocoa-night + hairline top and bottom | the audiobook spread, foundation; About foreword and values |
+| `band-ivory` | paper | cocoa-night | hero, book, quote, stories; About hero, chapters, mission, close |
+| `band-peach` | paper-alt | cocoa-night + hairline top and bottom | the audiobook spread, foundation; About foreword and values |
 | `band-cocoa` | cocoa-ink, peach text | cocoa-ink | videos, footer |
 
 `band-cocoa` re-points every semantic token, so components inside it need no dark
@@ -1222,7 +1229,7 @@ controls and selected style.
 - **Selection:**
   - A 2px accent outline on the section.
   - **Outside** the section, above its top-right corner, sits a bar with:
-    - the tag "Videos · Filmstrip" (accent fill, `--color-bg` text: Ivory on Burnt 4.99,
+    - the tag "Videos · Filmstrip" (accent fill, `--color-bg` text: Paper on Burnt 5.18,
       Night on Apricot 10.35);
     - the tools Move up, Move down, Duplicate, Hide | Delete (Berry). These are plain
       buttons, not `role="toolbar"`.
@@ -1255,7 +1262,7 @@ controls and selected style.
      - Width: Text 720 / Wide 1280 / Edge to edge.
      - Spacing: Compact 64·64 / Regular 96·128 / Generous 128·128, with the values shown
        ("96 top · 128 bottom on desktop"). Phones are always 64·64.
-     - Background: three swatches, Warm ivory, Peach cream and Cocoa ink. These are the
+     - Background: three swatches, White, Light gray and Cocoa ink. These are the
        three band utilities and nothing else.
   5. **Footer**: "Visible in English and Greek" and "Revert section".
 

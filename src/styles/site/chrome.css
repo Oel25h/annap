@@ -27,11 +27,13 @@
   .nav {
     display: none;
   }
-  .nav ul {
+  .nav > ul {
     display: flex;
+    align-items: center;
     gap: var(--space-5);
   }
-  .nav a {
+  .nav a,
+  .nav-group-btn {
     display: inline-flex;
     align-items: center;
     min-height: var(--size-control-sm);
@@ -47,14 +49,137 @@
       color var(--duration-hover),
       text-decoration-color var(--duration-hover);
   }
-  .nav a:hover {
+  .nav a:hover,
+  .nav-group-btn:hover {
     color: var(--color-text);
     text-decoration-color: var(--color-accent-text);
   }
-  .nav a[aria-current="page"] {
+  .nav a[aria-current="page"],
+  .nav-group-btn[aria-current="true"] {
     color: var(--color-text);
     text-decoration-color: var(--color-accent-text);
     text-decoration-thickness: 2px;
+  }
+  .nav-group {
+    position: static;
+  }
+  .nav-group-btn {
+    gap: var(--space-1);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .nav-group-btn[aria-expanded="true"] {
+    color: var(--color-text);
+    text-decoration-color: var(--color-accent-text);
+  }
+  /* A sheet of the same paper, hung from the bar. Foundation sits in the footer's peach. */
+  .nav-mega {
+    position: absolute;
+    z-index: 2;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding-block: var(--space-6) var(--space-7);
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-hairline);
+    animation: nav-mega-in 180ms ease-out;
+  }
+  @keyframes nav-mega-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .nav-mega-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .nav-mega a {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    height: 100%;
+    padding: var(--space-4) var(--space-5);
+    white-space: normal;
+    text-decoration: none;
+    border-radius: var(--radius);
+    transition: background-color var(--duration-hover);
+  }
+  .nav-mega a:hover,
+  .nav-mega a:focus-visible {
+    color: inherit;
+    text-decoration: none;
+    background: var(--color-peach-cream);
+  }
+  .nav-mega a[aria-current="page"] {
+    color: inherit;
+    text-decoration: none;
+    background: var(--color-peach-cream);
+  }
+  .mega-kicker {
+    font: 600 var(--text-meta) / 1 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-accent-text);
+  }
+  .mega-title {
+    font: 500 var(--text-display-m) / 1.05 var(--font-display);
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.12em;
+    transition: text-decoration-color var(--duration-hover);
+  }
+  .nav-mega a:hover .mega-title,
+  .nav-mega a:focus-visible .mega-title,
+  .nav-mega a[aria-current="page"] .mega-title {
+    text-decoration-color: var(--color-accent-text);
+  }
+  .mega-line {
+    font: italic 400 var(--text-small) / 1.45 var(--font-serif);
+    color: var(--color-text-secondary);
+  }
+  .nav-mega-apart {
+    margin-top: var(--space-5);
+  }
+  .nav-mega-apart a {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-6);
+    background: var(--color-footer);
+  }
+  .nav-mega-apart a:hover,
+  .nav-mega-apart a:focus-visible,
+  .nav-mega-apart a[aria-current="page"] {
+    background: var(--color-peach-cream);
+  }
+  .nav-mega-apart .mega-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .nav-mega-apart svg.i {
+    margin-left: auto;
+    color: var(--color-text-secondary);
+    transition: color var(--duration-hover);
+  }
+  .nav-mega-apart a:hover svg.i,
+  .nav-mega-apart a:focus-visible svg.i {
+    color: var(--color-accent-text);
   }
   .header-actions {
     display: flex;
@@ -262,7 +387,7 @@
   }
   /* Seven Greek items at 1180 need a tighter step to clear the actions */
   @media (min-width: 1180px) and (max-width: 1279px) {
-    .nav ul:lang(el) {
+    .nav > ul:lang(el) {
       gap: var(--space-4);
     }
   }
@@ -333,6 +458,8 @@
   /* ---------- Footer: Letters, links, legal ---------- */
   .back {
     padding-block: var(--space-8) var(--space-5);
+    background: var(--color-footer);
+    color: var(--color-text);
   }
   .back .signup,
   .back .foot {
