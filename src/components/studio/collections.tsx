@@ -3,6 +3,7 @@
  * which groups, the children each item has, and the Greek entity it
  * translates as. Field keys are the tables' own columns.
  */
+import { nextBookFile } from "@/lib/book-files";
 import { moveToBucket } from "@/lib/media-upload";
 import type { ChildConfig, CollectionConfig, FieldDef, Row } from "./collection";
 import { clock, day } from "./format";
@@ -154,7 +155,7 @@ const bookFiles: ChildConfig = {
   fk: "book_id",
   title: "Free downloads and samples",
   noun: "file",
-  hint: "Given away behind the name-and-email form, per language. Kept private; readers get an expiring link.",
+  hint: "One free ebook per language, behind the name-and-email form. Open a language and choose a new file to replace it. The same steps work for every book.",
   name: (r) =>
     `${r.purpose === "sample" ? "Sample" : "Free download"} (${label(LOCALES, r.locale)})`,
   fields: [
@@ -174,13 +175,13 @@ const bookFiles: ChildConfig = {
       label: "File",
       media: "document",
       access: "private",
+      hint: "Choosing a new file replaces this one. The language on this row is the page that offers it.",
     },
   ],
   addWith: { key: "media_id", label: "File", kind: "document", access: "private" },
   create: (parent, rows) => ({
     book_id: parent?.id,
-    purpose: rows.some((r) => r.purpose === "free_download") ? "sample" : "free_download",
-    locale: "en",
+    ...nextBookFile(rows),
   }),
 };
 

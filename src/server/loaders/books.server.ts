@@ -2,6 +2,7 @@
  * Books for sections and book pages: text in the page's language where a
  * person approved it, the formats to offer, and whether there is a free copy.
  */
+import { freeEbookOffer } from "@/lib/book-files";
 import type { Locale } from "@/lib/i18n/locale";
 import type { BookFormat, BookOffer, BookSummary } from "@/sections/types";
 import {
@@ -109,7 +110,7 @@ export async function loadBooks(ctx: LoaderContext, ids?: string[]): Promise<Boo
         ctx.locale,
         integrations.payments,
       ),
-      freeDownload: free?.has(ctx.locale) ? ctx.locale : free?.has("en") ? "en" : null,
+      ...freeEbookOffer(free, ctx.locale),
     };
   });
 }

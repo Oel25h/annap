@@ -277,7 +277,7 @@ async function bookPage(ctx: LoaderContext, slug: string): Promise<PageData | nu
         variant: "carousel",
         props: { title: t.book.praise, bookId: row.id },
       },
-      ...(book.freeDownload
+      ...(book.freeDownload || book.greekEbookUnavailable
         ? [
             {
               type: "ebook_gate" as const,

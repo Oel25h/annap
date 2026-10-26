@@ -302,7 +302,7 @@ export function FeaturedBook({
           </figure>
         )}
       </div>
-      {p.showEbookGate && book.freeDownload && (
+      {p.showEbookGate && (book.freeDownload || book.greekEbookUnavailable) && (
         <EbookForm
           book={book}
           anchor="free-ebook"
@@ -320,7 +320,7 @@ export function FeaturedBook({
 /** The free eBook card as a section of its own; the section carries the anchor. */
 export function EbookGate({ section, ctx }: Props<"ebook_gate">) {
   const book = section.data?.book;
-  if (!book?.freeDownload) return null;
+  if (!book?.freeDownload && !book?.greekEbookUnavailable) return null;
   const p = section.props;
   return (
     <SectionShell section={section} ctx={ctx} labelled defaultAnchor="free-ebook">
@@ -404,8 +404,8 @@ export function EbookForm({
   const Title = level;
   const Done = heading ? (heading.headingLevel === "h1" ? "h2" : "h3") : level;
 
-  const title = copy?.title || e.title;
-  const titleLang = copy?.title ? lang?.("title") : undefined;
+  const title = book.greekEbookUnavailable ? e.unavailable : copy?.title || e.title;
+  const titleLang = !book.greekEbookUnavailable && copy?.title ? lang?.("title") : undefined;
   const bookLang = langIf(book.textLang, locale);
   const [before, after] = e.body.split("{title}");
 
@@ -424,7 +424,7 @@ export function EbookForm({
             {nb(title)}
           </Title>
         )}
-        {copy?.body ? (
+        {book.greekEbookUnavailable ? null : copy?.body ? (
           <p className="body" lang={lang?.("body")}>
             {copy.body}
           </p>
@@ -439,10 +439,9 @@ export function EbookForm({
             )}
           </p>
         )}
-        {book.freeDownload === "en" && locale === "el" && <p className="meta">{e.englishOnly}</p>}
       </div>
 
-      {done ? (
+      {book.greekEbookUnavailable ? null : done ? (
         <div className="bp-done">
           <Done ref={form.doneRef} tabIndex={-1} className="display-m">
             {doneTitle}

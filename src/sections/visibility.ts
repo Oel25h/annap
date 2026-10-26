@@ -45,7 +45,7 @@ export function isEmpty(section: RenderedSection, media?: MediaMap, primary = fa
     case "featured_book":
       return !section.data?.book;
     case "ebook_gate":
-      return !section.data?.book.freeDownload;
+      return !section.data?.book.freeDownload && !section.data?.book.greekEbookUnavailable;
     case "book_list":
       return !section.data || section.data.books.length === 0;
     case "latest_posts":

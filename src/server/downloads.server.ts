@@ -4,6 +4,7 @@
  * use counts once and hands out a one-minute signed URL for the private file.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { filesForLocale } from "@/lib/book-files";
 import { localizePath, type Locale } from "@/lib/i18n/locale";
 import { hashToken, randomToken } from "./crypto.server";
 import { overlayFields } from "./loaders/common.server";
@@ -63,7 +64,10 @@ export async function issueDownloads(
   }));
 }
 
-/** A book's files for one purpose in the reader's language, otherwise English. */
+/**
+ * A book's files for one purpose. A free ebook is only the reader's language.
+ * A bought file may still use the English one when that language has none.
+ */
 export async function bookFiles(
   bookId: string,
   purpose: "free_download" | "purchase",
@@ -79,12 +83,13 @@ export async function bookFiles(
     locale: Locale;
     media: { id: string; mime: string } | null;
   }[];
-  const pick = (l: Locale) =>
-    rows
-      .filter((r) => r.locale === l && r.media)
-      .map((r) => ({ mediaId: r.media!.id, mime: r.media!.mime }));
-  const files = pick(lang);
-  return files.length > 0 ? files : pick("en");
+  return filesForLocale(
+    rows.flatMap((row) =>
+      row.media ? [{ locale: row.locale, mediaId: row.media.id, mime: row.media.mime }] : [],
+    ),
+    lang,
+    purpose === "purchase",
+  ).map(({ mediaId, mime }) => ({ mediaId, mime }));
 }
 
 /** `textLang` is the language `title` is in, so a Greek page can mark an English one. */

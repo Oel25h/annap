@@ -56,8 +56,10 @@ export type BookSummary = {
   coverMediaId: string | null;
   textLang: Locale;
   offers: BookOffer[];
-  /** A free download exists in the page's language (or in English). */
+  /** A free ebook uploaded in this page's language. */
   freeDownload: Locale | null;
+  /** This Greek page has an English free ebook and no Greek one. */
+  greekEbookUnavailable: boolean;
 };
 
 export type AudiobookTrack = {

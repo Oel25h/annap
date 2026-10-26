@@ -137,7 +137,7 @@ export const en = {
     ebook: {
       title: "Read it tonight, free.",
       body: "Leave your first name and email and {title} is yours to download straight away.",
-      englishOnly: "The Greek edition is in preparation; for now the download is in English.",
+      unavailable: "The Greek ebook isn’t available yet.",
       doneTitle: "It’s yours, {name}.",
       doneTitleNoName: "It’s yours.",
       doneBody: "Your download is ready below. We have also emailed you the link.",
