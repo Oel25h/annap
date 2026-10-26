@@ -4,10 +4,8 @@
  */
 import type { Locale } from "@/lib/i18n/locale";
 
-export type StoredBookFile = { purpose?: unknown; locale?: unknown };
-
 /** The next studio row: a free ebook in whichever language does not have one yet. */
-export function nextBookFile(rows: StoredBookFile[]): {
+export function nextBookFile(rows: ReadonlyArray<Record<string, unknown>>): {
   purpose: "free_download" | "sample";
   locale: Locale;
 } {
